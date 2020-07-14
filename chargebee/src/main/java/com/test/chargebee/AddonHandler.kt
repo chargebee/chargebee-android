@@ -13,9 +13,9 @@ import retrofit2.Response
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 
-public class AddonHandler(val handler: (Addon?) -> Unit) {
+public class AddonHandler {
 
-    public fun retrieveAddon(addonId: String) {
+    public fun retrieve(addonId: String, handler: (Addon?) -> Unit) {
         val gson: Gson = GsonBuilder()
             .setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES)
             .create()
@@ -27,7 +27,7 @@ public class AddonHandler(val handler: (Addon?) -> Unit) {
 
         val service = retrofit.create(AddonService::class.java)
         val retrievePlan = service.retrieveAddon(addonId = addonId)
-        retrievePlan?.enqueue(object : Callback<AddonWrapper?>{
+        retrievePlan?.enqueue(object : Callback<AddonWrapper?> {
             override fun onFailure(call: Call<AddonWrapper?>, t: Throwable) {
                 Log.d("message", "Failure")
                 Log.d("message", t.localizedMessage ?: "Some Error")

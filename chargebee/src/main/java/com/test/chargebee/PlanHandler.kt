@@ -10,9 +10,9 @@ import retrofit2.Response
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 
-class PlanHandler(val handler: (Plan?) -> Unit) : Callback<PlanWrapper?>  {
+class PlanHandler {
 
-    public fun retrievePlan(planId: String) {
+    fun retrieve(planId: String, handler: (Plan?) -> Unit) {
         val retrofit = Retrofit.Builder()
             .baseUrl(CBEnvironment.baseUrl)
             .addConverterFactory(GsonConverterFactory.create())
@@ -20,19 +20,20 @@ class PlanHandler(val handler: (Plan?) -> Unit) : Callback<PlanWrapper?>  {
 
         val service: PlanService = retrofit.create(PlanService::class.java)
         val retrievePlan = service.retrievePlan(planId = planId)
-        retrievePlan?.enqueue(this)
-    }
+        retrievePlan?.enqueue(object : Callback<PlanWrapper?> {
 
-    override fun onFailure(call: Call<PlanWrapper?>, t: Throwable) {
-        Log.d("message", "Failure")
-        Log.d("message", t.localizedMessage ?: "Some Error")
-        TODO("Not yet implemented")
-    }
+            override fun onFailure(call: Call<PlanWrapper?>, t: Throwable) {
+                Log.d("message", "Failure")
+                Log.d("message", t.localizedMessage ?: "Some Error")
+                TODO("Not yet implemented")
+            }
 
-    override fun onResponse(call: Call<PlanWrapper?>, response: Response<PlanWrapper?>) {
-        Log.d("message", "Success")
-        Log.d("message", response.toString())
-        val body: PlanWrapper? = response.body()
-        this.handler(body?.plan)
+            override fun onResponse(call: Call<PlanWrapper?>, response: Response<PlanWrapper?>) {
+                Log.d("message", "Success")
+                Log.d("message", response.toString())
+                val body: PlanWrapper? = response.body()
+                handler(body?.plan)
+            }
+        })
     }
 }

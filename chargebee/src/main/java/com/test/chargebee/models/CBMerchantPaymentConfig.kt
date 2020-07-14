@@ -1,25 +1,24 @@
 package com.test.chargebee.models
 
-import android.util.Log
 import com.google.gson.annotations.SerializedName
 
-public enum class CBPaymentType(val displayName: String) {
+enum class CBPaymentMethodType(val displayName: String) {
     CARD("card")
 }
 
-data class CBGatewayDetail(
-    val clientIdval: String,
+internal data class CBGatewayDetail(
+    val clientId: String,
     val gatewayId: String
 )
 
-public class CBMerchantPaymentConfig(
+internal class CBMerchantPaymentConfig(
     val apmConfig: Map<String, PaymentConfigs>,
     val currencyList: Array<String>,
     val defaultCurrency: String
 ) {
-    fun getPaymentProviderConfig (currencyCode: String, paymentType: CBPaymentType): CBGatewayDetail? {
+    internal fun getPaymentProviderConfig (currencyCode: String, paymentMethodType: CBPaymentMethodType): CBGatewayDetail? {
         val paymentMethod = this.apmConfig[currencyCode]?.pmList?.find {
-            it.type == paymentType.displayName && it.gatewayName == "STRIPE"
+            it.type == paymentMethodType.displayName && it.gatewayName == "STRIPE"
         }
 
         return if (paymentMethod == null) null else CBGatewayDetail(
@@ -29,7 +28,7 @@ public class CBMerchantPaymentConfig(
     }
 }
 
-data class PaymentConfigs(
+internal data class PaymentConfigs(
     val pmList: Array<PaymentMethod>
 )
 

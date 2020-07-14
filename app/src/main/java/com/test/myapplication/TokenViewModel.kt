@@ -2,26 +2,22 @@ package com.test.myapplication
 
 import android.util.Log
 import androidx.lifecycle.ViewModel
-import com.test.chargebee.StripeHandler
-import com.test.chargebee.models.StripeToken
+import androidx.lifecycle.viewModelScope
+import com.test.chargebee.TokenHandler
+import com.test.chargebee.models.CBCard
+import com.test.chargebee.models.CBPaymentDetail
+import com.test.chargebee.models.CBPaymentMethodType
+import kotlinx.coroutines.launch
 
 class TokenViewModel : ViewModel() {
     fun createToken() {
-//        val handler: (CBMerchantPaymentConfig?) -> Unit =
-//            { res ->
-//                Log.d("message", "final response")
-//                Log.d("message", res.toString())
-//                Log.d("message", "------------res?.getConfig()")
-//                Log.d("message", res?.getPaymentProviderConfig("USD", CBPaymentType.CARD).toString())
-//            }
-//
-//        TokenHandler(handler).retrieveConfig()
-        val handler: (StripeToken?) -> Unit =
-            { res ->
-                Log.d("message", "final response")
-                Log.d("message", res.toString())
+        viewModelScope.launch {
+            val card = CBCard("4242424242424242", "09", "29", "123")
+            val paymentDetail = CBPaymentDetail("USD", CBPaymentMethodType.CARD, card)
+            TokenHandler().tokenize(paymentDetail) {
+                Log.d("message", "-=-=-=-")
+                Log.d("message", it!!)
             }
-
-        StripeHandler(handler).createToken()
+        }
     }
 }

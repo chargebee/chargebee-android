@@ -10,7 +10,7 @@ interface StripeService {
     @FormUrlEncoded
     @POST("tokens")
     fun createToken(
-        @Header("Authorization") merchantKey: String = "Bearer pk_test_F97JzyrPUIFE5KSlCxBj8Eq000LP8an6pJ",
+        @Header("Authorization") bearerToken: String,
         @FieldMap body: Map<String, String>
     ): Call<StripeToken?>?
 }
