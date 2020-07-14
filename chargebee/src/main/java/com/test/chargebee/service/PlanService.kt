@@ -10,13 +10,9 @@ import retrofit2.http.Path
 
 interface PlanService {
 
-    @GET("plans/{planId}")
+    @GET("v2/plans/{planId}")
     fun retrievePlan(
-        @Header("Authorization") token: String = getTokenValue(),
+        @Header("Authorization") token: String = CBEnvironment.encodedApiKey,
         @Path("planId") planId: String
     ): Call<PlanWrapper?>?
-}
-
-fun getTokenValue(): String {
-    return Credentials.basic(CBEnvironment.apiKey, "")
 }

@@ -12,8 +12,9 @@ class MainActivity : AppCompatActivity() {
 
         Log.d("message", "Another message")
         CBEnvironment.configure(site = "test-ashwin1-test", apiKey = "test_1PDU9iynvhEcPMgWAJ0QZw90d2Aw92ah")
-        PlanViewModel().retrievePlan()
-        AddonViewModel().retrieveAddon()
-        AddonViewModel().retrieveAddon()
+//        PlanViewModel().retrievePlan()
+//        AddonViewModel().retrieveAddon()
+//        AddonViewModel().retrieveAddon()
+        TokenViewModel().createToken()
     }
 }

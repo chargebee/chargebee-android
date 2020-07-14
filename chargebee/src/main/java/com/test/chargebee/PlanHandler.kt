@@ -14,7 +14,7 @@ class PlanHandler(val handler: (Plan?) -> Unit) : Callback<PlanWrapper?>  {
 
     public fun retrievePlan(planId: String) {
         val retrofit = Retrofit.Builder()
-            .baseUrl("https://${CBEnvironment.site}.chargebee.com/api/v2/")
+            .baseUrl(CBEnvironment.baseUrl)
             .addConverterFactory(GsonConverterFactory.create())
             .build()
 

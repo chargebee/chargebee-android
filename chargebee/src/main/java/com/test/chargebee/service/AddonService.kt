@@ -1,5 +1,6 @@
 package com.test.chargebee.service
 
+import com.test.chargebee.CBEnvironment
 import com.test.chargebee.models.AddonWrapper
 import retrofit2.Call
 import retrofit2.http.GET
@@ -8,9 +9,9 @@ import retrofit2.http.Path
 
 interface AddonService {
 
-    @GET("addons/{addonId}")
+    @GET("v2/addons/{addonId}")
     fun retrieveAddon(
-        @Header("Authorization") token: String = getTokenValue(),
+        @Header("Authorization") token: String = CBEnvironment.encodedApiKey,
         @Path("addonId") addonId: String
     ): Call<AddonWrapper?>?
 }
