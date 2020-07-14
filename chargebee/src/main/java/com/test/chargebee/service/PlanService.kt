@@ -11,8 +11,8 @@ import retrofit2.http.Path
 interface PlanService {
 
     @GET("v2/plans/{planId}")
-    fun retrievePlan(
+    suspend fun retrievePlan(
         @Header("Authorization") token: String = CBEnvironment.encodedApiKey,
         @Path("planId") planId: String
-    ): Call<PlanWrapper?>?
+    ): PlanWrapper?
 }
