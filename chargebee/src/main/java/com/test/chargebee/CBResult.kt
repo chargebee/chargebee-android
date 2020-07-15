@@ -26,7 +26,7 @@ internal class Failure<T>(private val exception:CBException? = null, private val
         }
         val commonError = error?.toCBError(statusCode) ?: CBErrorDetail("")
         when {
-            error is CBInternalErrorWrapper && statusCode in 400..499 -> throw InvalidRequestException(commonError)
+            (error is CBInternalErrorWrapper || error is CBErrorDetail) && statusCode in 400..499 -> throw InvalidRequestException(commonError)
             error is StripeErrorDetailWrapper -> throw PaymentException(commonError)
             else -> throw OperationFailedException(commonError)
         }
