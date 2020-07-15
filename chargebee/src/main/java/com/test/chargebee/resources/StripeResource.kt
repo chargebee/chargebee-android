@@ -1,5 +1,8 @@
-package com.test.chargebee
+package com.test.chargebee.resources
 
+import com.test.chargebee.CBResult
+import com.test.chargebee.StripeErrorDetailWrapper
+import com.test.chargebee.fromResponse
 import com.test.chargebee.models.CBGatewayDetail
 import com.test.chargebee.models.CBPaymentDetail
 import com.test.chargebee.models.StripeCard
@@ -14,7 +17,10 @@ internal class StripeResource() : BaseResource("https://api.stripe.com/v1/") {
 
         val gatewayToken = apiClient.create(StripeRepository::class.java)
             .createToken(bearerToken, card.toFormBody())
-        return fromResponse(gatewayToken, StripeErrorDetailWrapper::class.java)
+        return fromResponse(
+            gatewayToken,
+            StripeErrorDetailWrapper::class.java
+        )
     }
 
 }

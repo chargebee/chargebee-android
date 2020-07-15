@@ -1,5 +1,8 @@
-package com.test.chargebee
+package com.test.chargebee.resources
 
+import com.test.chargebee.CBEnvironment
+import com.test.chargebee.CBErrorDetail
+import com.test.chargebee.fromResponse
 import com.test.chargebee.models.CBPaymentMethodType
 import com.test.chargebee.service.TokenService
 
@@ -12,7 +15,10 @@ internal class TempTokenResource : BaseResource(CBEnvironment.baseUrl) {
             gatewayToken = gatewayToken,
             paymentMethodType = paymentMethod.displayName
         )
-        val result = fromResponse(createTempToken, CBErrorDetail::class.java)
+        val result = fromResponse(
+            createTempToken,
+            CBErrorDetail::class.java
+        )
         return result.getData().token.id
     }
 }

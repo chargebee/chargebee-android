@@ -1,4 +1,4 @@
-package com.test.chargebee
+package com.test.chargebee.resources
 
 import com.google.gson.FieldNamingPolicy
 import com.google.gson.Gson
