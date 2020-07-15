@@ -16,7 +16,7 @@ class MainActivity : AppCompatActivity() {
 
         Log.d("message", "Another message")
         PlanViewModel().retrievePlan()
-        AddonViewModel().retrieveAddon()
-        viewModel.createToken()
+//        AddonViewModel().retrieveAddon()
+//        viewModel.createToken()
     }
 }

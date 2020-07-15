@@ -1,16 +1,18 @@
 package com.test.chargebee.service
 
-import com.test.chargebee.models.StripeCard
 import com.test.chargebee.models.StripeToken
-import retrofit2.Call
-import retrofit2.http.*
+import retrofit2.Response
+import retrofit2.http.FieldMap
+import retrofit2.http.FormUrlEncoded
+import retrofit2.http.Header
+import retrofit2.http.POST
 
 interface StripeService {
 
     @FormUrlEncoded
     @POST("tokens")
-    fun createToken(
+    suspend fun createToken(
         @Header("Authorization") bearerToken: String,
         @FieldMap body: Map<String, String>
-    ): Call<StripeToken?>?
+    ): Response<StripeToken?>
 }

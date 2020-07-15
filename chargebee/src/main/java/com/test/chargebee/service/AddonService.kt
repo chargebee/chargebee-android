@@ -2,7 +2,7 @@ package com.test.chargebee.service
 
 import com.test.chargebee.CBEnvironment
 import com.test.chargebee.models.AddonWrapper
-import retrofit2.Call
+import retrofit2.Response
 import retrofit2.http.GET
 import retrofit2.http.Header
 import retrofit2.http.Path
@@ -10,8 +10,8 @@ import retrofit2.http.Path
 interface AddonService {
 
     @GET("v2/addons/{addonId}")
-    fun retrieveAddon(
+    suspend fun retrieveAddon(
         @Header("Authorization") token: String = CBEnvironment.encodedApiKey,
         @Path("addonId") addonId: String
-    ): Call<AddonWrapper?>?
+    ): Response<AddonWrapper?>
 }

@@ -2,8 +2,7 @@ package com.test.chargebee.service
 
 import com.test.chargebee.CBEnvironment
 import com.test.chargebee.models.PlanWrapper
-import okhttp3.Credentials
-import retrofit2.Call
+import retrofit2.Response
 import retrofit2.http.GET
 import retrofit2.http.Header
 import retrofit2.http.Path
@@ -14,5 +13,5 @@ interface PlanService {
     suspend fun retrievePlan(
         @Header("Authorization") token: String = CBEnvironment.encodedApiKey,
         @Path("planId") planId: String
-    ): PlanWrapper?
+    ): Response<PlanWrapper?>
 }
