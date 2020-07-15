@@ -17,7 +17,6 @@ class TokenHandler {
                 val gatewayToken = GatewayTokenizer().createToken(detail, paymentConfig)
                 val cbTempToken = TempTokenResource()
                     .create(gatewayToken, detail.type, paymentConfig.gatewayId)
-
                 completion(Success(cbTempToken))
             } catch (ex: CBException) {
                 completion(Failure(ex))

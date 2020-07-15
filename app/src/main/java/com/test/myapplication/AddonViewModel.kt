@@ -23,8 +23,8 @@ class AddonViewModel: ViewModel() {
                 addonResult.postValue(data)
                 Log.d("success", data.toString())
             } catch (ex: CBException) {
-                Log.d("error", ex.error.toString());
-                addonError.postValue(ex.error.message)
+                Log.d("error", ex.toString());
+                addonError.postValue(ex.message)
             }
         }
     }

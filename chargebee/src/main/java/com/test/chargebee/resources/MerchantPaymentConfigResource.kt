@@ -4,21 +4,20 @@ import com.test.chargebee.CBEnvironment
 import com.test.chargebee.CBErrorDetail
 import com.test.chargebee.CBInternalErrorWrapper
 import com.test.chargebee.exceptions.CBException
+import com.test.chargebee.exceptions.InvalidRequestException
 import com.test.chargebee.fromResponse
 import com.test.chargebee.models.CBGatewayDetail
 import com.test.chargebee.models.CBMerchantPaymentConfig
 import com.test.chargebee.models.CBPaymentMethodType
 import com.test.chargebee.repository.MerchantPaymentConfigRepository
 
-internal class MerchantPaymentConfigResource : BaseResource(CBEnvironment.baseUrl) {
+internal class MerchantPaymentConfigResource: BaseResource(CBEnvironment.baseUrl) {
 
     suspend fun retrieve(currencyCode: String, paymentType: CBPaymentMethodType): CBGatewayDetail {
         val merchantPaymentConfig = retrieveConfig()
         return merchantPaymentConfig.getPaymentProviderConfig(currencyCode, paymentType)
-            ?: throw CBException(
-                CBErrorDetail(
-                    "Unable to retrieve gateway info for given payment details"
-                )
+            ?: throw InvalidRequestException(
+                CBErrorDetail("Unable to retrieve gateway info for given payment details")
             )
     }
 

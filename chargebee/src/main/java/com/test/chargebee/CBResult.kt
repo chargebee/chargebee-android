@@ -2,6 +2,7 @@ package com.test.chargebee
 
 import com.google.gson.FieldNamingPolicy
 import com.google.gson.GsonBuilder
+import com.test.chargebee.exceptions.CBException
 import com.test.chargebee.exceptions.InvalidRequestException
 import com.test.chargebee.exceptions.OperationFailedException
 import com.test.chargebee.exceptions.PaymentException

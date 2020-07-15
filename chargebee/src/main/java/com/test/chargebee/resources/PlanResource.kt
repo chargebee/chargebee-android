@@ -1,6 +1,7 @@
 package com.test.chargebee.resources
 
 import com.test.chargebee.*
+import com.test.chargebee.exceptions.CBException
 import com.test.chargebee.models.Plan
 import com.test.chargebee.repository.PlanRepository
 

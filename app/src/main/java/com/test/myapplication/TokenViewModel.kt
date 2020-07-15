@@ -5,6 +5,9 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.test.chargebee.TokenHandler
 import com.test.chargebee.exceptions.CBException
+import com.test.chargebee.exceptions.InvalidRequestException
+import com.test.chargebee.exceptions.OperationFailedException
+import com.test.chargebee.exceptions.PaymentException
 import com.test.chargebee.models.CBPaymentDetail
 
 class TokenViewModel : ViewModel() {
@@ -18,9 +21,15 @@ class TokenViewModel : ViewModel() {
                 val cbTempToken = it.getData()
                 Log.d("success", cbTempToken)
                 result.postValue(cbTempToken)
-            } catch (ex: CBException) {
-                Log.d("error", ex.error.toString())
-                result.postValue(ex.error.message)
+            } catch (ex: PaymentException) {
+                Log.d("error payment", ex.toString())
+                result.postValue(ex.message)
+            } catch (ex: InvalidRequestException) {
+                Log.d("error invalid", ex.toString())
+                result.postValue(ex.message)
+            } catch (ex: OperationFailedException) {
+                Log.d("error operation", ex.toString())
+                result.postValue(ex.message)
             }
         }
     }

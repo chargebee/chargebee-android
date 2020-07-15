@@ -21,8 +21,8 @@ class PlanViewModel extends ViewModel {
                 Log.d("success", data.toString());
                 planResult.postValue(data);
             } catch (CBException ex) {
-                Log.d("error", ex.getError().getMessage());
-                planError.postValue(ex.getError().getMessage());
+                Log.d("error", ex.toString());
+                planError.postValue(ex.getMessage());
             }
             return null;
         });

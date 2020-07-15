@@ -38,6 +38,4 @@ internal data class CBInternalErrorWrapper(val errors: Array<CBInternalErrorDeta
     }
 }
 
-
 internal data class CBInternalErrorDetail(val message: String)
-
