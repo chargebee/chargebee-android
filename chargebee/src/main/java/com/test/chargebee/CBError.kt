@@ -1,7 +1,7 @@
 package com.test.chargebee;
 
 internal interface CBError {
-    fun convertCommonError(statusCode: Int): CBErrorDetail
+    fun toCBError(statusCode: Int): CBErrorDetail
 }
 
 data class CBErrorDetail(
@@ -11,7 +11,7 @@ data class CBErrorDetail(
     val param: String? = null,
     val httpStatusCode: Int? = null
 ) : CBError {
-    override fun convertCommonError(statusCode: Int): CBErrorDetail {
+    override fun toCBError(statusCode: Int): CBErrorDetail {
         return this
     }
 }
@@ -19,7 +19,7 @@ data class CBErrorDetail(
 internal data class StripeErrorDetailWrapper(
     val error: StripeErrorDetail
 ) : CBError {
-    override fun convertCommonError(statusCode: Int): CBErrorDetail {
+    override fun toCBError(statusCode: Int): CBErrorDetail {
         return CBErrorDetail(error.message, error.type, error.code, error.param, statusCode)
     }
 }
@@ -32,7 +32,7 @@ internal data class StripeErrorDetail(
 )
 
 internal data class CBInternalErrorWrapper(val errors: Array<CBInternalErrorDetail>): CBError {
-    override fun convertCommonError(statusCode: Int): CBErrorDetail {
+    override fun toCBError(statusCode: Int): CBErrorDetail {
         val message = errors.getOrNull(0)?.message ?: ""
         return CBErrorDetail(message, httpStatusCode=statusCode)
     }
@@ -40,6 +40,4 @@ internal data class CBInternalErrorWrapper(val errors: Array<CBInternalErrorDeta
 
 
 internal data class CBInternalErrorDetail(val message: String)
-
-open class CBException(val error: CBErrorDetail) : RuntimeException()
 

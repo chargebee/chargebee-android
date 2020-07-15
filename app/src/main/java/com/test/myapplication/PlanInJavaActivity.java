@@ -3,15 +3,9 @@ package com.test.myapplication;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.os.Bundle;
-import android.util.Log;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
-
-import com.test.chargebee.CBException;
-import com.test.chargebee.PlanHandler;
-import com.test.chargebee.models.Plan;
-import com.test.chargebee.models.PlanWrapper;
 
 public class PlanInJavaActivity extends AppCompatActivity {
 
@@ -36,17 +30,16 @@ public class PlanInJavaActivity extends AppCompatActivity {
 
         this.viewModel = new PlanViewModel();
 
-        this.viewModel.getPlanResult().observe(this, plan -> {
+        this.viewModel.planResult.observe(this, plan -> {
             planName.setText(plan.getName());
-            planPricingText.setText(plan.getPricing_model());
+            planPricingText.setText(plan.getPricingModel());
         });
 
-        this.viewModel.getPlanError().observe(this, message -> {
+        this.viewModel.planError.observe(this, message -> {
             errorText.setText(message);
         });
         this.planButton.setOnClickListener(view -> {
             this.viewModel.retrievePlan(planIdInput.getText().toString());
         });
     }
-
 }

@@ -1,5 +1,6 @@
 package com.test.chargebee
 
+import com.test.chargebee.exceptions.CBException
 import com.test.chargebee.models.CBPaymentDetail
 import com.test.chargebee.resources.MerchantPaymentConfigResource
 import com.test.chargebee.resources.TempTokenResource

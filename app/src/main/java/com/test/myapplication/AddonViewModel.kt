@@ -4,7 +4,7 @@ import android.util.Log
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.test.chargebee.AddonHandler
-import com.test.chargebee.CBException
+import com.test.chargebee.exceptions.CBException
 import com.test.chargebee.models.Addon
 
 class AddonViewModel: ViewModel() {
@@ -21,12 +21,9 @@ class AddonViewModel: ViewModel() {
             try {
                 val data = result.getData()
                 addonResult.postValue(data)
-                Log.d("message", "SUCCESS");
-                Log.d("message", data.toString())
+                Log.d("success", data.toString())
             } catch (ex: CBException) {
-                Log.d("message", "ERROR");
-                Log.d("message", ex.toString());
-                Log.d("message", ex.error.toString());
+                Log.d("error", ex.error.toString());
                 addonError.postValue(ex.error.message)
             }
         }

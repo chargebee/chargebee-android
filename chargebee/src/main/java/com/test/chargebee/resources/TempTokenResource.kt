@@ -4,12 +4,12 @@ import com.test.chargebee.CBEnvironment
 import com.test.chargebee.CBErrorDetail
 import com.test.chargebee.fromResponse
 import com.test.chargebee.models.CBPaymentMethodType
-import com.test.chargebee.service.TokenService
+import com.test.chargebee.repository.TokenRepository
 
 internal class TempTokenResource : BaseResource(CBEnvironment.baseUrl) {
 
     suspend fun create(gatewayToken: String, paymentMethod: CBPaymentMethodType, gatewayId: String ): String {
-        val service = apiClient.create(TokenService::class.java)
+        val service = apiClient.create(TokenRepository::class.java)
         val createTempToken = service.create(
             gatewayId = gatewayId,
             gatewayToken = gatewayToken,

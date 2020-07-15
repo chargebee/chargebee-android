@@ -1,4 +1,4 @@
-package com.test.chargebee.service
+package com.test.chargebee.repository
 
 import com.test.chargebee.CBEnvironment
 import com.test.chargebee.models.PlanWrapper
@@ -7,7 +7,7 @@ import retrofit2.http.GET
 import retrofit2.http.Header
 import retrofit2.http.Path
 
-interface PlanService {
+internal interface PlanRepository {
 
     @GET("v2/plans/{planId}")
     suspend fun retrievePlan(

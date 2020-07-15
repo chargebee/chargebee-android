@@ -1,4 +1,4 @@
-package com.test.chargebee.service
+package com.test.chargebee.repository
 
 import com.test.chargebee.CBEnvironment
 import com.test.chargebee.models.CBMerchantPaymentConfig
@@ -7,7 +7,7 @@ import retrofit2.http.GET
 import retrofit2.http.Header
 import retrofit2.http.Headers
 
-internal interface MerchantPaymentConfigService {
+internal interface MerchantPaymentConfigRepository {
 
     @Headers("X-Requested-With: XMLHttpRequest")
     @GET("internal/component/retrieve_config")

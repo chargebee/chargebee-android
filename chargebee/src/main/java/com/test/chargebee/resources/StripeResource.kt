@@ -7,7 +7,7 @@ import com.test.chargebee.models.CBGatewayDetail
 import com.test.chargebee.models.CBPaymentDetail
 import com.test.chargebee.models.StripeCard
 import com.test.chargebee.models.StripeToken
-import com.test.chargebee.service.StripeRepository
+import com.test.chargebee.repository.StripeRepository
 
 internal class StripeResource() : BaseResource("https://api.stripe.com/v1/") {
 

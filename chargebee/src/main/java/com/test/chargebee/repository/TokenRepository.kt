@@ -1,4 +1,4 @@
-package com.test.chargebee.service
+package com.test.chargebee.repository
 
 import com.test.chargebee.CBEnvironment
 import com.test.chargebee.models.CBTokenWrapper
@@ -8,7 +8,7 @@ import retrofit2.http.FormUrlEncoded
 import retrofit2.http.Header
 import retrofit2.http.POST
 
-interface TokenService {
+internal interface TokenRepository {
 
     @FormUrlEncoded
     @POST("v2/tokens/create_using_temp_token")

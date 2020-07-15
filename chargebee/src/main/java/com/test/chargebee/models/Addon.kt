@@ -1,6 +1,6 @@
 package com.test.chargebee.models
 
-public data class Addon(
+data class Addon(
     val id: String,
     val name: String,
     val invoiceName: String,
@@ -22,4 +22,4 @@ public data class Addon(
     val showDescriptionInQuotes: Boolean
 )
 
-data class AddonWrapper(val addon: Addon)
+internal data class AddonWrapper(val addon: Addon)

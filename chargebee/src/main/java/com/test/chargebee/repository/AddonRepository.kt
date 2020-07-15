@@ -1,4 +1,4 @@
-package com.test.chargebee.service
+package com.test.chargebee.repository
 
 import com.test.chargebee.CBEnvironment
 import com.test.chargebee.models.AddonWrapper
@@ -7,7 +7,7 @@ import retrofit2.http.GET
 import retrofit2.http.Header
 import retrofit2.http.Path
 
-interface AddonService {
+internal interface AddonRepository {
 
     @GET("v2/addons/{addonId}")
     suspend fun retrieveAddon(
