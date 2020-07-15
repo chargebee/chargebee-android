@@ -1,7 +1,7 @@
 package com.test.chargebee.repository
 
 import com.test.chargebee.CBEnvironment
-import com.test.chargebee.models.CBTokenWrapper
+import com.test.chargebee.models.TokenWrapper
 import retrofit2.Response
 import retrofit2.http.Field
 import retrofit2.http.FormUrlEncoded
@@ -17,5 +17,5 @@ internal interface TokenRepository {
         @Field("id_at_vault") gatewayToken: String,
         @Field("payment_method_type") paymentMethodType: String,
         @Field("gateway_account_id") gatewayId: String
-    ): Response<CBTokenWrapper?>
+    ): Response<TokenWrapper?>
 }

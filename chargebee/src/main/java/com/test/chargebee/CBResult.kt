@@ -6,6 +6,7 @@ import com.test.chargebee.exceptions.CBException
 import com.test.chargebee.exceptions.InvalidRequestException
 import com.test.chargebee.exceptions.OperationFailedException
 import com.test.chargebee.exceptions.PaymentException
+import com.test.chargebee.gateway.stripe.StripeError
 import retrofit2.Response
 
 interface CBResult<T> {
@@ -28,7 +29,7 @@ internal class Failure<T>(private val exception:CBException? = null, private val
         val commonError = error?.toCBError(statusCode) ?: CBErrorDetail("")
         when {
             (error is CBInternalErrorWrapper || error is CBErrorDetail) && statusCode in 400..499 -> throw InvalidRequestException(commonError)
-            error is StripeErrorDetailWrapper -> throw PaymentException(commonError)
+            error is StripeError -> throw PaymentException(commonError)
             else -> throw OperationFailedException(commonError)
         }
     }

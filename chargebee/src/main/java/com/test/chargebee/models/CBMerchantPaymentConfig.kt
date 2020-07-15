@@ -28,7 +28,7 @@ internal data class PaymentConfigs(
     val pmList: Array<PaymentMethod>
 )
 
-data class PaymentMethod(
+internal data class PaymentMethod(
     val type: String,
     val id: String,
     val gatewayName: String,
@@ -36,10 +36,10 @@ data class PaymentMethod(
     val tokenizationConfig: TokenizationConfig
 )
 
-data class TokenizationConfig(
+internal data class TokenizationConfig(
     @SerializedName("STRIPE") val STRIPE: PaymentProviderConfig
 )
 
-data class PaymentProviderConfig(
+internal data class PaymentProviderConfig(
     val clientId: String
 )

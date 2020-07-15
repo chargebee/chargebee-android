@@ -1,11 +1,8 @@
-package com.test.chargebee.models
+package com.test.chargebee.gateway.stripe
 
-data class StripeToken(
-    val id: String,
-    val type: String
-)
+import com.test.chargebee.models.CBCard
 
-data class StripeCard(
+internal data class StripeCard(
     val number: String,
     val expMonth: String,
     val expYear: String,

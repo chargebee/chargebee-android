@@ -1,12 +1,12 @@
 package com.test.chargebee.resources
 
 import com.test.chargebee.CBResult
-import com.test.chargebee.StripeErrorDetailWrapper
 import com.test.chargebee.fromResponse
+import com.test.chargebee.gateway.stripe.StripeCard
+import com.test.chargebee.gateway.stripe.StripeError
+import com.test.chargebee.gateway.stripe.StripeToken
 import com.test.chargebee.models.CBGatewayDetail
 import com.test.chargebee.models.CBPaymentDetail
-import com.test.chargebee.models.StripeCard
-import com.test.chargebee.models.StripeToken
 import com.test.chargebee.repository.StripeRepository
 
 internal class StripeResource() : BaseResource("https://api.stripe.com/v1/") {
@@ -19,7 +19,7 @@ internal class StripeResource() : BaseResource("https://api.stripe.com/v1/") {
             .createToken(bearerToken, card.toFormBody())
         return fromResponse(
             gatewayToken,
-            StripeErrorDetailWrapper::class.java
+            StripeError::class.java
         )
     }
 

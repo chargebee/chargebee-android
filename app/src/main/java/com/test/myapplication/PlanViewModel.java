@@ -5,7 +5,6 @@ import android.util.Log;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 
-import com.test.chargebee.PlanHandler;
 import com.test.chargebee.exceptions.CBException;
 import com.test.chargebee.models.Plan;
 
@@ -15,7 +14,7 @@ class PlanViewModel extends ViewModel {
     MutableLiveData<String> planError = new MutableLiveData();
 
     void retrievePlan(String planId) {
-        new PlanHandler().retrieve(planId, plan -> {
+        Plan.retrieve(planId, plan -> {
             try {
                 Plan data = plan.getData();
                 Log.d("success", data.toString());

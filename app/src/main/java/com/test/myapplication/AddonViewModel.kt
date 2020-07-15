@@ -3,7 +3,6 @@ package com.test.myapplication
 import android.util.Log
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
-import com.test.chargebee.AddonHandler
 import com.test.chargebee.exceptions.CBException
 import com.test.chargebee.models.Addon
 
@@ -16,8 +15,7 @@ class AddonViewModel: ViewModel() {
         MutableLiveData<String>()
     }
     fun retrieveAddon(addonId: String) {
-        val addonHandler = AddonHandler()
-        addonHandler.retrieve(addonId) { result ->
+        Addon.retrieve(addonId) { result ->
             try {
                 val data = result.getData()
                 addonResult.postValue(data)

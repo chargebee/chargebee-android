@@ -16,21 +16,6 @@ data class CBErrorDetail(
     }
 }
 
-internal data class StripeErrorDetailWrapper(
-    val error: StripeErrorDetail
-) : CBError {
-    override fun toCBError(statusCode: Int): CBErrorDetail {
-        return CBErrorDetail(error.message, error.type, error.code, error.param, statusCode)
-    }
-}
-
-internal data class StripeErrorDetail(
-    val message: String,
-    val code: String? = null,
-    val param: String? = null,
-    val type: String? = null
-)
-
 internal data class CBInternalErrorWrapper(val errors: Array<CBInternalErrorDetail>): CBError {
     override fun toCBError(statusCode: Int): CBErrorDetail {
         val message = errors.getOrNull(0)?.message ?: ""

@@ -1,6 +1,6 @@
 package com.test.chargebee.repository
 
-import com.test.chargebee.models.StripeToken
+import com.test.chargebee.gateway.stripe.StripeToken
 import retrofit2.Response
 import retrofit2.http.FieldMap
 import retrofit2.http.FormUrlEncoded

@@ -1,4 +1,4 @@
-package com.test.chargebee
+package com.test.chargebee.gateway
 
 import com.test.chargebee.models.CBGatewayDetail
 import com.test.chargebee.models.CBPaymentDetail

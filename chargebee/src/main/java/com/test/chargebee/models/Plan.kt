@@ -1,5 +1,13 @@
 package com.test.chargebee.models
 
+import com.test.chargebee.CBResult
+import com.test.chargebee.exceptions.InvalidRequestException
+import com.test.chargebee.exceptions.OperationFailedException
+import com.test.chargebee.resources.PlanResource
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+
 data class Plan(
     val id: String,
     val name: String,
@@ -24,6 +32,17 @@ data class Plan(
     val currencyCode: String,
     val showDescriptionInInvoices: Boolean,
     val showDescriptionInQuotes: Boolean
-)
+) {
+    companion object {
+        @JvmStatic
+        @Throws(InvalidRequestException::class, OperationFailedException::class)
+        fun retrieve(planId: String, handler: (CBResult<Plan>) -> Unit) {
+            CoroutineScope(Dispatchers.IO).launch {
+                val planResult = PlanResource().retrieve(planId)
+                handler(planResult)
+            }
+        }
+    }
+}
 
 internal data class PlanWrapper(val plan: Plan)
