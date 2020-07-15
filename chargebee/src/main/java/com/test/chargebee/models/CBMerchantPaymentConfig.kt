@@ -2,15 +2,6 @@ package com.test.chargebee.models
 
 import com.google.gson.annotations.SerializedName
 
-enum class CBPaymentMethodType(val displayName: String) {
-    CARD("card")
-}
-
-internal data class CBGatewayDetail(
-    val clientId: String,
-    val gatewayId: String
-)
-
 internal class CBMerchantPaymentConfig(
     val apmConfig: Map<String, PaymentConfigs>,
     val currencyList: Array<String>,
@@ -27,6 +18,11 @@ internal class CBMerchantPaymentConfig(
         )
     }
 }
+
+internal data class CBGatewayDetail(
+    val clientId: String,
+    val gatewayId: String
+)
 
 internal data class PaymentConfigs(
     val pmList: Array<PaymentMethod>

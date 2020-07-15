@@ -7,7 +7,7 @@ import retrofit2.http.FormUrlEncoded
 import retrofit2.http.Header
 import retrofit2.http.POST
 
-interface StripeService {
+interface StripeRepository {
 
     @FormUrlEncoded
     @POST("tokens")
