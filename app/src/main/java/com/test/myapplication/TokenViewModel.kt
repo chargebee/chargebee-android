@@ -1,31 +1,43 @@
 package com.test.myapplication
 
 import android.util.Log
+import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
 import com.test.chargebee.CBException
 import com.test.chargebee.TokenHandler
-import com.test.chargebee.models.CBCard
 import com.test.chargebee.models.CBPaymentDetail
-import com.test.chargebee.models.CBPaymentMethodType
-import kotlinx.coroutines.launch
 
 class TokenViewModel : ViewModel() {
-    fun createToken() {
-        viewModelScope.launch {
-            val card = CBCard("4242424242424242", "09", "29", "123")
-            val paymentDetail = CBPaymentDetail("USD", CBPaymentMethodType.CARD, card)
-            TokenHandler().tokenize(paymentDetail) {
-                try {
-                    val cbTempToken = it.getData()
-                    Log.d("message", "-=-=-=-")
-                    Log.d("message", cbTempToken)
-                } catch (ex: CBException) {
-                    Log.d("message", "-=-=-=-")
-                    Log.d("message", ex.toString())
-                    Log.d("message", ex.error.toString())
-                }
+    val result: MutableLiveData<String> by lazy {
+        MutableLiveData<String>()
+    }
+
+    var temp: String = ""
+
+    fun create(paymentDetail: CBPaymentDetail) {
+        val setter = { res: String ->
+            Log.d("another", res)
+            Log.d("another", "messy here")
+            Log.d("another", temp)
+//            result.value = res
+            Log.d("another", "ronaldo")
+        }
+        result.value = "Another Value"
+//        viewModelScope.launch {
+        Log.d("another", "before call")
+        TokenHandler().tokenize(paymentDetail) {
+            try {
+                Log.d("another", "First")
+                val cbTempToken = it.getData()
+                Log.d("another", cbTempToken)
+                temp = cbTempToken
+                setter(cbTempToken)
+//                    result.value = cbTempToken
+            } catch (ex: CBException) {
+                Log.d("another", "-=-=-=-")
+                Log.d("another", ex.toString())
             }
         }
+//        }
     }
 }

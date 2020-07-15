@@ -15,9 +15,21 @@ public class PlanInJavaActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_plan_in_java);
-        new PlanViewModel().retrievePlan();
-        new TokenViewModel().createToken();
-        new AddonViewModel().retrieveAddon();
+//        new PlanViewModel().retrievePlan();
+//        new TokenViewModel().createToken();
+//        new AddonViewModel().retrieveAddon();
+        PlanHandler planHandler = new PlanHandler();
+        planHandler.retrieve("cb-demo-no-trial", (result) -> {
+            try {
+                PlanWrapper data = result.getData();
+                Log.d("message", "SUCCESS");
+                Log.d("message", data.toString());
+            } catch (CBException ex) {
+                Log.d("message", "ERROR");
+                Log.d("message", ex.toString());
+            }
+            return null;
+        });
     }
 
 }

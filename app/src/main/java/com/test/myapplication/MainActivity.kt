@@ -1,22 +1,38 @@
 package com.test.myapplication
 
+import android.content.Intent
 import android.os.Bundle
-import android.util.Log
+import android.widget.Button
 import androidx.appcompat.app.AppCompatActivity
-import androidx.lifecycle.ViewModelProvider
 
 class MainActivity : AppCompatActivity() {
+    private var planBtn: Button? = null
+    private var addonBtn: Button? = null
+    private var tokenizeBtn: Button? = null
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-        val viewModel = ViewModelProvider(
-            this,
-            ViewModelProvider.AndroidViewModelFactory(application)
-        )[TokenViewModel::class.java]
-
-        Log.d("message", "Another message")
-        PlanViewModel().retrievePlan()
-//        AddonViewModel().retrieveAddon()
-//        viewModel.createToken()
+        this.addonBtn = findViewById(R.id.addon_btn)
+        this.planBtn = findViewById(R.id.plan_btn)
+        this.tokenizeBtn = findViewById(R.id.tokenize_btn)
+        initializeListeners()
     }
+
+    private fun initializeListeners() {
+        this.addonBtn?.setOnClickListener {
+            val intent = Intent(this, PlanInJavaActivity::class.java)
+            startActivity(intent)
+        }
+        this.planBtn?.setOnClickListener {
+            val intent = Intent(this, PlanInJavaActivity::class.java)
+            startActivity(intent)
+        }
+        this.tokenizeBtn?.setOnClickListener {
+            val intent = Intent(this, TokenizeActivity::class.java)
+            startActivity(intent)
+        }
+    }
+
+
 }
