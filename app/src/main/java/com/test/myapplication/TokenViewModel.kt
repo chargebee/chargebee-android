@@ -12,32 +12,26 @@ class TokenViewModel : ViewModel() {
         MutableLiveData<String>()
     }
 
-    var temp: String = ""
-
     fun create(paymentDetail: CBPaymentDetail) {
         val setter = { res: String ->
             Log.d("another", res)
             Log.d("another", "messy here")
-            Log.d("another", temp)
-//            result.value = res
+            result.postValue(res)
             Log.d("another", "ronaldo")
         }
         result.value = "Another Value"
-//        viewModelScope.launch {
         Log.d("another", "before call")
         TokenHandler().tokenize(paymentDetail) {
             try {
                 Log.d("another", "First")
                 val cbTempToken = it.getData()
                 Log.d("another", cbTempToken)
-                temp = cbTempToken
                 setter(cbTempToken)
-//                    result.value = cbTempToken
             } catch (ex: CBException) {
                 Log.d("another", "-=-=-=-")
-                Log.d("another", ex.toString())
+                Log.d("another", ex.error.toString())
+                setter(ex.error.message)
             }
         }
-//        }
     }
 }

@@ -21,7 +21,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun initializeListeners() {
         this.addonBtn?.setOnClickListener {
-            val intent = Intent(this, PlanInJavaActivity::class.java)
+            val intent = Intent(this, AddonActivity::class.java)
             startActivity(intent)
         }
         this.planBtn?.setOnClickListener {
@@ -33,6 +33,4 @@ class MainActivity : AppCompatActivity() {
             startActivity(intent)
         }
     }
-
-
 }

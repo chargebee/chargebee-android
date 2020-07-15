@@ -1,6 +1,5 @@
 package com.test.myapplication
 
-import android.app.PendingIntent.getActivity
 import android.os.Bundle
 import android.util.Log
 import android.widget.Button
