@@ -22,6 +22,7 @@ class TokenViewModel : ViewModel() {
                     Log.d("message", cbTempToken)
                 } catch (ex: CBException) {
                     Log.d("message", "-=-=-=-")
+                    Log.d("message", ex.toString())
                     Log.d("message", ex.error.toString())
                 }
             }

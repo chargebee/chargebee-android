@@ -22,7 +22,6 @@ class TokenHandler {
                 val paymentProviderConfig =
                     merchantPaymentConfig.getPaymentProviderConfig(detail.currencyCode, detail.type)
                         ?: throw CBException(CBErrorDetail("Unable to retrieve gateway info for given payment details"))
-
                 val gatewayToken = retrieveGatewayToken(detail, paymentProviderConfig)
                 val cbTempToken = TempTokenHandler().createTempToken(
                     gatewayToken,
@@ -31,9 +30,9 @@ class TokenHandler {
                 )
                 completion(Success(cbTempToken))
             } catch (ex: CBException) {
-                completion(Failure(ex.error))
+                completion(Failure(ex))
             } catch( ex: Exception) {
-                completion(Failure(CBErrorDetail("Unknown Exception")))
+                completion(Failure(error=CBErrorDetail("Unknown Exception")))
             }
         }
     }
@@ -53,7 +52,7 @@ class TokenHandler {
             .build()
         val service = retrofit.create(MerchantPaymentConfigService::class.java)
         val paymentConfig = service.retrieveConfig()
-        val result = fromResponse(paymentConfig, CBErrorDetail::class.java)
+        val result = fromResponse(paymentConfig, CBInternalErrorWrapper::class.java)
         return result.getData()
     }
 }

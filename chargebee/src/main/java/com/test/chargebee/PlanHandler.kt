@@ -1,7 +1,11 @@
 package com.test.chargebee
 
+import android.util.Log
 import com.google.gson.FieldNamingPolicy
 import com.google.gson.GsonBuilder
+import com.test.chargebee.exceptions.InvalidRequestException
+import com.test.chargebee.exceptions.OperationFailedException
+import com.test.chargebee.exceptions.PaymentException
 import com.test.chargebee.models.PlanWrapper
 import com.test.chargebee.service.PlanService
 import kotlinx.coroutines.CoroutineScope
@@ -62,7 +66,18 @@ data class StripeErrorDetail(
     val type: String? = null
 )
 
-class CBException(val error: CBError) : RuntimeException() {
+data class CBInternalErrorWrapper(val errors: Array<CBInternalErrorDetail>): CBError {
+    override fun convertCommonError(statusCode: Int): CBErrorDetail {
+        val message = errors.getOrNull(0)?.message ?: ""
+        return CBErrorDetail(message, httpStatusCode=statusCode)
+    }
+}
+
+
+data class CBInternalErrorDetail(val message: String)
+
+
+open class CBException(val error: CBError) : RuntimeException() {
 
 }
 
@@ -78,10 +93,17 @@ class Success<T>(private val value: T) : CBResult<T> {
     }
 }
 
-class Failure<T>(private val error: CBError, private val statusCode: Int = 400) : CBResult<T> {
+class Failure<T>(private val exception:CBException? = null, private val error: CBError? = null, private val statusCode: Int = 400) : CBResult<T> {
     override fun getData(): T {
-        val commonError = error.convertCommonError(statusCode)
-        throw CBException(commonError)
+        if (exception != null) {
+            throw exception
+        }
+        val commonError = error?.convertCommonError(statusCode) ?: CBErrorDetail("")
+        when {
+            error is CBInternalErrorWrapper && statusCode in 400..499 -> throw InvalidRequestException(commonError)
+            error is StripeErrorDetailWrapper -> throw PaymentException(commonError)
+            else -> throw OperationFailedException(commonError)
+        }
     }
 }
 
@@ -91,7 +113,7 @@ fun <T, E : CBError> fromResponse(response: Response<T?>, type: Class<E>): CBRes
         if (value != null)
             return Success(value)
         // TODO: Fix message
-        return Failure(CBErrorDetail("Empty response"), 400)
+        return Failure(error=CBErrorDetail("Empty response"), statusCode = 400)
     }
     val errorBody = response.errorBody()
     val gson = GsonBuilder()
@@ -99,5 +121,5 @@ fun <T, E : CBError> fromResponse(response: Response<T?>, type: Class<E>): CBRes
         .create()
     val adapter = gson.getAdapter(type)
     val errorParser = adapter.fromJson(errorBody?.string())
-    return Failure(errorParser, response.code())
+    return Failure(error = errorParser, statusCode = response.code())
 }

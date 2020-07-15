@@ -15,6 +15,7 @@ class AddonViewModel: ViewModel() {
                 Log.d("message", data.toString())
             } catch (ex: CBException) {
                 Log.d("message", "ERROR");
+                Log.d("message", ex.toString());
                 Log.d("message", ex.error.toString());
             }
         }
