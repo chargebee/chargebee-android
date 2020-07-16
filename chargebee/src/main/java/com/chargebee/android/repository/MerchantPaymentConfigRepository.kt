@@ -12,6 +12,6 @@ internal interface MerchantPaymentConfigRepository {
     @Headers("X-Requested-With: XMLHttpRequest")
     @GET("internal/component/retrieve_config")
     suspend fun retrieveConfig(
-        @Header("Authorization") token: String = "Basic ${Chargebee.apiKey}"
+        @Header("Authorization") token: String = "Basic ${Chargebee.publishableApiKey}"
     ): Response<MerchantPaymentConfig?>
 }

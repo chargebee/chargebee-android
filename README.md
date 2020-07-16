@@ -16,7 +16,7 @@ To use the Chargebee Android SDK, you must initialize it with your Chargebee Sit
 ```kotlin
 import com.chargebee.android.Chargebee
 
-Chargebee.configure(site = "site-code", apiKey = "api_key")
+Chargebee.configure(site = "site-code", publishableApiKey = "api_key")
 ```
 
 ### Get Plan Details

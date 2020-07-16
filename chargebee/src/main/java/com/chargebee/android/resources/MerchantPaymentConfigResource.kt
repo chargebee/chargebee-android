@@ -16,7 +16,7 @@ internal class MerchantPaymentConfigResource: BaseResource(Chargebee.baseUrl) {
         val merchantPaymentConfig = retrieveConfig()
         return merchantPaymentConfig.getPaymentProviderConfig(currencyCode, paymentType)
             ?: throw InvalidRequestException(
-                ErrorDetail("Unable to retrieve gateway info for given payment details")
+                ErrorDetail("Currency/gateway not yet supported in the SDK")
             )
     }
 

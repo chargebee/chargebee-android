@@ -4,14 +4,14 @@ import okhttp3.Credentials
 
 object Chargebee {
     var site: String = ""
-    var apiKey: String = ""
+    var publishableApiKey: String = ""
     var encodedApiKey: String = ""
     var baseUrl: String = ""
 
-    fun configure(site: String, apiKey: String) {
-        this.apiKey = apiKey
+    fun configure(site: String, publishableApiKey: String) {
+        this.publishableApiKey = publishableApiKey
         this.site = site
-        this.encodedApiKey = Credentials.basic(apiKey, "")
+        this.encodedApiKey = Credentials.basic(publishableApiKey, "")
         this.baseUrl = "https://${site}.chargebee.com/api/"
     }
 }
