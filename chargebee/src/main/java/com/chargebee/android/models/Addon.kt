@@ -1,6 +1,9 @@
 package com.chargebee.android.models
 
 import com.chargebee.android.CBResult
+import com.chargebee.android.ErrorDetail
+import com.chargebee.android.Failure
+import com.chargebee.android.exceptions.CBException
 import com.chargebee.android.exceptions.InvalidRequestException
 import com.chargebee.android.exceptions.OperationFailedException
 import com.chargebee.android.resources.AddonResource
@@ -34,13 +37,17 @@ data class Addon(
         @Throws(InvalidRequestException::class, OperationFailedException::class)
         fun retrieve(addonId: String, handler: (CBResult<Addon>) -> Unit) {
             CoroutineScope(Dispatchers.IO).launch {
-                val addonResult = AddonResource().retrieve(addonId)
-                handler(addonResult)
+                try {
+                    val addonResult = AddonResource().retrieve(addonId)
+                    handler(addonResult)
+                } catch (ex: CBException) {
+                    handler(Failure(ex))
+                } catch (ex: Exception) {
+                    handler(Failure(error = ErrorDetail("Unknown/Network exception")))
+                }
             }
         }
     }
 }
-
-
 
 internal data class AddonWrapper(val addon: Addon)

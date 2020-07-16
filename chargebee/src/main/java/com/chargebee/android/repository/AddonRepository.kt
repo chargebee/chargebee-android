@@ -1,6 +1,6 @@
 package com.chargebee.android.repository
 
-import com.chargebee.android.CBEnvironment
+import com.chargebee.android.Chargebee
 import com.chargebee.android.models.AddonWrapper
 import retrofit2.Response
 import retrofit2.http.GET
@@ -11,7 +11,7 @@ internal interface AddonRepository {
 
     @GET("v2/addons/{addonId}")
     suspend fun retrieveAddon(
-        @Header("Authorization") token: String = CBEnvironment.encodedApiKey,
+        @Header("Authorization") token: String = Chargebee.encodedApiKey,
         @Path("addonId") addonId: String
     ): Response<AddonWrapper?>
 }

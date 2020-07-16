@@ -5,13 +5,13 @@ import com.chargebee.android.exceptions.CBException
 import com.chargebee.android.models.Addon
 import com.chargebee.android.repository.AddonRepository
 
-internal class AddonResource: BaseResource(CBEnvironment.baseUrl) {
+internal class AddonResource: BaseResource(Chargebee.baseUrl) {
 
     suspend fun retrieve(addonId: String): CBResult<Addon> {
         val planResponse = apiClient.create(AddonRepository::class.java).retrieveAddon(addonId = addonId)
         val result = fromResponse(
             planResponse,
-            CBErrorDetail::class.java
+            ErrorDetail::class.java
         )
         return try {
             Success(result.getData().addon)

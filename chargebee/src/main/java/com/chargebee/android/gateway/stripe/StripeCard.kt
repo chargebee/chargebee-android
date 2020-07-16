@@ -1,6 +1,6 @@
 package com.chargebee.android.gateway.stripe
 
-import com.chargebee.android.models.CBCard
+import com.chargebee.android.models.Card
 
 internal data class StripeCard(
     val number: String,
@@ -9,7 +9,7 @@ internal data class StripeCard(
     val cvc: String
 ) {
     companion object {
-        fun fromCBCard(card: CBCard): StripeCard {
+        fun fromCBCard(card: Card): StripeCard {
             return StripeCard(
                 card.number,
                 card.expiryMonth,

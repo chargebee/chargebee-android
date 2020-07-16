@@ -2,7 +2,7 @@ package com.chargebee.android
 
 import okhttp3.Credentials
 
-object CBEnvironment {
+object Chargebee {
     var site: String = ""
     var apiKey: String = ""
     var encodedApiKey: String = ""

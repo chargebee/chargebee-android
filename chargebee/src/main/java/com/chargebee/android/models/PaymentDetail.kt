@@ -1,12 +1,12 @@
 package com.chargebee.android.models
 
-data class CBPaymentDetail(
+data class PaymentDetail(
     val currencyCode: String,
-    val type: CBPaymentMethodType,
-    val card: CBCard
+    val type: PaymentMethodType,
+    val card: Card
 )
 
-data class CBCard(
+data class Card(
     val number: String,
     val expiryMonth: String,
     val expiryYear: String,

@@ -1,7 +1,7 @@
 package com.chargebee.android.exceptions
 
-import com.chargebee.android.CBErrorDetail
+import com.chargebee.android.ErrorDetail
 
-class PaymentException(error: CBErrorDetail) : CBException(error) {
+class PaymentException(error: ErrorDetail) : CBException(error) {
 
 }

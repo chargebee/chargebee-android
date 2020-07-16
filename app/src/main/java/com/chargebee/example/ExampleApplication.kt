@@ -1,7 +1,7 @@
 package com.chargebee.example
 
 import android.app.Application
-import com.chargebee.android.CBEnvironment
+import com.chargebee.android.Chargebee
 
 class ExampleApplication: Application() {
 
@@ -9,6 +9,6 @@ class ExampleApplication: Application() {
         super.onCreate()
 
 //      Configure the Chargebee site credentials at the start of the application
-        CBEnvironment.configure(site = "test-ashwin1-test", apiKey = "test_1PDU9iynvhEcPMgWAJ0QZw90d2Aw92ah")
+        Chargebee.configure(site = "test-ashwin1-test", apiKey = "test_1PDU9iynvhEcPMgWAJ0QZw90d2Aw92ah")
     }
 }

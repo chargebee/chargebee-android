@@ -1,8 +1,12 @@
 package com.chargebee.android.models
 
 import com.chargebee.android.CBResult
+import com.chargebee.android.ErrorDetail
+import com.chargebee.android.Failure
+import com.chargebee.android.exceptions.CBException
 import com.chargebee.android.exceptions.InvalidRequestException
 import com.chargebee.android.exceptions.OperationFailedException
+import com.chargebee.android.resources.AddonResource
 import com.chargebee.android.resources.PlanResource
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -38,8 +42,14 @@ data class Plan(
         @Throws(InvalidRequestException::class, OperationFailedException::class)
         fun retrieve(planId: String, handler: (CBResult<Plan>) -> Unit) {
             CoroutineScope(Dispatchers.IO).launch {
-                val planResult = PlanResource().retrieve(planId)
-                handler(planResult)
+                try {
+                    val result = PlanResource().retrieve(planId)
+                    handler(result)
+                } catch (ex: CBException) {
+                    handler(Failure(ex))
+                } catch (ex: Exception) {
+                    handler(Failure(error = ErrorDetail("Unknown/Network exception")))
+                }
             }
         }
     }

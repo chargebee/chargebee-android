@@ -1,6 +1,6 @@
 package com.chargebee.android.repository
 
-import com.chargebee.android.CBEnvironment
+import com.chargebee.android.Chargebee
 import com.chargebee.android.models.PlanWrapper
 import retrofit2.Response
 import retrofit2.http.GET
@@ -11,7 +11,7 @@ internal interface PlanRepository {
 
     @GET("v2/plans/{planId}")
     suspend fun retrievePlan(
-        @Header("Authorization") token: String = CBEnvironment.encodedApiKey,
+        @Header("Authorization") token: String = Chargebee.encodedApiKey,
         @Path("planId") planId: String
     ): Response<PlanWrapper?>
 }

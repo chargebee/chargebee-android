@@ -7,9 +7,9 @@ import android.widget.EditText
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.Observer
-import com.chargebee.android.models.CBCard
-import com.chargebee.android.models.CBPaymentDetail
-import com.chargebee.android.models.CBPaymentMethodType
+import com.chargebee.android.models.Card
+import com.chargebee.android.models.PaymentDetail
+import com.chargebee.android.models.PaymentMethodType
 import com.chargebee.example.R
 
 class TokenizeActivity : AppCompatActivity() {
@@ -40,8 +40,8 @@ class TokenizeActivity : AppCompatActivity() {
         })
 
         this.tokenizeButton.setOnClickListener {
-            val card = CBCard(cardNumber.text.toString(), expiryMonth.text.toString(), expiryYear.text.toString(), cvc.text.toString())
-            val paymentDetail = CBPaymentDetail("USD", CBPaymentMethodType.CARD, card)
+            val card = Card(cardNumber.text.toString(), expiryMonth.text.toString(), expiryYear.text.toString(), cvc.text.toString())
+            val paymentDetail = PaymentDetail("USD", PaymentMethodType.CARD, card)
             this.viewModel.create(paymentDetail)
         }
     }

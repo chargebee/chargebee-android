@@ -18,7 +18,7 @@ class Token {
     companion object {
         @JvmStatic
         @Throws(InvalidRequestException::class, OperationFailedException::class, PaymentException::class)
-        fun createTempToken(detail: CBPaymentDetail, completion: (CBResult<String>) -> Unit) {
+        fun createTempToken(detail: PaymentDetail, completion: (CBResult<String>) -> Unit) {
             CoroutineScope(Dispatchers.IO).launch {
                 try {
                     val paymentConfig = MerchantPaymentConfigResource()
@@ -31,13 +31,7 @@ class Token {
                 } catch (ex: CBException) {
                     completion(Failure(ex))
                 } catch (ex: Exception) {
-                    completion(
-                        Failure(
-                            error = CBErrorDetail(
-                                "Unknown Exception"
-                            )
-                        )
-                    )
+                    completion(Failure(error = ErrorDetail("Unknown/Network exception")))
                 }
             }
         }

@@ -1,13 +1,13 @@
 package com.chargebee.android.gateway.stripe
 
-import com.chargebee.android.CBError
-import com.chargebee.android.CBErrorDetail
+import com.chargebee.android.ChargebeeError
+import com.chargebee.android.ErrorDetail
 
 internal data class StripeError(
     val error: StripeErrorDetail
-) : CBError {
-    override fun toCBError(statusCode: Int): CBErrorDetail {
-        return CBErrorDetail(error.message, error.type, error.code, error.param, statusCode)
+) : ChargebeeError {
+    override fun toCBError(statusCode: Int): ErrorDetail {
+        return ErrorDetail(error.message, error.type, error.code, error.param, statusCode)
     }
 }
 

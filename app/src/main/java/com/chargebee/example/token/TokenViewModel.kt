@@ -7,14 +7,14 @@ import com.chargebee.android.models.Token
 import com.chargebee.android.exceptions.InvalidRequestException
 import com.chargebee.android.exceptions.OperationFailedException
 import com.chargebee.android.exceptions.PaymentException
-import com.chargebee.android.models.CBPaymentDetail
+import com.chargebee.android.models.PaymentDetail
 
 class TokenViewModel : ViewModel() {
     val result: MutableLiveData<String> by lazy {
         MutableLiveData<String>()
     }
 
-    fun create(paymentDetail: CBPaymentDetail) {
+    fun create(paymentDetail: PaymentDetail) {
         Token.createTempToken(paymentDetail) {
             try {
                 val cbTempToken = it.getData()

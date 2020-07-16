@@ -2,12 +2,12 @@ package com.chargebee.android.models
 
 import com.google.gson.annotations.SerializedName
 
-internal class CBMerchantPaymentConfig(
+internal class MerchantPaymentConfig(
     val apmConfig: Map<String, PaymentConfigs>,
     val currencyList: Array<String>,
     val defaultCurrency: String
 ) {
-    internal fun getPaymentProviderConfig (currencyCode: String, paymentMethodType: CBPaymentMethodType): CBGatewayDetail? {
+    internal fun getPaymentProviderConfig (currencyCode: String, paymentMethodType: PaymentMethodType): CBGatewayDetail? {
         val paymentMethod = this.apmConfig[currencyCode]?.pmList?.find {
             it.type == paymentMethodType.displayName && it.gatewayName == "STRIPE"
         }
