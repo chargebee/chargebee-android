@@ -5,6 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".addon.AddonActivity">
+
     <TextView
         android:id="@+id/addonDescription"
         android:layout_width="255dp"
@@ -14,6 +15,7 @@
         android:text=""
         app:layout_constraintStart_toEndOf="@+id/addonNameDescription"
         app:layout_constraintTop_toBottomOf="@+id/addonName" />
+
     <TextView
         android:id="@+id/addonName"
         android:layout_width="255dp"
@@ -23,18 +25,27 @@
         android:text=""
         app:layout_constraintStart_toEndOf="@+id/addonNameLabel"
         app:layout_constraintTop_toBottomOf="@+id/addonButton" />
-    <EditText
-        android:id="@+id/addonIdInput"
+
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/addonIdInputLayout"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="40dp"
-        android:ems="10"
-        android:inputType="textPersonName"
-        android:text="cbdemo_setuphelp"
+        android:layout_marginTop="50dp"
+        android:hint="Addon ID"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.497"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/textView" />
+        app:layout_constraintTop_toBottomOf="@+id/textView">
+
+        <EditText
+            android:id="@+id/addonIdInput"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:ems="10"
+            android:inputType="textPersonName"
+            android:text="cbdemo_setuphelp" />
+    </com.google.android.material.textfield.TextInputLayout>
+
     <TextView
         android:id="@+id/textView"
         android:layout_width="wrap_content"
@@ -46,6 +57,7 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
+
     <Button
         android:id="@+id/addonButton"
         android:layout_width="wrap_content"
@@ -56,7 +68,8 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.497"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/addonIdInput" />
+        app:layout_constraintTop_toBottomOf="@+id/addonIdInputLayout" />
+
     <TextView
         android:id="@+id/textView2"
         android:layout_width="wrap_content"
@@ -69,6 +82,7 @@
         app:layout_constraintHorizontal_bias="0.088"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/addonButton" />
+
     <TextView
         android:id="@+id/addonNameLabel"
         android:layout_width="wrap_content"
@@ -78,6 +92,7 @@
         android:text="Name"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/textView2" />
+
     <TextView
         android:id="@+id/addonNameDescription"
         android:layout_width="wrap_content"
@@ -87,6 +102,7 @@
         android:text="Description"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/addonNameLabel" />
+
     <TextView
         android:id="@+id/textView3"
         android:layout_width="wrap_content"
@@ -96,6 +112,7 @@
         android:text="Error"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/addonNameDescription" />
+
     <TextView
         android:id="@+id/errorText"
         android:layout_width="255dp"
