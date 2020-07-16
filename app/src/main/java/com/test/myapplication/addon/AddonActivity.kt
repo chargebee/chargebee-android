@@ -1,4 +1,4 @@
-package com.test.myapplication
+package com.test.myapplication.addon
 
 import android.os.Bundle
 import android.widget.Button
@@ -6,6 +6,7 @@ import android.widget.EditText
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.Observer
+import com.test.myapplication.R
 
 class AddonActivity : AppCompatActivity() {
 

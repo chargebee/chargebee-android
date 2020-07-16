@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".AddonActivity">
+    tools:context=".addon.AddonActivity">
     <TextView
         android:id="@+id/addonDescription"
         android:layout_width="255dp"

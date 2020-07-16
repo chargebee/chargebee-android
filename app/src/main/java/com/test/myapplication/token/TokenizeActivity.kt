@@ -1,4 +1,4 @@
-package com.test.myapplication
+package com.test.myapplication.token
 
 import android.os.Bundle
 import android.util.Log
@@ -10,6 +10,7 @@ import androidx.lifecycle.Observer
 import com.test.chargebee.models.CBCard
 import com.test.chargebee.models.CBPaymentDetail
 import com.test.chargebee.models.CBPaymentMethodType
+import com.test.myapplication.R
 
 class TokenizeActivity : AppCompatActivity() {
     private lateinit var viewModel: TokenViewModel

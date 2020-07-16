@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".PlanInJavaActivity">
+    tools:context=".plan.PlanInJavaActivity">
     <TextView
         android:id="@+id/planPricing"
         android:layout_width="255dp"

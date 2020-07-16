@@ -4,6 +4,9 @@ import android.content.Intent
 import android.os.Bundle
 import android.widget.Button
 import androidx.appcompat.app.AppCompatActivity
+import com.test.myapplication.addon.AddonActivity
+import com.test.myapplication.plan.PlanInJavaActivity
+import com.test.myapplication.token.TokenizeActivity
 
 class MainActivity : AppCompatActivity() {
     private var planBtn: Button? = null

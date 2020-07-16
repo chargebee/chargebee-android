@@ -1,4 +1,4 @@
-package com.test.myapplication
+package com.test.myapplication.addon
 
 import android.util.Log
 import androidx.lifecycle.MutableLiveData
