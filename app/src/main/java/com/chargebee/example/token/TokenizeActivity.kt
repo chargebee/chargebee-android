@@ -40,9 +40,14 @@ class TokenizeActivity : AppCompatActivity() {
         })
 
         this.tokenizeButton.setOnClickListener {
+            this.clearFields()
             val card = Card(cardNumber.text.toString(), expiryMonth.text.toString(), expiryYear.text.toString(), cvc.text.toString())
             val paymentDetail = PaymentDetail("USD", PaymentMethodType.CARD, card)
             this.viewModel.create(paymentDetail)
         }
+    }
+
+    private fun clearFields() {
+        this.result.text = ""
     }
 }

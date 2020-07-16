@@ -39,7 +39,14 @@ class AddonActivity : AppCompatActivity() {
         })
 
         this.addonButton.setOnClickListener {
+            this.clearFields()
             this.viewModel.retrieveAddon(addonIdInput.text.toString())
         }
+    }
+
+    private fun clearFields() {
+        this.addonName.text = ""
+        this.addonDescription.text = ""
+        this.addonError.text = ""
     }
 }
