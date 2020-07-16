@@ -41,7 +41,14 @@ public class PlanInJavaActivity extends AppCompatActivity {
             errorText.setText(message);
         });
         this.planButton.setOnClickListener(view -> {
+            this.clearFields();
             this.viewModel.retrievePlan(planIdInput.getText().toString());
         });
+    }
+
+    private void clearFields() {
+        this.planName.setText("");
+        this.planPricingText.setText("");
+        this.errorText.setText("");
     }
 }
