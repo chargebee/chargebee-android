@@ -1,13 +1,17 @@
 # Chargebee Android
 
 ## Requirements
+* Android 5.0 (API level 21) and above
+* [Android Gradle Plugin](https://developer.android.com/studio/releases/gradle-plugin) 4.0.0
+* [Gradle](https://gradle.org/releases/) 6.1.1+
+* [AndroidX](https://developer.android.com/jetpack/androidx/)
 
 ## Installation
 
 ## Usage
 
 ### Configure
-To use the Chargebee Adnroid SDK, you must initialize it with your Chargebee Site Code and API key. You can initialize this during your app startup by including this in Android application class' `onCreate` method.
+To use the Chargebee Android SDK, you must initialize it with your Chargebee Site Code and API key. You can initialize this during your app startup by including this in Android application class' `onCreate` method.
 
 ```kotlin
 import com.chargebee.android.Chargebee
