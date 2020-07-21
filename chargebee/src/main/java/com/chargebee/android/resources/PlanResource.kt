@@ -2,6 +2,7 @@ package com.chargebee.android.resources
 
 import com.chargebee.android.*
 import com.chargebee.android.exceptions.CBException
+import com.chargebee.android.loggers.CBLogger
 import com.chargebee.android.models.Plan
 import com.chargebee.android.repository.PlanRepository
 
@@ -13,10 +14,6 @@ internal class PlanResource: BaseResource(Chargebee.baseUrl) {
             planResponse,
             ErrorDetail::class.java
         )
-        return try {
-            Success(result.getData().plan)
-        } catch (ex: CBException) {
-            Failure(ex)
-        }
+        return Success(result.getData().plan)
     }
 }
