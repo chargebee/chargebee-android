@@ -8,16 +8,14 @@ import com.chargebee.android.resources.LoggerResource
 internal class CBLogger(private val name: String,
             private val action: String) {
 
-    fun error(message: String, code: Int? = null) {
+    suspend fun error(message: String, code: Int? = null) {
         if (Chargebee.allowErrorLogging) {
-            ResultHandler.safeExecute({
                 LoggerResource().log(
                     action,
                     LogType.ERROR,
                     message,
                     code
                 )
-            }, {})
         }
     }
 }

@@ -35,7 +35,7 @@ data class Plan(
         @JvmStatic
         @Throws(InvalidRequestException::class, OperationFailedException::class)
         fun retrieve(planId: String, completion: (CBResult<Plan>) -> Unit) {
-            val logger = CBLogger(name = "plan", action = "retreive_plan")
+            val logger = CBLogger(name = "plan", action = "retrieve_plan")
             ResultHandler.safeExecute({ PlanResource().retrieve(planId) }, completion, logger)
         }
 

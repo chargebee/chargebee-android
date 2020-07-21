@@ -31,7 +31,7 @@ data class Addon(
         @JvmStatic
         @Throws(InvalidRequestException::class, OperationFailedException::class)
         fun retrieve(addonId: String, handler: (CBResult<Addon>) -> Unit) {
-            val logger = CBLogger(name = "addon", action = "retreive_addon")
+            val logger = CBLogger(name = "addon", action = "retrieve_addon")
             ResultHandler.safeExecute({ AddonResource().retrieve(addonId) }, handler, logger)
         }
     }

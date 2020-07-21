@@ -1,6 +1,5 @@
 package com.chargebee.android.resources
 
-import android.util.Log
 import com.chargebee.android.CBResult
 import com.chargebee.android.Chargebee
 import com.chargebee.android.Success
@@ -20,7 +19,7 @@ internal class LoggerResource: BaseResource(Chargebee.baseUrl) {
             "error_code" to "$error_code"
         )
         val logDetail = LogDetail(data = data)
-        val response = apiClient.create(LoggerRepository::class.java).log(logDetail = logDetail)
+        apiClient.create(LoggerRepository::class.java).log(logDetail = logDetail)
         return Success(null)
     }
 }
