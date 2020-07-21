@@ -3,6 +3,7 @@ package com.chargebee.android.models
 import com.chargebee.android.CBResult
 import com.chargebee.android.exceptions.InvalidRequestException
 import com.chargebee.android.exceptions.OperationFailedException
+import com.chargebee.android.loggers.CBLogger
 import com.chargebee.android.resources.AddonResource
 
 data class Addon(
@@ -30,7 +31,8 @@ data class Addon(
         @JvmStatic
         @Throws(InvalidRequestException::class, OperationFailedException::class)
         fun retrieve(addonId: String, handler: (CBResult<Addon>) -> Unit) {
-            ResultHandler.safeExecute({ AddonResource().retrieve(addonId) }, handler)
+            val logger = CBLogger(name = "addon", action = "retreive_addon")
+            ResultHandler.safeExecute({ AddonResource().retrieve(addonId) }, handler, logger)
         }
     }
 }
