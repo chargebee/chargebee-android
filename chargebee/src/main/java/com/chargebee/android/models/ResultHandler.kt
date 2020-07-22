@@ -18,11 +18,13 @@ internal class ResultHandler {
         ) {
             CoroutineScope(Dispatchers.IO).launch {
                 val result: CBResult<T> = try {
+                    logger?.info()
                     codeBlock()
                 } catch (ex: CBException) {
                     logger?.error(ex.message ?: "failed", ex.httpStatusCode)
                     Failure(ex)
                 } catch (ex: Exception) {
+                    logger?.error(ex.message ?: "failed")
                     Failure(error = ErrorDetail("Unknown/Network exception"))
                 }
                 completion(result)

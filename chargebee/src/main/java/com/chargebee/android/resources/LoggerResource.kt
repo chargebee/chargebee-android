@@ -8,22 +8,28 @@ import com.chargebee.android.repository.LoggerRepository
 
 internal class LoggerResource: BaseResource(Chargebee.baseUrl) {
 
-    suspend fun log(action: String, type: LogType, error_message: String, error_code: Int?): CBResult<String?> {
-        val data = mapOf(
-            "key" to "cb.logging",
-            "ref_module" to "cb_android_sdk",
-            "site" to Chargebee.site,
-            "action" to action,
-            "log_data_type" to type.value,
-            "error_message" to error_message,
-            "error_code" to "$error_code"
-        )
+    suspend fun log(action: String, type: LogType, errorMessage: String? = null, errorCode: Int? = null): CBResult<String?> {
+        var data = logData(action, type, errorMessage, errorCode)
         val logDetail = LogDetail(data = data)
         apiClient.create(LoggerRepository::class.java).log(logDetail = logDetail)
         return Success(null)
     }
+
+    private fun logData(action: String, type: LogType, errorMessage: String?, errorCode: Int?): MutableMap<String, String> {
+        var data = mutableMapOf(
+            "key" to "cb.logging",
+            "ref_module" to "cb_android_sdk",
+            "site" to Chargebee.site,
+            "action" to action,
+            "log_data_type" to type.value
+        )
+        errorMessage?.let { data["error_message"] = it }
+        errorCode?.let { data["error_code"] = "$it" }
+        return data
+    }
 }
 
 enum class LogType(val value: String) {
-    ERROR("error")
+    ERROR("error"),
+    INFO("info")
 }
