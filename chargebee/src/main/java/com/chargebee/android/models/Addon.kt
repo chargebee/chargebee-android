@@ -1,17 +1,10 @@
 package com.chargebee.android.models
 
 import com.chargebee.android.CBResult
-import com.chargebee.android.ErrorDetail
-import com.chargebee.android.Failure
-import com.chargebee.android.exceptions.CBException
 import com.chargebee.android.exceptions.InvalidRequestException
 import com.chargebee.android.exceptions.OperationFailedException
-import com.chargebee.android.models.SafeFetcher.Companion.safeExecute
+import com.chargebee.android.loggers.CBLogger
 import com.chargebee.android.resources.AddonResource
-import com.chargebee.android.resources.PlanResource
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 
 data class Addon(
     val id: String,
@@ -38,10 +31,8 @@ data class Addon(
         @JvmStatic
         @Throws(InvalidRequestException::class, OperationFailedException::class)
         fun retrieve(addonId: String, handler: (CBResult<Addon>) -> Unit) {
-            CoroutineScope(Dispatchers.IO).launch {
-                val result = safeExecute { AddonResource().retrieve(addonId) }
-                handler(result)
-            }
+            val logger = CBLogger(name = "addon", action = "retrieve_addon")
+            ResultHandler.safeExecute({ AddonResource().retrieve(addonId) }, handler, logger)
         }
     }
 }

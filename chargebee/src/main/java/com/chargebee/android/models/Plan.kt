@@ -3,11 +3,8 @@ package com.chargebee.android.models
 import com.chargebee.android.CBResult
 import com.chargebee.android.exceptions.InvalidRequestException
 import com.chargebee.android.exceptions.OperationFailedException
-import com.chargebee.android.models.SafeFetcher.Companion.safeExecute
+import com.chargebee.android.loggers.CBLogger
 import com.chargebee.android.resources.PlanResource
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 
 data class Plan(
     val id: String,
@@ -38,10 +35,8 @@ data class Plan(
         @JvmStatic
         @Throws(InvalidRequestException::class, OperationFailedException::class)
         fun retrieve(planId: String, completion: (CBResult<Plan>) -> Unit) {
-            CoroutineScope(Dispatchers.IO).launch {
-                val result = safeExecute { PlanResource().retrieve(planId) }
-                completion(result)
-            }
+            val logger = CBLogger(name = "plan", action = "retrieve_plan")
+            ResultHandler.safeExecute({ PlanResource().retrieve(planId) }, completion, logger)
         }
 
     }
