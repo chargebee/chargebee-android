@@ -1,12 +1,20 @@
 # Chargebee Android
 
-## Requirements
+## Installation
+
+### Requirements
 * Android 5.0 (API level 21) and above
 * [Android Gradle Plugin](https://developer.android.com/studio/releases/gradle-plugin) 4.0.0
 * [Gradle](https://gradle.org/releases/) 6.1.1+
 * [AndroidX](https://developer.android.com/jetpack/androidx/)
 
-## Installation
+### Configuration
+
+Add `chargebee-android` to your `build.gradle` dependencies.
+
+```
+implementation 'com.chargebee:chargebee-android:0.1.0'
+```
 
 ## Usage
 
