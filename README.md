@@ -19,18 +19,18 @@ implementation 'com.chargebee:chargebee-android:0.1.0'
 ## Usage
 
 ### Configure
-To use the Chargebee Android SDK, you must initialize it with your Chargebee Site Code and API key. You can initialize this during your app startup by including this in Android application class' `onCreate` method.
+To use the Chargebee Android SDK, you must initialize it with your Chargebee Site and API key. You can initialize this during your app startup by including this in Android application class' `onCreate` method.
 
 ```kotlin
 import com.chargebee.android.Chargebee
 
-Chargebee.configure(site = "site-code", publishableApiKey = "api_key")
+Chargebee.configure(site = "your-site", publishableApiKey = "api_key")
 ```
 
 ### Get Plan Details
 
 ```java
-Plan.retrieve("planCode", planResult -> {
+Plan.retrieve("planId", planResult -> {
     try {
         Plan plan = planResult.getData();
         Log.d("success", plan.toString());
@@ -46,7 +46,7 @@ Plan.retrieve("planCode", planResult -> {
 ### Get Addon Details
 
 ```kotlin
-Addon.retrieve("addonCode") { addonResult ->
+Addon.retrieve("addonId") { addonResult ->
     try {
         val addon = addonResult.getData()
         Log.d("success", addon.toString())
@@ -87,6 +87,14 @@ Token.createTempToken(paymentDetail) { tokenResult ->
     }
 }
 ```
+## Use the Chargebee Token
+Once your customer’s card data is processed and stored, and a Chargebee token reference is returned to you, you can use the token in subsequent API calls to process transactions. The following are some endpoints that accept Chargebee tokens for processing.
+
+- [Create a Payment Source for the customer](https://apidocs.chargebee.com/docs/api/payment_sources#create_using_chargebee_token)
+- [Create a Subscription](https://apidocs.chargebee.com/docs/api/subscriptions#create_a_subscription)
+- [Update a Subscription](https://apidocs.chargebee.com/docs/api/subscriptions#update_a_subscription)
+
+Please refer to the [Chargebee API Docs](https://apidocs.chargebee.com/docs/api) for subsequent integration steps.
 
 ## License
 
