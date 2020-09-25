@@ -1,0 +1,25 @@
+version: 0.2
+phases:
+  build:
+    commands:
+      - cd $CODEBUILD_SRC_DIR
+      - VERSION=$(echo $CODEBUILD_WEBHOOK_TRIGGER | sed 's/branch\///g')
+      - sh $CODEBUILD_SRC_DIR/build-config/sns_util.sh "START" "$VERSION"
+      - echo $SIGNING_KEY | base64 -d > /secret.gpg
+      - signing_keyId=$(echo $SIGNING_KEYID)
+      - signing_password=$(echo $SIGNING_PASSWORD | base64 -d)
+      - maven_username=$(echo $MAVEN_USERNAME)
+      #- maven_username=$(echo $MAVEN_USERNAME | base64 -d)
+      - maven_password=$(echo $MAVEN_PASSWORD)
+      #- maven_password=$(echo $MAVEN_PASSWORD | base64 -d)
+      - echo "signing.keyId=$signing_keyId\nsigning.password=$signing_password\nsigning.secretKeyRingFile=/secret.gpg\nmaven_username=$maven_username\nmaven_password=$maven_password" > local.properties
+      - cat local.properties 
+      - ./gradlew clean
+      #- ./gradlew chargebee:publishReleasePublicationToMavenRepository
+    finally:
+      - |
+        if [ "$CODEBUILD_BUILD_SUCCEEDING" = "0" ]; then
+            sh $CODEBUILD_SRC_DIR/build-config/sns_util.sh "FAILED" "$VERSION"
+        else
+            sh $CODEBUILD_SRC_DIR/build-config/sns_util.sh "SUCCESS" "$VERSION"
+        fi
