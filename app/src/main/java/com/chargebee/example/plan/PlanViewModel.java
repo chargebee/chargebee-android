@@ -1,12 +1,8 @@
 package com.chargebee.example.plan;
 
 import android.util.Log;
-
-import androidx.core.util.Consumer;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
-
-import com.chargebee.android.CBResult;
 import com.chargebee.android.exceptions.CBException;
 import com.chargebee.android.models.Plan;
 

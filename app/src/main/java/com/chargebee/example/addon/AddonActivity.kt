@@ -4,11 +4,11 @@ import android.os.Bundle
 import android.widget.Button
 import android.widget.EditText
 import android.widget.TextView
-import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.Observer
+import com.chargebee.example.BaseActivity
 import com.chargebee.example.R
 
-class AddonActivity : AppCompatActivity() {
+class AddonActivity : BaseActivity() {
 
     private lateinit var viewModel: AddonViewModel
 
@@ -30,15 +30,18 @@ class AddonActivity : AppCompatActivity() {
 
         this.viewModel = AddonViewModel()
         this.viewModel.addonResult.observe(this, Observer {
+            hideProgressDialog()
             addonName.text = it.name
             addonDescription.text = it.description
         })
 
         this.viewModel.addonError.observe(this, Observer {
+            hideProgressDialog()
             addonError.text = it
         })
 
         this.addonButton.setOnClickListener {
+            showProgressDialog()
             this.clearFields()
             this.viewModel.retrieveAddon(addonIdInput.text.toString())
         }

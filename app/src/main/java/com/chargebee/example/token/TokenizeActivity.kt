@@ -10,9 +10,10 @@ import androidx.lifecycle.Observer
 import com.chargebee.android.models.Card
 import com.chargebee.android.models.PaymentDetail
 import com.chargebee.android.models.PaymentMethodType
+import com.chargebee.example.BaseActivity
 import com.chargebee.example.R
 
-class TokenizeActivity : AppCompatActivity() {
+class TokenizeActivity : BaseActivity() {
     private lateinit var viewModel: TokenViewModel
     private lateinit var cardNumber: EditText
     private lateinit var expiryMonth: EditText
@@ -33,6 +34,7 @@ class TokenizeActivity : AppCompatActivity() {
         this.result = findViewById(R.id.token_txt)
         this.viewModel = TokenViewModel()
         this.viewModel.result.observe(this, Observer {
+            hideProgressDialog()
             Log.d("calling ", "value")
             Log.d("calling ", it.toString())
             Log.d("calling ", "it.toString()")
@@ -40,6 +42,7 @@ class TokenizeActivity : AppCompatActivity() {
         })
 
         this.tokenizeButton.setOnClickListener {
+            showProgressDialog()
             this.clearFields()
             val card = Card(cardNumber.text.toString(), expiryMonth.text.toString(), expiryYear.text.toString(), cvc.text.toString())
             val paymentDetail = PaymentDetail("USD", PaymentMethodType.CARD, card)

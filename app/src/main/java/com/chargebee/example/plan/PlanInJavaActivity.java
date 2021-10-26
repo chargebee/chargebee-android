@@ -1,15 +1,13 @@
 package com.chargebee.example.plan;
 
-import androidx.appcompat.app.AppCompatActivity;
-
 import android.os.Bundle;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
-
+import com.chargebee.example.BaseActivity;
 import com.chargebee.example.R;
 
-public class PlanInJavaActivity extends AppCompatActivity {
+public class PlanInJavaActivity extends BaseActivity {
 
     private PlanViewModel viewModel;
     private EditText planIdInput;
@@ -33,15 +31,18 @@ public class PlanInJavaActivity extends AppCompatActivity {
         this.viewModel = new PlanViewModel();
 
         this.viewModel.planResult.observe(this, plan -> {
+            hideProgressDialog();
             planName.setText(plan.getName());
             planPricingText.setText(plan.getPricingModel());
         });
 
         this.viewModel.planError.observe(this, message -> {
+            hideProgressDialog();
             errorText.setText(message);
         });
         this.planButton.setOnClickListener(view -> {
             this.clearFields();
+           showProgressDialog();
             this.viewModel.retrievePlan(planIdInput.getText().toString());
         });
     }
