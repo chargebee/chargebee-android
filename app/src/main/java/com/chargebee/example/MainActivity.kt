@@ -18,7 +18,7 @@ import com.chargebee.example.addon.AddonActivity
 import com.chargebee.example.billing.BillingActivity
 import com.chargebee.example.plan.PlanInJavaActivity
 import com.chargebee.example.token.TokenizeActivity
-import com.chargebee.example.util.CBItems
+import com.chargebee.example.util.CBMenu
 import com.chargebee.example.util.Constants.PRODUCTS_LIST_KEY
 import com.google.gson.Gson
 import kotlinx.coroutines.GlobalScope
@@ -28,7 +28,7 @@ class MainActivity : AppCompatActivity(), ListItemsAdapter.ItemClickListener {
     private var mItemsRecyclerView: RecyclerView? = null
     private var list  = arrayListOf<String>()
     var listItemsAdapter: ListItemsAdapter? = null
-    var featureList = mutableListOf<CBItems>()
+    var featureList = mutableListOf<CBMenu>()
     var mContext: Context? = null
     private val TAG = "MainActivity"
     private val gson = Gson()
@@ -43,7 +43,7 @@ class MainActivity : AppCompatActivity(), ListItemsAdapter.ItemClickListener {
     }
 
     private fun setListAdapter(){
-        featureList = CBItems.values().toMutableList()
+        featureList = CBMenu.values().toMutableList()
         listItemsAdapter = ListItemsAdapter(featureList, this)
         val layoutManager: RecyclerView.LayoutManager = LinearLayoutManager(applicationContext)
         mItemsRecyclerView?.setLayoutManager(layoutManager)
@@ -52,23 +52,23 @@ class MainActivity : AppCompatActivity(), ListItemsAdapter.ItemClickListener {
     }
 
     override fun onItemClick(view: View?, position: Int) {
-        when(CBItems.valueOf(featureList.get(position).toString()).value){
-            CBItems.Configure.value ->{
+        when(CBMenu.valueOf(featureList.get(position).toString()).value){
+            CBMenu.Configure.value ->{
                 //TODO Implementation yet to be done
             }
-            CBItems.ShowPlan.value->{
+            CBMenu.GetPlan.value->{
                 val intent = Intent(this, PlanInJavaActivity::class.java)
                 startActivity(intent)
             }
-            CBItems.ShowAddOn.value ->{
+            CBMenu.GetAddOn.value ->{
                 val intent = Intent(this, AddonActivity::class.java)
                 startActivity(intent)
             }
-            CBItems.Tokenize.value ->{
+            CBMenu.Tokenize.value ->{
                 val intent = Intent(this, TokenizeActivity::class.java)
                 startActivity(intent)
             }
-            CBItems.ProductIDs.value ->{
+            CBMenu.ProductIDs.value ->{
                 CBPurchase.retrieveProductIDs(this, object : CBCallback.ListProductIDsCallback<ArrayList<String>>{
                     override fun onSuccess(productIDs: ArrayList<String>) {
                         list = productIDs
@@ -78,8 +78,8 @@ class MainActivity : AppCompatActivity(), ListItemsAdapter.ItemClickListener {
                     }
                 })
             }
-            else ->{
-                val SUBS_SKUS = arrayListOf("gaurav_test", "cb_weekly_premium", "test_123_gaurav", "test_weekly_premium")
+            CBMenu.GetProducts.value -> {
+                val SUBS_SKUS = arrayListOf("merchant.premium.android", "merchant.pro.android")
                 CBPurchase.retrieveProducts(this,SUBS_SKUS, object : CBCallback.ListProductsCallback<ArrayList<Products>>{
                     override fun onSuccess(productDetails: ArrayList<Products>) {
                         GlobalScope.launch {
@@ -90,6 +90,13 @@ class MainActivity : AppCompatActivity(), ListItemsAdapter.ItemClickListener {
                         Log.e(TAG," ${error.message}")
                     }
                 })
+
+            }
+            CBMenu.GetPlans.value -> {
+
+            }
+            else ->{
+                Log.e(TAG,"Not configured")
             }
         }
     }

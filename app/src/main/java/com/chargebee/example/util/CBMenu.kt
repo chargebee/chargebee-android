@@ -1,10 +1,17 @@
 package com.chargebee.example.util
 
-enum class CBItems(val value: String) {
+enum class CBMenu(val value: String) {
     Configure("Configure"),
-    ShowPlan("Show Plan"),
-    ShowAddOn("Show AddOn"),
+
+    GetPlans("Get Plans"),
+    GetPlan("Get Plan"),
+
+    GetItems("Get Items"),
+    GetItem("Get Item"),
+
+    GetAddOn("Get AddOn"),
     Tokenize("Tokenize"),
+
     ProductIDs("Get Google Play Product IDs"),
     GetProducts("Get Products"),
     SubsStatus("Get Subscription Status")
