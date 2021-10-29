@@ -5,6 +5,7 @@ import android.content.Context
 import android.os.Looper
 import android.util.Log
 import com.android.billingclient.api.*
+import com.chargebee.android.ErrorDetail
 import com.chargebee.android.exceptions.CBException
 import com.chargebee.android.models.Products
 
@@ -96,14 +97,14 @@ class BillingClientManager constructor(context: Context, skuType: String,
                        }
                        callBack.onSuccess(productIDs = skusWithSkuDetails)
                    }catch (ex: CBException){
-                       callBack.onError(ex)
+                       callBack.onError(CBException(ErrorDetail("Unknown error")))
                        Log.e(TAG,"exception :"+ex.message)
                    }
                }
            }
        }catch (exp : CBException){
            Log.e(TAG,"exception :$exp.message")
-           callBack.onError(exp)
+           callBack.onError(CBException(ErrorDetail("failed")))
        }
 
     }
@@ -137,27 +138,47 @@ class BillingClientManager constructor(context: Context, skuType: String,
             BillingClient.BillingResponseCode.OK -> {
                 purchases?.forEach { purchase ->
                     if (purchase.purchaseState == Purchase.PurchaseState.PURCHASED) {
-                            try {
-                               val purchaseModel =  PurchaseModel(purchase.purchaseToken,purchase.isAcknowledged,purchase.purchaseTime)
-                                purchaseCallBack?.onSuccess(purchaseModel)
-                            } catch (ex: CBException) {
-                                Log.e("error", ex.toString())
-                                purchaseCallBack?.onError(ex)
-                            }
-
+                        acknowledgePurchase(purchase)
                     }
                 }
             }
             BillingClient.BillingResponseCode.ITEM_ALREADY_OWNED -> {
                 // call queryPurchases to verify and process all owned items
                 Log.e(TAG, "onPurchasesUpdated ITEM_ALREADY_OWNED")
+                purchaseCallBack?.onError(CBException(ErrorDetail("Item already owned")))
             }
             BillingClient.BillingResponseCode.SERVICE_DISCONNECTED -> {
                 connectToBillingService()
             }
             else -> {
                 Log.e(TAG, "Failed to onPurchasesUpdated")
+                purchaseCallBack?.onError(CBException(ErrorDetail("Unknown error")))
             }
         }
+    }
+
+    private fun acknowledgePurchase(purchase: Purchase) {
+        if (!purchase.isAcknowledged) {
+            val params = AcknowledgePurchaseParams.newBuilder()
+                .setPurchaseToken(purchase.purchaseToken)
+                .build()
+            billingClient.acknowledgePurchase(params) { billingResult ->
+                if (billingResult.responseCode == BillingClient.BillingResponseCode.OK) {
+                    //val debugMessage = billingResult.debugMessage
+                    try {
+                        val purchaseModel = PurchaseModel(
+                            purchase.purchaseToken,
+                            purchase.isAcknowledged,
+                            purchase.purchaseTime
+                        )
+                        purchaseCallBack?.onSuccess(purchaseModel)
+                    } catch (ex: CBException) {
+                        Log.e("error", ex.toString())
+                        purchaseCallBack?.onError(ex)
+                    }
+                }
+            }
+        }
+
     }
 }

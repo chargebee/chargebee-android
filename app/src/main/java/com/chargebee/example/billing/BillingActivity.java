@@ -51,9 +51,9 @@ public class BillingActivity extends BaseActivity implements ProductListAdapter.
             PurchaseModel p = (PurchaseModel) purchaseModel;
             String purchaseToken = p.getPurchaseToken();
 
-            showProgressDialog();
-            Log.i(TAG, "purchaseToken :"+purchaseToken);
-           // billingViewModel.updatePurchaseToken(p);
+            showPurchaseSuccessDialog(purchaseToken);
+            //showProgressDialog();
+            // billingViewModel.updatePurchaseToken(purchaseToken);
         });
         this.billingViewModel.getMPurchaseTokenStatus().observe(this, purchaseModel -> {
            hideProgressDialog();
