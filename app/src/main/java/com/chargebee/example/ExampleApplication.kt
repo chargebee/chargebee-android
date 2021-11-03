@@ -9,6 +9,7 @@ class ExampleApplication: Application() {
         super.onCreate()
 
 //      Configure the Chargebee site credentials at the start of the application
-        Chargebee.configure(site = "test-ashwin1-test", publishableApiKey = "test_1PDU9iynvhEcPMgWAJ0QZw90d2Aw92ah")
+        Chargebee.configure(site = "cb-imay-test", publishableApiKey = "test_EojsGoGFeHoc3VpGPQDOZGAxYy3d0FF3", sdkKey = "cb-j53yhbfmtfhfhkmhow3ramecom1")
+
     }
 }
