@@ -79,7 +79,7 @@ class MainActivity : AppCompatActivity(), ListItemsAdapter.ItemClickListener {
                 })
             }
             else ->{
-                val SUBS_SKUS = arrayListOf("gaurav_test", "cb_weekly_premium", "test_123_gaurav", "test_weekly_premium")
+                val SUBS_SKUS = arrayListOf("merchant.pro.android", "merchant.premium.android")
                 CBPurchase.retrieveProducts(this,SUBS_SKUS, object : CBCallback.ListProductsCallback<ArrayList<Products>>{
                     override fun onSuccess(productDetails: ArrayList<Products>) {
                         GlobalScope.launch {

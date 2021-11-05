@@ -1,8 +1,7 @@
 package com.chargebee.android.resources
 
 import com.chargebee.android.*
-import com.chargebee.android.exceptions.CBException
-import com.chargebee.android.loggers.CBLogger
+import com.chargebee.android.exceptions.ChargebeeResult
 import com.chargebee.android.models.Plan
 import com.chargebee.android.repository.PlanRepository
 
@@ -15,5 +14,13 @@ internal class PlanResource: BaseResource(Chargebee.baseUrl) {
             ErrorDetail::class.java
         )
         return Success(result.getData().plan)
+    }
+
+    suspend fun retrievePlan(planId: String): ChargebeeResult<Any> {
+        val planResponse = apiClient.create(PlanRepository::class.java).retrievePlan(planId = planId)
+
+        return responseFromServer(
+            planResponse,
+        ErrorDetail::class.java)
     }
 }

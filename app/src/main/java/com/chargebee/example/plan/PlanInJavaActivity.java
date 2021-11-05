@@ -4,6 +4,7 @@ import android.os.Bundle;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
+import com.chargebee.android.models.Plan;
 import com.chargebee.example.BaseActivity;
 import com.chargebee.example.R;
 
@@ -30,19 +31,19 @@ public class PlanInJavaActivity extends BaseActivity {
 
         this.viewModel = new PlanViewModel();
 
-        this.viewModel.planResult.observe(this, plan -> {
+        this.viewModel.getPlanResult().observe(this, plan -> {
             hideProgressDialog();
-            planName.setText(plan.getName());
-            planPricingText.setText(plan.getPricingModel());
+            planName.setText(((Plan) plan).getName());
+            planPricingText.setText(((Plan) plan).getPricingModel());
         });
 
-        this.viewModel.planError.observe(this, message -> {
+        this.viewModel.getPlanError().observe(this, message -> {
             hideProgressDialog();
-            errorText.setText(message);
+            errorText.setText(message.toString());
         });
         this.planButton.setOnClickListener(view -> {
             this.clearFields();
-           showProgressDialog();
+            showProgressDialog();
             this.viewModel.retrievePlan(planIdInput.getText().toString());
         });
     }
