@@ -1,14 +1,18 @@
 package com.chargebee.example
 
+import android.app.AlertDialog
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
+import android.text.TextUtils
 import android.util.Log
 import android.view.View
+import android.widget.EditText
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.DefaultItemAnimator
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.chargebee.android.Chargebee
 import com.chargebee.android.billingservice.CBCallback
 import com.chargebee.android.billingservice.CBPurchase
 import com.chargebee.android.exceptions.CBException
@@ -54,7 +58,9 @@ class MainActivity : AppCompatActivity(), ListItemsAdapter.ItemClickListener {
     override fun onItemClick(view: View?, position: Int) {
         when(CBItems.valueOf(featureList.get(position).toString()).value){
             CBItems.Configure.value ->{
-                //TODO Implementation yet to be done
+                if (view != null) {
+                    onClickConfigure(view)
+                }
             }
             CBItems.ShowPlan.value->{
                 val intent = Intent(this, PlanInJavaActivity::class.java)
@@ -98,6 +104,29 @@ class MainActivity : AppCompatActivity(), ListItemsAdapter.ItemClickListener {
         val intent = Intent(this, BillingActivity::class.java)
         intent.putExtra(PRODUCTS_LIST_KEY,productDetails)
         this.startActivity(intent)
+    }
+
+    private fun onClickConfigure(view: View) {
+        val builder = AlertDialog.Builder(this)
+        val inflater = layoutInflater
+        val dialogLayout = inflater.inflate(R.layout.activity_configure, null)
+        val siteNameEditText  = dialogLayout.findViewById<EditText>(R.id.etv_siteName)
+        val apiKeyEditText  = dialogLayout.findViewById<EditText>(R.id.etv_apikey)
+        val sdkKeyEditText  = dialogLayout.findViewById<EditText>(R.id.etv_sdkkey)
+        builder.setView(dialogLayout)
+        builder.setPositiveButton("Initialize") { _, i ->
+            if (!TextUtils.isEmpty(siteNameEditText.text.toString()) && TextUtils.isEmpty(
+                    apiKeyEditText.text.toString()
+                ) && !TextUtils.isEmpty(sdkKeyEditText.text.toString())
+            )
+                Chargebee.configure(
+                    siteNameEditText.text.toString(),
+                    apiKeyEditText.text.toString(),
+                    true,
+                    sdkKeyEditText.text.toString()
+                )
+        }
+        builder.show()
     }
 
 
