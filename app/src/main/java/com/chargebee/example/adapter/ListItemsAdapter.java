@@ -7,15 +7,15 @@ import android.widget.TextView;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.chargebee.example.R;
-import com.chargebee.example.util.CBItems;
+import com.chargebee.example.util.CBMenu;
 import java.util.List;
 
 public class ListItemsAdapter extends RecyclerView.Adapter<ListItemsAdapter.ViewHolder> {
 
-    private List<CBItems> mProductsList;
+    private List<CBMenu> mProductsList;
     private ItemClickListener mClickListener;
 
-    public ListItemsAdapter(List<CBItems> mProductsList, ItemClickListener mClickListener) {
+    public ListItemsAdapter(List<CBMenu> mProductsList, ItemClickListener mClickListener) {
         this.mProductsList = mProductsList;
         this.mClickListener = mClickListener;
     }
@@ -28,7 +28,7 @@ public class ListItemsAdapter extends RecyclerView.Adapter<ListItemsAdapter.View
 
     @Override
     public void onBindViewHolder(ViewHolder holder, int position) {
-        String productName = CBItems.valueOf(mProductsList.get(position).toString()).getValue();
+        String productName = CBMenu.valueOf(mProductsList.get(position).toString()).getValue();
         holder.myTextView.setText(productName);
     }
 
