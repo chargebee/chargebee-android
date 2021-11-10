@@ -14,4 +14,10 @@ internal interface PlanRepository {
         @Header("Authorization") token: String = Chargebee.encodedApiKey,
         @Path("planId") planId: String
     ): Response<PlanWrapper?>
+
+    @GET("v2/plans/{planId}")
+    suspend fun retrievePlanDetail(
+        @Header("Authorization") token: String = Chargebee.encodedApiKey,
+        @Path("planId") planId: String
+    ): Response<PlanWrapper?>
 }

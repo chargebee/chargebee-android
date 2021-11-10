@@ -1,11 +1,11 @@
 package com.chargebee.android;
 
-internal interface ChargebeeError {
+interface ChargebeeError {
     fun toCBError(statusCode: Int): ErrorDetail
 }
 
 data class ErrorDetail(
-    val message: String,
+    val message: String?,
     val type: String? = null,
     val apiErrorCode: String? = null,
     val param: String? = null,

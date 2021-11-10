@@ -1,6 +1,7 @@
 package com.chargebee.android.models
 
 import com.chargebee.android.CBResult
+import com.chargebee.android.exceptions.ChargebeeResult
 import com.chargebee.android.exceptions.InvalidRequestException
 import com.chargebee.android.exceptions.OperationFailedException
 import com.chargebee.android.loggers.CBLogger
@@ -39,7 +40,14 @@ data class Plan(
             ResultHandler.safeExecute({ PlanResource().retrieve(planId) }, completion, logger)
         }
 
+        @JvmStatic
+        @Throws(InvalidRequestException::class, OperationFailedException::class)
+        fun retrievePlan(planId: String, completion : (ChargebeeResult<Any>) -> Unit) {
+            val logger = CBLogger(name = "plan", action = "retrieve_plan")
+            ResultHandler.safeExecuter({ PlanResource().retrievePlan(planId) }, completion, logger)
+        }
+
     }
 }
 
-internal data class PlanWrapper(val plan: Plan)
+data class PlanWrapper(val plan: Plan)

@@ -3,18 +3,22 @@ package com.chargebee.example.billing
 import android.util.Log
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import com.chargebee.android.CBResult
 import com.chargebee.android.billingservice.CBCallback
 import com.chargebee.android.billingservice.CBPurchase
 import com.chargebee.android.billingservice.PurchaseModel
 import com.chargebee.android.exceptions.CBException
+import com.chargebee.android.models.KeyValidation
 import com.chargebee.android.models.Products
+import com.chargebee.android.models.SubscriptionDetail
 
 class BillingViewModel : ViewModel() {
 
+    private val TAG = "BillingViewModel"
     var productPurchaseResult: MutableLiveData<Any?> = MutableLiveData()
     var cbException: MutableLiveData<CBException?> = MutableLiveData()
     var mPurchaseTokenStatus: MutableLiveData<Any?> = MutableLiveData()
-    private val TAG = "BillingViewModel"
+    var sdkKeyValidationResult: MutableLiveData<Any?> = MutableLiveData()
 
     fun purchaseProduct(param: Products) {
         CBPurchase.purchaseProduct(param, object : CBCallback.PurchaseCallback<PurchaseModel>{
@@ -27,30 +31,28 @@ class BillingViewModel : ViewModel() {
         })
     }
 
-   /* fun validateSDKKey(sdkKey: String?, customerId: String?) {
-        validateSdkKey(sdkKey!!, customerId!!,object: CBCallback.ValidateSDKKeyCallback<CBPurchaseFailure>{
-            override fun onSuccess(success: ) {
-                TODO("Not yet implemented")
+    fun validateSDKKey(sdkKey: String, customerId: String) {
+        KeyValidation.validateSdkKey(sdkKey, customerId) { validateKey: CBResult<KeyValidation> ->
+            try {
+                val validate = validateKey.getData().boolean
+                Log.d(TAG, "validation success $validate")
+                sdkKeyValidationResult.postValue(validate)
+            } catch (ex: CBException) {
+                Log.d("error", ex.toString())
+                cbException.postValue(ex)
             }
-
-            override fun onError(error: CBException) {
-                TODO("Not yet implemented")
-            }
-
-        })
+        }
     }
-
-    fun updatePurchaseToken(purchaseModel: PurchaseModel) {
-        KeyValidation.updatePurchaseToken(object: CBCallback.ValidateSDKKeyCallback<CBPurchaseFailure>{
-            override fun onSuccess(success: ) {
-                TODO("Not yet implemented")
+    fun updatePurchaseToken(purchaseToken: String) {
+        SubscriptionDetail.updatePurchaseToken(purchaseToken) { subscriptionDetail: CBResult<SubscriptionDetail> ->
+            try {
+                val subscriptionId = subscriptionDetail.getData().subscriptionId
+                Log.d(TAG, "subscriptionId $subscriptionId")
+                sdkKeyValidationResult.postValue(subscriptionId)
+            } catch (ex: CBException) {
+                Log.d(TAG, ex.toString())
+                cbException.postValue(ex)
             }
-
-            override fun onError(error: CBException) {
-                TODO("Not yet implemented")
-            }
-
-        })
-    }*/
-
+        }
+    }
 }

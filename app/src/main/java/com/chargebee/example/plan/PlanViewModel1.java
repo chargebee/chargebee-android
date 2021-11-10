@@ -4,9 +4,10 @@ import android.util.Log;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 import com.chargebee.android.exceptions.CBException;
+import com.chargebee.android.exceptions.ChargebeeResult;
 import com.chargebee.android.models.Plan;
 
-class PlanViewModel extends ViewModel {
+class PlanViewModel1 extends ViewModel {
 
     MutableLiveData<Plan> planResult = new MutableLiveData();
     MutableLiveData<String> planError = new MutableLiveData();
@@ -23,5 +24,7 @@ class PlanViewModel extends ViewModel {
             }
             return null;
         });
+
+
     }
 }

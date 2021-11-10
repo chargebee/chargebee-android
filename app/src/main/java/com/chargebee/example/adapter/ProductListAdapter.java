@@ -38,12 +38,13 @@ public class ProductListAdapter extends RecyclerView.Adapter<ProductListAdapter.
     }
 
     public class ViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
-        TextView mTextViewTitle,mTextViewPrice;
+        TextView mTextViewTitle,mTextViewPrice, mTextViewSubscribe;
 
         ViewHolder(View itemView) {
             super(itemView);
             mTextViewTitle = itemView.findViewById(R.id.tv_productTitle);
             mTextViewPrice = itemView.findViewById(R.id.tv_productPrice);
+            mTextViewSubscribe = itemView.findViewById(R.id.tv_subscription);
             itemView.setOnClickListener(this);
         }
 
