@@ -4,7 +4,6 @@ import android.content.Context
 import com.chargebee.android.exceptions.CBException
 import com.chargebee.android.models.Products
 import java.util.ArrayList
-
 object CBPurchase {
 
     var billingClientManager: BillingClientManager? = null
