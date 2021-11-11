@@ -35,7 +35,7 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
         android:layout_marginEnd="10dp"
-        android:text="Subscription"
+        android:text="Subscribe"
         android:textSize="15dp"
         android:textStyle="bold"
         app:layout_constraintEnd_toEndOf="parent"

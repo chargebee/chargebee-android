@@ -15,7 +15,6 @@ import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
-
 import static com.chargebee.example.util.Constants.PRODUCTS_LIST_KEY;
 
 public class BillingActivity extends BaseActivity implements ProductListAdapter.ProductClickListener {
@@ -26,6 +25,7 @@ public class BillingActivity extends BaseActivity implements ProductListAdapter.
     private RecyclerView mItemsRecyclerView = null;
     private BillingViewModel billingViewModel= new BillingViewModel();
     private static final String TAG = "BillingActivity";
+    private int position = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -41,7 +41,7 @@ public class BillingActivity extends BaseActivity implements ProductListAdapter.
             productList = gson.fromJson(productDetails, listType);
         }
 
-        productListAdapter = new ProductListAdapter(productList, this);
+        productListAdapter = new ProductListAdapter(this,productList, this);
         linearLayoutManager = new LinearLayoutManager(this);
         mItemsRecyclerView.setLayoutManager(linearLayoutManager);
         mItemsRecyclerView.setItemAnimator(new DefaultItemAnimator());
@@ -50,25 +50,35 @@ public class BillingActivity extends BaseActivity implements ProductListAdapter.
         this.billingViewModel.getProductPurchaseResult().observe(this, purchaseModel -> {
             PurchaseModel p = (PurchaseModel) purchaseModel;
             String purchaseToken = p.getPurchaseToken();
-
+            System.out.println("purchaseToken :"+purchaseToken);
+            Log.i(TAG, "purchaseToken :"+purchaseToken);
             showPurchaseSuccessDialog(purchaseToken);
+            updateSubscribeStatus();
             //showProgressDialog();
             // billingViewModel.updatePurchaseToken(purchaseToken);
         });
+
         this.billingViewModel.getMPurchaseTokenStatus().observe(this, purchaseModel -> {
            hideProgressDialog();
             Log.i(TAG, "purchaseToken update status :");
 
         });
+
         this.billingViewModel.getCbException().observe(this, error -> {
             hideProgressDialog();
             Log.i(TAG, "error :");
 
         });
+
     }
 
     @Override
     public void onProductClick(View view, int position) {
+        this.position = position;
         this.billingViewModel.purchaseProduct(productList.get(position));
+    }
+    private void updateSubscribeStatus(){
+        productList.get(position).setSubStatus(true);
+        productListAdapter.notifyDataSetChanged();
     }
 }
