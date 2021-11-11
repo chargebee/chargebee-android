@@ -63,31 +63,29 @@ class MainActivity : AppCompatActivity(), ListItemsAdapter.ItemClickListener {
     }
 
     override fun onItemClick(view: View?, position: Int) {
-        when(CBItems.valueOf(featureList.get(position).toString()).value){
-            CBItems.Configure.value ->{
+        when(CBMenu.valueOf(featureList.get(position).toString()).value){
+            CBMenu.Configure.value ->{
                 if (view != null) {
                     onClickConfigure(view)
                 }
             }
-            CBMenu.GetPlan.value->{
-            CBItems.ShowPlans.value->{
+            CBMenu.GetPlans.value->{
                 val intent = Intent(this, PlansActivity::class.java)
                 startActivity(intent)
             }
-            CBItems.ShowPlan.value->{
+            CBMenu.GetPlan.value->{
                 val intent = Intent(this, PlanInJavaActivity::class.java)
                 startActivity(intent)
             }
-            CBMenu.GetAddOn.value ->{
-            CBItems.ShowItems.value->{
+            CBMenu.GetItems.value->{
                 val intent = Intent(this, ItemsActivity::class.java)
                 startActivity(intent)
             }
-            CBItems.ShowItem.value->{
+            CBMenu.GetItem.value->{
                 val intent = Intent(this, ItemActivity::class.java)
                 startActivity(intent)
             }
-            CBItems.ShowAddOn.value ->{
+            CBMenu.GetAddOn.value ->{
                 val intent = Intent(this, AddonActivity::class.java)
                 startActivity(intent)
             }
@@ -105,7 +103,7 @@ class MainActivity : AppCompatActivity(), ListItemsAdapter.ItemClickListener {
                     }
                 })
             }
-            CBItems.GetProducts.value ->{
+            CBMenu.GetProducts.value ->{
                 val SUBS_SKUS = arrayListOf("merchant.pro.android", "merchant.premium.android")
                 CBPurchase.retrieveProducts(this,SUBS_SKUS, object : CBCallback.ListProductsCallback<ArrayList<Products>>{
                     override fun onSuccess(productDetails: ArrayList<Products>) {
@@ -118,7 +116,7 @@ class MainActivity : AppCompatActivity(), ListItemsAdapter.ItemClickListener {
                     }
                 })
             }
-            CBItems.SubsStatus.value ->{
+            CBMenu.SubsStatus.value ->{
                 mBillingViewModel?.retrieveSubscription("1000000894110088")
             }
             else ->{
