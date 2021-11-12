@@ -34,6 +34,7 @@ class PlanViewModel : ViewModel() {
                     Log.i(javaClass.simpleName, "list plans :  ${it.data}")
                     mPlansList.clear()
                     for (item in  (it.data as PlansWrapper).list){
+                        Log.i(javaClass.simpleName, "Plan id :  ${item.plan.id}")
                         mPlansList.add(item.plan.name)
                     }
                     mPlansResult.postValue((mPlansList))
