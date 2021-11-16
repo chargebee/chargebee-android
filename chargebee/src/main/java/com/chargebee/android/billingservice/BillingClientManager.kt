@@ -91,8 +91,9 @@ class BillingClientManager constructor(context: Context, skuType: String,
            ) { billingResult, skuDetailsList ->
                if (billingResult.responseCode == BillingClient.BillingResponseCode.OK && skuDetailsList != null) {
                    try {
+                       skusWithSkuDetails.clear()
                        for (details in skuDetailsList) {
-                           val products = Products(details.sku,details.title, details.price, details)
+                           val products = Products(details.sku,details.title, details.price, details, false)
                            skusWithSkuDetails.add(products)
                        }
                        callBack.onSuccess(productIDs = skusWithSkuDetails)

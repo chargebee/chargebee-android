@@ -8,6 +8,7 @@ import com.chargebee.android.billingservice.CBCallback
 import com.chargebee.android.billingservice.CBPurchase
 import com.chargebee.android.billingservice.PurchaseModel
 import com.chargebee.android.exceptions.CBException
+import com.chargebee.android.exceptions.ChargebeeResult
 import com.chargebee.android.models.KeyValidation
 import com.chargebee.android.models.Products
 import com.chargebee.android.models.SubscriptionDetail
@@ -38,20 +39,20 @@ class BillingViewModel : ViewModel() {
                 Log.d(TAG, "validation success $validate")
                 sdkKeyValidationResult.postValue(validate)
             } catch (ex: CBException) {
-                Log.d("error", ex.toString())
+                Log.d(TAG, ex.toString())
                 cbException.postValue(ex)
             }
         }
     }
-    fun updatePurchaseToken(purchaseToken: String) {
-        SubscriptionDetail.updatePurchaseToken(purchaseToken) { subscriptionDetail: CBResult<SubscriptionDetail> ->
-            try {
-                val subscriptionId = subscriptionDetail.getData().subscriptionId
-                Log.d(TAG, "subscriptionId $subscriptionId")
-                sdkKeyValidationResult.postValue(subscriptionId)
-            } catch (ex: CBException) {
-                Log.d(TAG, ex.toString())
-                cbException.postValue(ex)
+    fun retrieveSubscription(subscriptionId: String) {
+        SubscriptionDetail.retrieveSubscription(subscriptionId) {
+            when(it){
+                is ChargebeeResult.Success ->{
+                    Log.i(TAG, "subscription :  ${it.data}")
+                }
+                is ChargebeeResult.Error ->{
+                    Log.d(TAG, "exception :  ${it.exp.message}")
+                }
             }
         }
     }

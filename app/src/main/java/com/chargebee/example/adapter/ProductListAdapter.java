@@ -1,5 +1,6 @@
 package com.chargebee.example.adapter;
 
+import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -13,8 +14,10 @@ public class ProductListAdapter extends RecyclerView.Adapter<ProductListAdapter.
 
     private List<Products> mProductsList;
     private ProductListAdapter.ProductClickListener mClickListener;
+    private Context mContext = null;
 
-    public ProductListAdapter(List<Products> mProductsList, ProductClickListener mClickListener) {
+    public ProductListAdapter(Context context, List<Products> mProductsList, ProductClickListener mClickListener) {
+        mContext = context;
         this.mProductsList = mProductsList;
         this.mClickListener = mClickListener;
     }
@@ -30,6 +33,14 @@ public class ProductListAdapter extends RecyclerView.Adapter<ProductListAdapter.
         Products products = mProductsList.get(position);
         holder.mTextViewTitle.setText(products.getProductId());
         holder.mTextViewPrice.setText(products.getProductPrice());
+        if (products.getSubStatus()) {
+            holder.mTextViewSubscribe.setText(R.string.status_subscribed);
+            holder.mTextViewSubscribe.setTextColor(mContext.getResources().getColor(R.color.success_green));
+        }else {
+            holder.mTextViewSubscribe.setText(R.string.status_subscribe);
+            holder.mTextViewSubscribe.setTextColor(mContext.getResources().getColor(R.color.colorAccent));
+        }
+
     }
 
     @Override

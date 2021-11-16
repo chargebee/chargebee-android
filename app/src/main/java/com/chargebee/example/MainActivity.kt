@@ -16,11 +16,17 @@ import com.chargebee.android.Chargebee
 import com.chargebee.android.billingservice.CBCallback
 import com.chargebee.android.billingservice.CBPurchase
 import com.chargebee.android.exceptions.CBException
+import com.chargebee.android.exceptions.ChargebeeResult
+import com.chargebee.android.models.Items
 import com.chargebee.android.models.Products
 import com.chargebee.example.adapter.ListItemsAdapter
 import com.chargebee.example.addon.AddonActivity
 import com.chargebee.example.billing.BillingActivity
+import com.chargebee.example.billing.BillingViewModel
+import com.chargebee.example.items.ItemActivity
+import com.chargebee.example.items.ItemsActivity
 import com.chargebee.example.plan.PlanInJavaActivity
+import com.chargebee.example.plan.PlansActivity
 import com.chargebee.example.token.TokenizeActivity
 import com.chargebee.example.util.CBMenu
 import com.chargebee.example.util.Constants.PRODUCTS_LIST_KEY
@@ -36,13 +42,14 @@ class MainActivity : AppCompatActivity(), ListItemsAdapter.ItemClickListener {
     var mContext: Context? = null
     private val TAG = "MainActivity"
     private val gson = Gson()
-    
+    private var mBillingViewModel : BillingViewModel? = null
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         mContext = this
+        mBillingViewModel = BillingViewModel()
         this.mItemsRecyclerView = findViewById(R.id.rv_list_feature)
-        //initializeListeners()
         setListAdapter()
     }
 
@@ -56,14 +63,26 @@ class MainActivity : AppCompatActivity(), ListItemsAdapter.ItemClickListener {
     }
 
     override fun onItemClick(view: View?, position: Int) {
-        when(CBItems.valueOf(featureList.get(position).toString()).value){
-            CBItems.Configure.value ->{
+        when(CBMenu.valueOf(featureList.get(position).toString()).value){
+            CBMenu.Configure.value ->{
                 if (view != null) {
                     onClickConfigure(view)
                 }
             }
+            CBMenu.GetPlans.value->{
+                val intent = Intent(this, PlansActivity::class.java)
+                startActivity(intent)
+            }
             CBMenu.GetPlan.value->{
                 val intent = Intent(this, PlanInJavaActivity::class.java)
+                startActivity(intent)
+            }
+            CBMenu.GetItems.value->{
+                val intent = Intent(this, ItemsActivity::class.java)
+                startActivity(intent)
+            }
+            CBMenu.GetItem.value->{
+                val intent = Intent(this, ItemActivity::class.java)
                 startActivity(intent)
             }
             CBMenu.GetAddOn.value ->{
@@ -84,8 +103,8 @@ class MainActivity : AppCompatActivity(), ListItemsAdapter.ItemClickListener {
                     }
                 })
             }
-            CBMenu.GetProducts.value -> {
-                val SUBS_SKUS = arrayListOf("merchant.premium.android", "merchant.pro.android")
+            CBMenu.GetProducts.value ->{
+                val SUBS_SKUS = arrayListOf("merchant.pro.android", "merchant.premium.android")
                 CBPurchase.retrieveProducts(this,SUBS_SKUS, object : CBCallback.ListProductsCallback<ArrayList<Products>>{
                     override fun onSuccess(productDetails: ArrayList<Products>) {
                         GlobalScope.launch {
@@ -96,20 +115,19 @@ class MainActivity : AppCompatActivity(), ListItemsAdapter.ItemClickListener {
                         Log.e(TAG," ${error.message}")
                     }
                 })
-
             }
-            CBMenu.GetPlans.value -> {
-
+            CBMenu.SubsStatus.value ->{
+                mBillingViewModel?.retrieveSubscription("1000000894110088")
             }
             else ->{
-                Log.e(TAG,"Not configured")
+
             }
         }
     }
 
-    private fun launchProductDetailsScreen(productDetails: String){
+    private fun launchProductDetailsScreen(productDetails: String) {
         val intent = Intent(this, BillingActivity::class.java)
-        intent.putExtra(PRODUCTS_LIST_KEY,productDetails)
+        intent.putExtra(PRODUCTS_LIST_KEY, productDetails)
         this.startActivity(intent)
     }
 
@@ -122,6 +140,7 @@ class MainActivity : AppCompatActivity(), ListItemsAdapter.ItemClickListener {
         val sdkKeyEditText  = dialogLayout.findViewById<EditText>(R.id.etv_sdkkey)
         builder.setView(dialogLayout)
         builder.setPositiveButton("Initialize") { _, i ->
+
             if (!TextUtils.isEmpty(siteNameEditText.text.toString()) && TextUtils.isEmpty(
                     apiKeyEditText.text.toString()
                 ) && !TextUtils.isEmpty(sdkKeyEditText.text.toString())

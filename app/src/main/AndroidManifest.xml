@@ -12,11 +12,14 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <activity android:name="com.chargebee.example.addon.AddonActivity"></activity>
+        <activity android:name="com.chargebee.example.addon.AddonActivity" />
         <activity android:name="com.chargebee.example.token.TokenizeActivity" />
         <activity android:name="com.chargebee.example.plan.PlanInJavaActivity">
         </activity>
         <activity android:name=".billing.BillingActivity"/>
+        <activity android:name=".items.ItemsActivity"/>
+        <activity android:name=".items.ItemActivity"/>
+        <activity android:name=".plan.PlansActivity"/>
         <activity android:name="com.chargebee.example.MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
