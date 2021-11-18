@@ -16,8 +16,5 @@ interface CBCallback {
         fun onSuccess(subscriptionId: PurchaseModel)
         fun onError(error: CBException)
     }
- /*   interface ValidateSDKKeyCallback<T> {
-        fun onSuccess(success: CBPurchaseFailure)
-        fun onError(error: CBException)
-    }*/
+
 }

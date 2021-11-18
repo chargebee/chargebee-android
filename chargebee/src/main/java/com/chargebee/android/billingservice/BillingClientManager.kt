@@ -46,6 +46,16 @@ class BillingClientManager constructor(context: Context, skuType: String,
             BillingClient.BillingResponseCode.BILLING_UNAVAILABLE -> {
                 Log.i(TAG,"onBillingSetupFinished() -> with error: ${billingResult.debugMessage}")
             }
+            BillingClient.BillingResponseCode.SERVICE_DISCONNECTED,
+            BillingClient.BillingResponseCode.USER_CANCELED,
+            BillingClient.BillingResponseCode.SERVICE_UNAVAILABLE,
+            BillingClient.BillingResponseCode.ITEM_UNAVAILABLE,
+            BillingClient.BillingResponseCode.ERROR,
+            BillingClient.BillingResponseCode.ITEM_ALREADY_OWNED,
+            BillingClient.BillingResponseCode.SERVICE_TIMEOUT,
+            BillingClient.BillingResponseCode.ITEM_NOT_OWNED -> {
+                Log.i(TAG,"onBillingSetupFinished() -> google billing client error: ${billingResult.debugMessage}")
+            }
             BillingClient.BillingResponseCode.DEVELOPER_ERROR -> {
                 // Client is already in the process of connecting to billing service
                 Log.i(TAG,"onBillingSetupFinished() -> Client is already in the process of connecting to billing service")
@@ -125,13 +135,22 @@ class BillingClientManager constructor(context: Context, skuType: String,
             }
 
     }
-    fun processPurchases(purchases: Set<Purchase>) {
-        purchases.forEach { purchase ->
-            if (purchase.purchaseState == Purchase.PurchaseState.PURCHASED) {
-                // Implement server verification
-                // If purchase token is OK, then unlock user access to the content
+
+    fun isFeatureSupported(): Boolean {
+        try {
+            val featureSupportedResult = billingClient.isFeatureSupported(BillingClient.FeatureType.SUBSCRIPTIONS)
+            when(featureSupportedResult.responseCode){
+                BillingClient.BillingResponseCode.OK ->{
+                    return true
+                }
+                BillingClient.BillingResponseCode.FEATURE_NOT_SUPPORTED ->{
+                    return false
+                }
             }
+        } catch (e: IllegalArgumentException) {
+            Log.e(TAG, "Play Services not available ")
         }
+        return false
     }
 
     override fun onPurchasesUpdated(billingResult: BillingResult, purchases: MutableList<Purchase>?) {

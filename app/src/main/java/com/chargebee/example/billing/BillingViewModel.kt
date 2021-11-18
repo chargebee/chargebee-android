@@ -3,23 +3,24 @@ package com.chargebee.example.billing
 import android.util.Log
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
-import com.chargebee.android.CBResult
 import com.chargebee.android.billingservice.CBCallback
 import com.chargebee.android.billingservice.CBPurchase
 import com.chargebee.android.billingservice.PurchaseModel
 import com.chargebee.android.exceptions.CBException
 import com.chargebee.android.exceptions.ChargebeeResult
-import com.chargebee.android.models.KeyValidation
 import com.chargebee.android.models.Products
 import com.chargebee.android.models.SubscriptionDetail
+import com.chargebee.android.models.SubscriptionDetailsWrapper
+import com.chargebee.android.network.CBReceiptResponse
 
 class BillingViewModel : ViewModel() {
 
     private val TAG = "BillingViewModel"
-    var productPurchaseResult: MutableLiveData<Any?> = MutableLiveData()
+    var productPurchaseResult: MutableLiveData<PurchaseModel?> = MutableLiveData()
     var cbException: MutableLiveData<CBException?> = MutableLiveData()
-    var mPurchaseTokenStatus: MutableLiveData<Any?> = MutableLiveData()
-    var sdkKeyValidationResult: MutableLiveData<Any?> = MutableLiveData()
+    var subscriptionStatus: MutableLiveData<String?> = MutableLiveData()
+    var error: MutableLiveData<String?> = MutableLiveData()
+    private var subscriptionId: String = ""
 
     fun purchaseProduct(param: Products) {
         CBPurchase.purchaseProduct(param, object : CBCallback.PurchaseCallback<PurchaseModel>{
@@ -32,15 +33,17 @@ class BillingViewModel : ViewModel() {
         })
     }
 
-    fun validateSDKKey(sdkKey: String, customerId: String) {
-        KeyValidation.validateSdkKey(sdkKey, customerId) { validateKey: CBResult<KeyValidation> ->
-            try {
-                val validate = validateKey.getData().boolean
-                Log.d(TAG, "validation success $validate")
-                sdkKeyValidationResult.postValue(validate)
-            } catch (ex: CBException) {
-                Log.d(TAG, ex.toString())
-                cbException.postValue(ex)
+    fun validateReceipt(purchaseToken: String, products: Products) {
+        CBPurchase.validateReceipt(purchaseToken, products){
+            when(it){
+                is ChargebeeResult.Success ->{
+                    subscriptionId = (it.data as CBReceiptResponse).in_app_subscription.subscription_id
+                    retrieveSubscription(subscriptionId)
+                }
+                is ChargebeeResult.Error ->{
+                    Log.d(TAG, "Exception from server :  ${it.exp.message}")
+                    error.postValue(it.exp.message)
+                }
             }
         }
     }
@@ -49,9 +52,11 @@ class BillingViewModel : ViewModel() {
             when(it){
                 is ChargebeeResult.Success ->{
                     Log.i(TAG, "subscription :  ${it.data}")
+                    subscriptionStatus.postValue((it.data as SubscriptionDetailsWrapper).subscription.status)
                 }
                 is ChargebeeResult.Error ->{
-                    Log.d(TAG, "exception :  ${it.exp.message}")
+                    Log.d(TAG, "Exception from server :  ${it.exp.message}")
+                    error.postValue(it.exp.message)
                 }
             }
         }

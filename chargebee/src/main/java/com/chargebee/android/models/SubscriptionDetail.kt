@@ -1,6 +1,5 @@
 package com.chargebee.android.models
 
-import com.chargebee.android.CBResult
 import com.chargebee.android.exceptions.ChargebeeResult
 import com.chargebee.android.exceptions.InvalidRequestException
 import com.chargebee.android.exceptions.OperationFailedException
@@ -17,4 +16,5 @@ class SubscriptionDetail(val id: String,val customer_id: String, val status: Str
         }
     }
 }
-internal data class SubscriptionDetailsWrapper(val subscription: SubscriptionDetail)
+
+data class SubscriptionDetailsWrapper(val subscription: SubscriptionDetail)

@@ -67,11 +67,10 @@
         android:layout_height="wrap_content"
         android:text="Initialize"
         android:visibility="gone"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintHorizontal_bias="0.456"
+        app:layout_constraintHorizontal_bias="0.418"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/tv_configure"
-        app:layout_constraintVertical_bias="0.498" />
+        app:layout_constraintTop_toBottomOf="@id/etv_sdkkey"
+        app:layout_constraintVertical_bias="0.300" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

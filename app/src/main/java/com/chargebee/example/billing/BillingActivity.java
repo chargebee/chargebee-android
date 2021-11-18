@@ -6,7 +6,6 @@ import android.view.View;
 import androidx.recyclerview.widget.DefaultItemAnimator;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
-import com.chargebee.android.billingservice.PurchaseModel;
 import com.chargebee.android.models.Products;
 import com.chargebee.example.BaseActivity;
 import com.chargebee.example.R;
@@ -26,6 +25,7 @@ public class BillingActivity extends BaseActivity implements ProductListAdapter.
     private BillingViewModel billingViewModel= new BillingViewModel();
     private static final String TAG = "BillingActivity";
     private int position = 0;
+    private Products products = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -48,25 +48,32 @@ public class BillingActivity extends BaseActivity implements ProductListAdapter.
         mItemsRecyclerView.setAdapter(productListAdapter);
 
         this.billingViewModel.getProductPurchaseResult().observe(this, purchaseModel -> {
-            PurchaseModel p = (PurchaseModel) purchaseModel;
-            String purchaseToken = p.getPurchaseToken();
+            String purchaseToken = purchaseModel.getPurchaseToken();
             System.out.println("purchaseToken :"+purchaseToken);
-            Log.i(TAG, "purchaseToken :"+purchaseToken);
             showPurchaseSuccessDialog(purchaseToken);
+            products = productList.get(position);
+            if (products!= null) {
+                showProgressDialog();
+                billingViewModel.validateReceipt(purchaseToken, products);
+            }
+
             updateSubscribeStatus();
-            //showProgressDialog();
-            // billingViewModel.updatePurchaseToken(purchaseToken);
         });
 
-        this.billingViewModel.getMPurchaseTokenStatus().observe(this, purchaseModel -> {
+        this.billingViewModel.getSubscriptionStatus().observe(this, status -> {
            hideProgressDialog();
-            Log.i(TAG, "purchaseToken update status :");
+           Log.i(TAG, "subscription status :"+status);
 
         });
 
         this.billingViewModel.getCbException().observe(this, error -> {
             hideProgressDialog();
-            Log.i(TAG, "error :");
+            Log.i(TAG, "Error from server :"+error);
+
+        });
+        this.billingViewModel.getError().observe(this, error -> {
+            hideProgressDialog();
+            Log.i(TAG, "error from server:"+error);
 
         });
 
