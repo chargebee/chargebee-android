@@ -31,6 +31,7 @@ import com.chargebee.example.token.TokenizeActivity
 import com.chargebee.example.util.CBMenu
 import com.chargebee.example.util.Constants.PRODUCTS_LIST_KEY
 import com.google.gson.Gson
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 
@@ -107,7 +108,7 @@ class MainActivity : AppCompatActivity(), ListItemsAdapter.ItemClickListener {
                 val SUBS_SKUS = arrayListOf("merchant.pro.android", "merchant.premium.android")
                 CBPurchase.retrieveProducts(this,SUBS_SKUS, object : CBCallback.ListProductsCallback<ArrayList<Products>>{
                     override fun onSuccess(productDetails: ArrayList<Products>) {
-                        GlobalScope.launch {
+                        GlobalScope.launch(Dispatchers.Main) {
                             launchProductDetailsScreen(gson.toJson(productDetails))
                         }
                     }

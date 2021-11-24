@@ -17,6 +17,11 @@ data class CBAuthentication(val resource_id: String, val app_id: String,
             val logger = CBLogger(name = "configure", action = "configure")
             ResultHandler.safeExecuter({  AuthResource().authenticate(sdkKey) }, completion, logger)
         }
+        @Throws(InvalidRequestException::class, OperationFailedException::class)
+        fun isSDKKeyValid(sdkKey: String, completion : (ChargebeeResult<Any>) -> Unit) {
+            val logger = CBLogger(name = "configure", action = "configure")
+            ResultHandler.safeExecuter({  AuthResource().authenticate(sdkKey) }, completion, logger)
+        }
     }
 }
 data class CBAuthResponse(val in_app_detail: CBAuthentication)
