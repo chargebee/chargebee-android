@@ -41,7 +41,7 @@ class BillingViewModel : ViewModel() {
                     retrieveSubscription(subscriptionId)
                 }
                 is ChargebeeResult.Error ->{
-                    Log.d(TAG, "Exception from server :  ${it.exp.message}")
+                    Log.e(TAG, "Exception from server - validateReceipt() :  ${it.exp.message}")
                     error.postValue(it.exp.message)
                 }
             }
@@ -51,11 +51,11 @@ class BillingViewModel : ViewModel() {
         SubscriptionDetail.retrieveSubscription(subscriptionId) {
             when(it){
                 is ChargebeeResult.Success ->{
-                    Log.i(TAG, "subscription :  ${it.data}")
+                    Log.i(TAG, "subscription status:  ${it.data}")
                     subscriptionStatus.postValue((it.data as SubscriptionDetailsWrapper).subscription.status)
                 }
                 is ChargebeeResult.Error ->{
-                    Log.d(TAG, "Exception from server :  ${it.exp.message}")
+                    Log.e(TAG, "Exception from server- retrieveSubscription() :  ${it.exp.message}")
                     error.postValue(it.exp.message)
                 }
             }

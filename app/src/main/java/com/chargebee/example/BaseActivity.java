@@ -1,7 +1,9 @@
 package com.chargebee.example;
 
+import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.ProgressDialog;
+import android.content.DialogInterface;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -19,7 +21,6 @@ public class BaseActivity extends AppCompatActivity {
     }
 
     public void showProgressDialog(){
-        Log.i("BaseActivity","show loader");
         try {
             if (progressDialog == null) {
                 progressDialog = new ProgressDialog(this, R.style.ProgressDialogTheme);
@@ -29,7 +30,7 @@ public class BaseActivity extends AppCompatActivity {
             progressDialog.setContentView(R.layout.progress_dialog);
         }
         catch (Exception e){
-            Log.e("BaseActivity",e.getLocalizedMessage());
+            Log.e("BaseActivity",e.getMessage());
         }
     }
     public void hideProgressDialog(){
@@ -38,7 +39,7 @@ public class BaseActivity extends AppCompatActivity {
                 progressDialog.dismiss();
             }
         } catch (IllegalArgumentException e) {
-            Log.e("BaseActivity",e.getLocalizedMessage());
+            Log.e("BaseActivity",e.getMessage());
         }
         progressDialog = null;
     }
@@ -57,5 +58,18 @@ public class BaseActivity extends AppCompatActivity {
             }
         });
         dialog.show();
+    }
+
+    public void alertSuccess(String subcriptionStatus) {
+        new AlertDialog.Builder(this)
+                .setIcon(android.R.drawable.ic_dialog_info)
+                .setTitle("Chargebee")
+                .setMessage("Subscription Status :"+subcriptionStatus)
+                .setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int i) {
+                        finish();
+                    }
+                }).show();
     }
 }

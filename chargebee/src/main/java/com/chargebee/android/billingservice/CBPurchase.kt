@@ -52,7 +52,7 @@ object CBPurchase {
             CBAuthentication.isSDKKeyValid(Chargebee.sdkKey){
                 when(it){
                     is ChargebeeResult.Success -> {
-                        if (billingClientManager?.isFeatureSupported() == true) {
+                        if (billingClientManager?.isBillingClientReady() == true && billingClientManager?.isFeatureSupported() == true) {
                             billingClientManager?.purchase(params, callback)
                         } else {
                             callback.onError(CBException(ErrorDetail("Play services not available")))
@@ -76,10 +76,9 @@ object CBPurchase {
         try {
             val logger = CBLogger(name = "receipt", action = "validate_receipt")
             price = products.productPrice.drop(1).dropLast(2).replace(".","").replace(",","")
-            val receiptData = Credentials.basic(purchaseToken, "")
 
             val params = Params(
-                receiptData,
+                purchaseToken,
                 products.productId,
                 price,
                 products.skuDetails.priceCurrencyCode,
@@ -92,6 +91,38 @@ object CBPurchase {
                 completion,
                 logger
             )
+        }catch (exp: Exception){
+            Log.e(javaClass.simpleName, "Exception in validateReceipt() :"+exp.message)
+            ChargebeeResult.Error(
+                exp = CBException(
+                    error = ErrorDetail(
+                        exp.message
+                    )
+                )
+            )
+        }
+    }
+    @JvmStatic
+    @Throws(InvalidRequestException::class, OperationFailedException::class)
+    fun queryPurchaseHistory() {
+        try {
+            billingClientManager?.queryPurchaseHistory()
+        }catch (exp: Exception){
+            Log.i(javaClass.simpleName, "Exception in validateReceipt() :"+exp.message)
+            ChargebeeResult.Error(
+                exp = CBException(
+                    error = ErrorDetail(
+                        exp.message
+                    )
+                )
+            )
+        }
+    }
+    @JvmStatic
+    @Throws(InvalidRequestException::class, OperationFailedException::class)
+    fun queryAllPurchases() {
+        try {
+            billingClientManager?.queryAllPurchases()
         }catch (exp: Exception){
             Log.i(javaClass.simpleName, "Exception in validateReceipt() :"+exp.message)
             ChargebeeResult.Error(

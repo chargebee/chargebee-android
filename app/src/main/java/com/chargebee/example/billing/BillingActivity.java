@@ -6,6 +6,8 @@ import android.view.View;
 import androidx.recyclerview.widget.DefaultItemAnimator;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+
+import com.chargebee.android.billingservice.CBPurchase;
 import com.chargebee.android.models.Products;
 import com.chargebee.example.BaseActivity;
 import com.chargebee.example.R;
@@ -50,7 +52,7 @@ public class BillingActivity extends BaseActivity implements ProductListAdapter.
         this.billingViewModel.getProductPurchaseResult().observe(this, purchaseModel -> {
             String purchaseToken = purchaseModel.getPurchaseToken();
             System.out.println("purchaseToken :"+purchaseToken);
-            showPurchaseSuccessDialog(purchaseToken);
+            //showPurchaseSuccessDialog(purchaseToken);
             products = productList.get(position);
             if (products!= null) {
                 showProgressDialog();
@@ -64,16 +66,19 @@ public class BillingActivity extends BaseActivity implements ProductListAdapter.
            hideProgressDialog();
            Log.i(TAG, "subscription status :"+status);
 
+            alertSuccess(status);
+
         });
 
         this.billingViewModel.getCbException().observe(this, error -> {
             hideProgressDialog();
             Log.i(TAG, "Error from server :"+error);
-
+            alertSuccess(error.getMessage());
         });
         this.billingViewModel.getError().observe(this, error -> {
             hideProgressDialog();
             Log.i(TAG, "error from server:"+error);
+            alertSuccess(error);
 
         });
 
@@ -81,8 +86,12 @@ public class BillingActivity extends BaseActivity implements ProductListAdapter.
 
     @Override
     public void onProductClick(View view, int position) {
-        this.position = position;
-        this.billingViewModel.purchaseProduct(productList.get(position));
+        try {
+            this.position = position;
+            this.billingViewModel.purchaseProduct(productList.get(position));
+        }catch (Exception exp) {
+            Log.e(TAG, "Exception:"+exp.getMessage());
+        }
     }
     private void updateSubscribeStatus(){
         productList.get(position).setSubStatus(true);
