@@ -6,7 +6,7 @@ import com.chargebee.android.exceptions.OperationFailedException
 import com.chargebee.android.loggers.CBLogger
 import com.chargebee.android.resources.ItemsResource
 
-data class Items(val id: String, val name: String,val status: String){
+data class Items(val id: String, val name: String,val status: String, val channel: String){
     companion object{
         @JvmStatic
         @Throws(InvalidRequestException::class, OperationFailedException::class)

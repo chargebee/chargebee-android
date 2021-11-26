@@ -10,7 +10,7 @@ import com.chargebee.android.responseFromServer
 internal class ItemsResource: BaseResource(Chargebee.baseUrl){
 
     suspend fun retrieveAllItems(params: Array<String>): ChargebeeResult<Any> {
-        val itemsResponse = apiClient.create(ItemsRepository::class.java).retrieveAllItems(limit = params.get(0), name = params.get(1))
+        val itemsResponse = apiClient.create(ItemsRepository::class.java).retrieveAllItems(limit = params.get(0), name = params.get(1), channel=params.get(2))
 
         return responseFromServer(
             itemsResponse,

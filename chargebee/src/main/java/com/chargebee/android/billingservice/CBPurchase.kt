@@ -5,22 +5,22 @@ import android.text.TextUtils
 import android.util.Log
 import com.chargebee.android.Chargebee
 import com.chargebee.android.ErrorDetail
-import com.chargebee.android.exceptions.CBException
-import com.chargebee.android.exceptions.ChargebeeResult
-import com.chargebee.android.exceptions.InvalidRequestException
-import com.chargebee.android.exceptions.OperationFailedException
+import com.chargebee.android.exceptions.*
 import com.chargebee.android.loggers.CBLogger
-import com.chargebee.android.models.Products
+import com.chargebee.android.models.*
 import com.chargebee.android.models.ResultHandler
+import com.chargebee.android.network.Auth
+import com.chargebee.android.network.CBAuthResponse
 import com.chargebee.android.network.CBAuthentication
 import com.chargebee.android.network.Params
+import com.chargebee.android.resources.CatalogVersion
 import com.chargebee.android.resources.ReceiptResource
 import okhttp3.Credentials
 import java.util.ArrayList
 object CBPurchase {
 
     var billingClientManager: BillingClientManager? = null
-    val SUBS_IDS = arrayListOf("gaurav_test", "cb_weekly_premium", "test_123_gaurav", "test_weekly_premium")
+    val productIdList = arrayListOf<String>()
     var price: String = ""
 
     annotation class SkuType {
@@ -30,8 +30,9 @@ object CBPurchase {
         }
     }
     @JvmStatic
-    fun retrieveProductIDs(context: Context, callBack : CBCallback.ListProductIDsCallback<ArrayList<String>>) {
-        callBack.onSuccess(SUBS_IDS)
+    fun retrieveProductIDs(params: Array<String>, completion : (CBProductIDResult<ArrayList<String>>) -> Unit) {
+        val queryParams = append(params,"Standard","app_store")
+        retrieveProductIDList(queryParams, completion)
     }
     @JvmStatic
     fun retrieveProducts(context: Context, params: ArrayList<String>, callBack : CBCallback.ListProductsCallback<ArrayList<Products>>) {
@@ -133,6 +134,84 @@ object CBPurchase {
                 )
             )
         }
+    }
+
+    private fun retrieveProductIDList(params: Array<String>, completion: (CBProductIDResult<ArrayList<String>>) -> Unit){
+        when(Chargebee.version){
+            CatalogVersion.V1.value ->{
+                Plan.retrieveAllPlans(params){
+                    when (it) {
+                        is ChargebeeResult.Success -> {
+                            Log.i(javaClass.simpleName, "list plan ID's :  ${it.data}")
+                            val productsList = (it.data as PlansWrapper).list
+                            productIdList.clear()
+                            for (plan in  productsList){
+                                if (plan.plan.channel.trim() == Chargebee.channel.trim()){
+                                    val id = plan.plan.id.split("-")
+                                    productIdList.add(id[0])
+                                }
+                            }
+                            completion(CBProductIDResult.ProductIds(productIdList))
+                        }
+                        is ChargebeeResult.Error -> {
+                            Log.e(javaClass.simpleName, "Error retrieving all plans :  ${it.exp.message}")
+                            completion(CBProductIDResult.Error(CBException(ErrorDetail(it.exp.message))))
+                        }
+                    }
+                }
+            }
+            CatalogVersion.V2.value ->{
+                Items.retrieveAllItems(params){
+                    when (it) {
+                        is ChargebeeResult.Success -> {
+                            Log.i(javaClass.simpleName, "list item ID's :  ${it.data}")
+                            val productsList = (it.data as ItemsWrapper).list
+                            productIdList.clear()
+                            for (item in  productsList){
+                                if (item.item.channel.trim() == Chargebee.channel.trim())
+                                productIdList.add(item.item.id)
+                            }
+                            completion(CBProductIDResult.ProductIds(productIdList))
+                        }
+                        is ChargebeeResult.Error -> {
+                            Log.e(javaClass.simpleName, "Error retrieving all items :  ${it.exp.message}")
+                            completion(CBProductIDResult.Error(CBException(ErrorDetail(it.exp.message))))
+                        }
+                    }
+                }
+            }
+            CatalogVersion.Unknown.value ->{
+                val auth = Auth(Chargebee.sdkKey,
+                    Chargebee.applicationId,
+                    Chargebee.appName,
+                    Chargebee.channel
+                )
+                CBAuthentication.authenticate(auth) {
+                    when(it){
+                        is ChargebeeResult.Success ->{
+                            Log.i(javaClass.simpleName, " Response :${it.data}")
+                            val response = it.data as CBAuthResponse
+                            Chargebee.version = response.in_app_detail.product_catalog_version
+                            retrieveProductIDList(params,completion)
+                        }
+                        is ChargebeeResult.Error ->{
+                            Log.i(javaClass.simpleName, "Invalid catalog version")
+                            completion(CBProductIDResult.Error(CBException(ErrorDetail("Invalid catalog version"))))
+                        }
+                    }
+                }
+            }
+            else ->{
+                Log.i(javaClass.simpleName, "Unknown error")
+                completion(CBProductIDResult.Error(CBException(ErrorDetail("Unknown error"))))
+            }
+        }
+    }
+    private fun append(arr: Array<String>, sort: String, channel: String ): Array<String> {
+        val list: MutableList<String> = arr.toMutableList()
+        list.add(sort)
+        list.add(channel)
+        return list.toTypedArray()
     }
 
 }

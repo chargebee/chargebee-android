@@ -8,6 +8,7 @@ import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.DefaultItemAnimator
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.chargebee.android.Chargebee
 import com.chargebee.android.ErrorDetail
 import com.chargebee.example.BaseActivity
 import com.chargebee.example.R
@@ -31,7 +32,7 @@ class ItemsActivity : BaseActivity(), ItemsAdapter.ItemClickListener {
 
         viewModel = ItemsViewModel()
         showProgressDialog()
-        val queryParam = arrayOf("8", "Standard")
+        val queryParam = arrayOf("8", "Standard", Chargebee.channel)
         viewModel!!.retrieveAllItems(queryParam)
 
         viewModel?.mItemsResult?.observe(this, Observer {

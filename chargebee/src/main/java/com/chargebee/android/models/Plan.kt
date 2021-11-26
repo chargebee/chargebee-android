@@ -25,6 +25,7 @@ data class Plan(
     val isShippable: Boolean,
     val updatedAt: Long,
     val giftable: Boolean,
+    val channel: String,
     val resourceVersion: Long,
     val `object`: String,
     val chargeModel: String,
