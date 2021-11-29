@@ -72,4 +72,38 @@ public class BaseActivity extends AppCompatActivity {
                     }
                 }).show();
     }
+
+    public void alertListProductId(String[] list){
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("Chargebee Product IDs");
+
+        builder.setItems(list, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+
+            }
+        });
+        builder.setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialogInterface, int i) {
+
+            }
+        });
+        AlertDialog dialog = builder.create();
+        dialog.show();
+    }
+    protected void showDialog(String msg){
+        final Dialog dialog = new Dialog(this);
+        dialog.setContentView(R.layout.dialog_layout);
+        TextView textViewMessage = (TextView) dialog.findViewById(R.id.tv_message);
+        textViewMessage.setText(msg);
+        Button dialogButton = (Button) dialog.findViewById(R.id.dialogButtonOK);
+        dialogButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                dialog.dismiss();
+            }
+        });
+        dialog.show();
+    }
 }

@@ -1,14 +1,15 @@
 package com.chargebee.example
 
 import android.app.AlertDialog
+import android.app.Dialog
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.text.TextUtils
 import android.util.Log
 import android.view.View
+import android.widget.Button
 import android.widget.EditText
-import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.DefaultItemAnimator
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -16,8 +17,7 @@ import com.chargebee.android.Chargebee
 import com.chargebee.android.billingservice.CBCallback
 import com.chargebee.android.billingservice.CBPurchase
 import com.chargebee.android.exceptions.CBException
-import com.chargebee.android.exceptions.ChargebeeResult
-import com.chargebee.android.models.Items
+import com.chargebee.android.exceptions.CBProductIDResult
 import com.chargebee.android.models.Products
 import com.chargebee.example.adapter.ListItemsAdapter
 import com.chargebee.example.addon.AddonActivity
@@ -35,7 +35,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 
-class MainActivity : AppCompatActivity(), ListItemsAdapter.ItemClickListener {
+class MainActivity : BaseActivity(), ListItemsAdapter.ItemClickListener {
     private var mItemsRecyclerView: RecyclerView? = null
     private var list  = arrayListOf<String>()
     var listItemsAdapter: ListItemsAdapter? = null
@@ -65,59 +65,57 @@ class MainActivity : AppCompatActivity(), ListItemsAdapter.ItemClickListener {
 
     override fun onItemClick(view: View?, position: Int) {
         when(CBMenu.valueOf(featureList.get(position).toString()).value){
-            CBMenu.Configure.value ->{
+            CBMenu.Configure.value -> {
                 if (view != null) {
                     onClickConfigure(view)
                 }
             }
-            CBMenu.GetPlans.value->{
+            CBMenu.GetPlans.value -> {
                 val intent = Intent(this, PlansActivity::class.java)
                 startActivity(intent)
             }
-            CBMenu.GetPlan.value->{
+            CBMenu.GetPlan.value -> {
                 val intent = Intent(this, PlanInJavaActivity::class.java)
                 startActivity(intent)
             }
-            CBMenu.GetItems.value->{
+            CBMenu.GetItems.value -> {
                 val intent = Intent(this, ItemsActivity::class.java)
                 startActivity(intent)
             }
-            CBMenu.GetItem.value->{
+            CBMenu.GetItem.value -> {
                 val intent = Intent(this, ItemActivity::class.java)
                 startActivity(intent)
             }
-            CBMenu.GetAddOn.value ->{
+            CBMenu.GetAddOn.value -> {
                 val intent = Intent(this, AddonActivity::class.java)
                 startActivity(intent)
             }
-            CBMenu.Tokenize.value ->{
+            CBMenu.Tokenize.value -> {
                 val intent = Intent(this, TokenizeActivity::class.java)
                 startActivity(intent)
             }
-            CBMenu.ProductIDs.value ->{
-                CBPurchase.retrieveProductIDs(this, object : CBCallback.ListProductIDsCallback<ArrayList<String>>{
-                    override fun onSuccess(productIDs: ArrayList<String>) {
-                        list = productIDs
-                    }
-                    override fun onError(error: CBException) {
-                        Log.e(TAG," ${error.message}")
-                    }
-                })
-            }
-            CBMenu.GetProducts.value ->{
-                val SUBS_SKUS = arrayListOf("merchant.pro.android", "merchant.premium.android")
-                CBPurchase.retrieveProducts(this,SUBS_SKUS, object : CBCallback.ListProductsCallback<ArrayList<Products>>{
-                    override fun onSuccess(productDetails: ArrayList<Products>) {
-                        GlobalScope.launch(Dispatchers.Main) {
-                            launchProductDetailsScreen(gson.toJson(productDetails))
+            CBMenu.ProductIDs.value -> {
+                val queryParam = arrayOf("100")
+                CBPurchase.retrieveProductIDs(queryParam) {
+                    Log.i(javaClass.simpleName, "list product ID's :  ${it}")
+                    when (it) {
+                        is CBProductIDResult.ProductIds -> {
+                            val array = it.IDs.toTypedArray()
+                            GlobalScope.launch(Dispatchers.Main) {
+                                alertListProductId(array)
+                            }
+                        }
+                        is CBProductIDResult.Error -> {
+                            Log.e(TAG, " ${it.exp.message}")
                         }
                     }
-                    override fun onError(error: CBException) {
-                        Log.e(TAG," ${error.message}")
-                    }
-                })
+                }
             }
-            CBMenu.SubsStatus.value ->{
+            CBMenu.GetProducts.value -> {
+                //val SUBS_SKUS = arrayListOf("merchant.pro.android", "merchant.premium.android")
+                getProductIdFromCustomer()
+            }
+            CBMenu.SubsStatus.value -> {
                 mBillingViewModel?.retrieveSubscription("1000000894110088")
             }
             else ->{
@@ -156,5 +154,33 @@ class MainActivity : AppCompatActivity(), ListItemsAdapter.ItemClickListener {
         builder.show()
     }
 
+    private fun getProductIdFromCustomer() {
+        val dialog = Dialog(this)
+        dialog.setContentView(R.layout.dialog_input_layout)
+        val input = dialog.findViewById<View>(R.id.productIdInput) as EditText
+        val dialogButton = dialog.findViewById<View>(R.id.btn_ok) as Button
+        dialogButton.setOnClickListener {
+            val productIdList = input.text.toString().split(",")
+            getProductIdList(productIdList.toCollection(ArrayList()))
+            dialog.dismiss()
+        }
+        dialog.show()
+    }
+    private fun getProductIdList(productIdList : ArrayList<String>){
+        CBPurchase.retrieveProducts(
+            this,
+            productIdList,
+            object : CBCallback.ListProductsCallback<ArrayList<Products>> {
+                override fun onSuccess(productDetails: ArrayList<Products>) {
+                    GlobalScope.launch(Dispatchers.Main) {
+                        launchProductDetailsScreen(gson.toJson(productDetails))
+                    }
+                }
+                override fun onError(error: CBException) {
+                    Log.e(TAG, "Error:  ${error.message}")
+                    showDialog(error.message)
+                }
+            })
+    }
 
 }

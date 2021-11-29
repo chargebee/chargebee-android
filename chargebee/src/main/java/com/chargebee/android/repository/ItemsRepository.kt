@@ -15,7 +15,8 @@ interface ItemsRepository {
     suspend fun retrieveAllItems(
         @Header("Authorization") token: String = Chargebee.encodedApiKey,
         @Query("limit") limit: String,
-        @Query("sort_by[desc]") name: String
+        @Query("sort_by[desc]") name: String,
+        @Query("channel") channel: String
     ): Response<ItemsWrapper?>
 
     @GET("v2/items/{itemId}")
