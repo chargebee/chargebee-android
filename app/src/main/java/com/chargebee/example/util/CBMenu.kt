@@ -8,7 +8,7 @@ enum class CBMenu(val value: String) {
     GetItem("Get Item"),
     GetAddOn("Get AddOn"),
     Tokenize("Tokenize"),
-    ProductIDs("Get Google Play Product IDs"),
+    ProductIDs("Get Google Play Product Identifiers"),
     GetProducts("Get Products"),
     SubsStatus("Get Subscription Status")
 }

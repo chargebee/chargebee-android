@@ -1,6 +1,5 @@
 package com.chargebee.android.resources
 
-import android.util.Log
 import com.chargebee.android.Chargebee
 import com.chargebee.android.ErrorDetail
 import com.chargebee.android.exceptions.ChargebeeResult

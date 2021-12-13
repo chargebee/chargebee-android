@@ -14,6 +14,7 @@ import androidx.recyclerview.widget.DefaultItemAnimator
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.chargebee.android.Chargebee
+import com.chargebee.android.ErrorDetail
 import com.chargebee.android.billingservice.CBCallback
 import com.chargebee.android.billingservice.CBPurchase
 import com.chargebee.android.exceptions.CBException
@@ -52,6 +53,13 @@ class MainActivity : BaseActivity(), ListItemsAdapter.ItemClickListener {
         mBillingViewModel = BillingViewModel()
         this.mItemsRecyclerView = findViewById(R.id.rv_list_feature)
         setListAdapter()
+
+        this.mBillingViewModel!!.error.observeForever {
+            alertSuccess(Gson().fromJson<ErrorDetail>(
+                it,
+                ErrorDetail::class.java
+            ).message)
+        }
     }
 
     private fun setListAdapter(){

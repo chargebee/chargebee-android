@@ -11,13 +11,13 @@ data class Items(val id: String, val name: String,val status: String, val channe
         @JvmStatic
         @Throws(InvalidRequestException::class, OperationFailedException::class)
         fun retrieveAllItems(params: Array<String>, completion : (ChargebeeResult<Any>) -> Unit) {
-            val logger = CBLogger(name = "items", action = "retrieve_items")
+            val logger = CBLogger(name = "items", action = "getAllItems")
             ResultHandler.safeExecuter({ ItemsResource().retrieveAllItems(params) }, completion, logger)
         }
         @JvmStatic
         @Throws(InvalidRequestException::class, OperationFailedException::class)
         fun retrieveItem(itemId: String, completion : (ChargebeeResult<Any>) -> Unit) {
-            val logger = CBLogger(name = "item", action = "retrieve_item")
+            val logger = CBLogger(name = "item", action = "getItem")
             ResultHandler.safeExecuter({ ItemsResource().retrieveItem(itemId) }, completion, logger)
         }
     }

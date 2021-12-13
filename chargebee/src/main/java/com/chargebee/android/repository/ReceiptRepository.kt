@@ -11,6 +11,8 @@ interface ReceiptRepository {
     @POST("v2/in_app_subscriptions/{sdkKey}/process_purchase_command/")
     suspend fun validateReceipt(
         @Header("Authorization") token: String = Chargebee.encodedApiKey,
+        @Header("platform") platform: String = Chargebee.platform,
+        @Header("version") version: String = Chargebee.version,
         @Path("sdkKey") sdkKey: String = Chargebee.sdkKey,
         @FieldMap data: Map<String, String>): Response<CBReceiptResponse?>
 }
