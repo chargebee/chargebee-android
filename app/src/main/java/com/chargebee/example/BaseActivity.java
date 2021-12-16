@@ -83,7 +83,7 @@ public class BaseActivity extends AppCompatActivity {
                 }
             });
         }else{
-            String[] empty = {"Product IDs not found on server for play store"};
+            String[] empty = {"Product IDs not found on this site for play store"};
             builder.setItems(empty, new DialogInterface.OnClickListener() {
                 @Override
                 public void onClick(DialogInterface dialog, int which) {

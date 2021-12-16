@@ -3,6 +3,7 @@ package com.chargebee.example.billing
 import android.util.Log
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import com.chargebee.android.ErrorDetail
 import com.chargebee.android.billingservice.CBCallback
 import com.chargebee.android.billingservice.CBPurchase
 import com.chargebee.android.billingservice.PurchaseModel
@@ -12,6 +13,7 @@ import com.chargebee.android.models.Products
 import com.chargebee.android.models.SubscriptionDetail
 import com.chargebee.android.models.SubscriptionDetailsWrapper
 import com.chargebee.android.network.CBReceiptResponse
+import com.google.gson.Gson
 
 class BillingViewModel : ViewModel() {
 
@@ -42,7 +44,10 @@ class BillingViewModel : ViewModel() {
                 }
                 is ChargebeeResult.Error ->{
                     Log.e(TAG, "Exception from server - validateReceipt() :  ${it.exp.message}")
-                    error.postValue(it.exp.message)
+                    error.postValue(Gson().fromJson<ErrorDetail>(
+                        it.exp.message,
+                        ErrorDetail::class.java
+                    ).message)
                 }
             }
         }
@@ -56,7 +61,10 @@ class BillingViewModel : ViewModel() {
                 }
                 is ChargebeeResult.Error ->{
                     Log.e(TAG, "Exception from server- retrieveSubscription() :  ${it.exp.message}")
-                    error.postValue(it.exp.message)
+                    error.postValue(Gson().fromJson<ErrorDetail>(
+                        it.exp.message,
+                        ErrorDetail::class.java
+                    ).message)
                 }
             }
         }

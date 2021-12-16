@@ -105,7 +105,6 @@ class MainActivity : BaseActivity(), ListItemsAdapter.ItemClickListener {
             CBMenu.ProductIDs.value -> {
                 val queryParam = arrayOf("100")
                 CBPurchase.retrieveProductIDs(queryParam) {
-                    Log.i(javaClass.simpleName, "list product ID's :  ${it}")
                     when (it) {
                         is CBProductIDResult.ProductIds -> {
                             val array = it.IDs.toTypedArray()
@@ -148,7 +147,7 @@ class MainActivity : BaseActivity(), ListItemsAdapter.ItemClickListener {
         builder.setView(dialogLayout)
         builder.setPositiveButton("Initialize") { _, i ->
 
-            if (!TextUtils.isEmpty(siteNameEditText.text.toString()) && TextUtils.isEmpty(
+            if (!TextUtils.isEmpty(siteNameEditText.text.toString()) && !TextUtils.isEmpty(
                     apiKeyEditText.text.toString()
                 ) && !TextUtils.isEmpty(sdkKeyEditText.text.toString())
             )
@@ -180,8 +179,12 @@ class MainActivity : BaseActivity(), ListItemsAdapter.ItemClickListener {
             productIdList,
             object : CBCallback.ListProductsCallback<ArrayList<Products>> {
                 override fun onSuccess(productDetails: ArrayList<Products>) {
-                    GlobalScope.launch(Dispatchers.Main) {
-                        launchProductDetailsScreen(gson.toJson(productDetails))
+                    if (productDetails.size>0) {
+                        GlobalScope.launch(Dispatchers.Main) {
+                            launchProductDetailsScreen(gson.toJson(productDetails))
+                        }
+                    }else{
+                        alertSuccess("Items not available to buy")
                     }
                 }
                 override fun onError(error: CBException) {
