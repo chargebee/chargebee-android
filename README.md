@@ -7,7 +7,7 @@ After installing and initializing the SDK with the Chargebee site authentication
 
 2. Tokenizing credit card information while presenting your own UI. Use this if you are selling physical goods or offline services, or are NOT REQUIRED to use Apple's in-app purchases as per their app review guidelines
 
-### Requirements
+## Requirements
 * Android 5.0 (API level 21) and above
 * [Android Gradle Plugin](https://developer.android.com/studio/releases/gradle-plugin) 4.0.0
 * [Gradle](https://gradle.org/releases/) 6.1.1+
@@ -20,7 +20,7 @@ The `Chargebee-Android` SDK can be installed by adding this to the `build.gradle
 implementation 'com.chargebee:chargebee-android:0.1.0'
 ```
 
-### Example project
+## Example project
 To run the example project, clone the repo, and run the gradle build first.
 
 ## Configuration
@@ -50,7 +50,7 @@ Chargebee.configure(site = "your-site", publishableApiKey = "api_key")
 
 ### Integrating In-App Purchases
 
-##Get all IAP Product Identifiers from Chargebee
+### Get all IAP Product Identifiers from Chargebee
 
 Every In-App Purchase subscription product that you configure in your Play Store Connect account, can be configured in Chargebee as a Plan. Start by retrieving the Google IAP Product IDs from your Chargebee account.
 
@@ -70,7 +70,7 @@ CBPurchase.retrieveProductIDs(queryParam) {
 For eg. query params above can be "limit": "100".
 
 The above function will determine your product catalog version in Chargebee and hit the relevant APIs automatically, to retrieve the Chargebee Plans that correspond to Google IAP products, along with their Google IAP Product IDs.
-## Get IAP Products
+### Get IAP Products
 You can then convert these to Google IAP Product objects with the following function.
 
 ```kotlin
@@ -125,7 +125,7 @@ The following section describes how to use the SDK to directly tokenize credit c
 
 If you are using Product Catalog 2.0 in your Chargebee site, then you can use the following functions to retrieve the product to be presented for users to purchase. 
 
-#Get all Items
+### Get all Items
 
 ```kotlin
 Items.retrieveAllItems(queryParam) {
@@ -141,7 +141,7 @@ Items.retrieveAllItems(queryParam) {
 ```
 For eg. query params above can be "sort_by[desc]" : "name" OR "limit": "100".
 
-#Get Item Details
+### Get Item Details
 
 ```kotlin
 Items.retrieveItem(queryParam) {
@@ -157,7 +157,7 @@ Items.retrieveItem(queryParam) {
 ```
 If you are using Product Catalog 1.0 in your Chargebee site, then you can use any of the following relevant functions to retrieve the product to be presented for users to purchase.
 
-###Get All Plans
+### Get All Plans
 
 ```kotlin
 Plan.retrieveAllPlans(queryParam) {
@@ -173,7 +173,7 @@ Plan.retrieveAllPlans(queryParam) {
 ```
 For eg. query params above can be "sort_by[desc]" : "name" OR "limit": "100".
 
-#Get Plan Details
+### Get Plan Details
 
 ```kotlin
 Plan.retrievePlan(queryParam) {
