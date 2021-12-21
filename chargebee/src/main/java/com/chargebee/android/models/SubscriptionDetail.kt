@@ -7,7 +7,8 @@ import com.chargebee.android.loggers.CBLogger
 import com.chargebee.android.resources.PurchaseResource
 import com.chargebee.android.resources.SubscriptionResource
 
-class SubscriptionDetail(val id: String,val customer_id: String, val status: String) {
+class SubscriptionDetail(val id: String,val customer_id: String, val status: String, val current_term_start: String, val current_term_end: String,
+        val activated_at: String) {
     companion object{
         @JvmStatic
         @Throws(InvalidRequestException::class, OperationFailedException::class)
