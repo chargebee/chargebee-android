@@ -26,7 +26,7 @@ To run the example project, clone the repo, and run the gradle build first.
 ## Configuration
 
 ### Configuration for using In-App Purchases
-To use the Chargebee Android SDK for making and managing in-app purchases, you must initialize the SDK with your Chargebee Site, Publishable API key and the SDK Key. You can find your Publishable API key, or create a new one, in your Chargebee account under Configure Chargebee > API Keys . Once you setup the Google Play Store integration on your Chargebee account, you can find the SDK Key under the name of Resource ID when you click on View Keys.
+To use the Chargebee Android SDK for making and managing in-app purchases, you must initialize the SDK with your Chargebee Site, Publishable API key and the SDK Key. You can find your API key, or create a new one, in your Chargebee account under Configure Chargebee > API Keys . Once you setup the Google Play Store integration on your Chargebee account, you can find the SDK Key under the name of Resource ID when you click on View Keys.
 
 You can initialize the SDK during your app startup by including the following in your app delegate.
 
@@ -38,7 +38,7 @@ Chargebee.configure(site= "your-site",
                     sdkKey= "sdk_key")
 ```
 ### Configuration for using tokenization only
-If you want to use the Chargebee Android SDK only for tokenizing credit card details, you can initialize the SDK with your Chargebee Site and Publishable API key alone. You can initialize the SDK during your app startup by including this in Android application class' onCreate method.
+If you want to use the Chargebee Android SDK only for tokenizing credit card details, you can initialize the SDK with your Chargebee Site and API key alone. You can initialize the SDK during your app startup by including this in Android application class' onCreate method.
 
 ```kotlin
 import com.chargebee.android.Chargebee
