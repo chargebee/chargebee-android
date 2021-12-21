@@ -19,7 +19,7 @@ class BillingViewModel : ViewModel() {
 
     private val TAG = "BillingViewModel"
     var productPurchaseResult: MutableLiveData<PurchaseModel?> = MutableLiveData()
-    var cbException: MutableLiveData<CBException?> = MutableLiveData()
+    var cbException: MutableLiveData<String?> = MutableLiveData()
     var subscriptionStatus: MutableLiveData<String?> = MutableLiveData()
     var error: MutableLiveData<String?> = MutableLiveData()
     private var subscriptionId: String = ""
@@ -30,7 +30,10 @@ class BillingViewModel : ViewModel() {
                 productPurchaseResult.postValue(success)
             }
             override fun onError(error: CBException) {
-                cbException.postValue(error)
+                cbException.postValue(Gson().fromJson<ErrorDetail>(
+                    error.message,
+                    ErrorDetail::class.java
+                ).message)
             }
         })
     }

@@ -49,7 +49,7 @@ class ItemsViewModel : ViewModel() {
     private fun parseResponse(items: ItemsWrapper){
         mItemsList.clear()
         for (item in  items.list){
-            mItemsList.add(item.item.name)
+            mItemsList.add(item.item.id)
         }
 
     }

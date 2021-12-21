@@ -52,6 +52,8 @@ public class BillingActivity extends BaseActivity implements ProductListAdapter.
         this.billingViewModel.getProductPurchaseResult().observe(this, purchaseModel -> {
             String purchaseToken = purchaseModel.getPurchaseToken();
             System.out.println("purchaseToken :"+purchaseToken);
+            Log.i(TAG, "purchaseToken :"+purchaseToken);
+
             //showPurchaseSuccessDialog(purchaseToken);
             products = productList.get(position);
             if (products!= null) {
@@ -73,7 +75,7 @@ public class BillingActivity extends BaseActivity implements ProductListAdapter.
         this.billingViewModel.getCbException().observe(this, error -> {
             hideProgressDialog();
             Log.i(TAG, "Error from server :"+error);
-            alertSuccess(error.getMessage());
+            alertSuccess(error);
         });
         this.billingViewModel.getError().observe(this, error -> {
             hideProgressDialog();

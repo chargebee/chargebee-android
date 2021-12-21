@@ -14,7 +14,6 @@ import androidx.recyclerview.widget.DefaultItemAnimator
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.chargebee.android.Chargebee
-import com.chargebee.android.ErrorDetail
 import com.chargebee.android.billingservice.CBCallback
 import com.chargebee.android.billingservice.CBPurchase
 import com.chargebee.android.exceptions.CBException
@@ -42,7 +41,6 @@ class MainActivity : BaseActivity(), ListItemsAdapter.ItemClickListener {
     var listItemsAdapter: ListItemsAdapter? = null
     var featureList = mutableListOf<CBMenu>()
     var mContext: Context? = null
-    private val TAG = "MainActivity"
     private val gson = Gson()
     private var mBillingViewModel : BillingViewModel? = null
 
@@ -55,10 +53,14 @@ class MainActivity : BaseActivity(), ListItemsAdapter.ItemClickListener {
         setListAdapter()
 
         this.mBillingViewModel!!.error.observeForever {
-            alertSuccess(Gson().fromJson<ErrorDetail>(
-                it,
-                ErrorDetail::class.java
-            ).message)
+            hideProgressDialog()
+            Log.e(javaClass.simpleName, "Error from server:  $it")
+            alertSuccess(it)
+        }
+        this.mBillingViewModel!!.subscriptionStatus.observeForever {
+            hideProgressDialog()
+            Log.i(javaClass.simpleName, "subscription status:  $it")
+            alertSuccess(it)
         }
     }
 
@@ -103,17 +105,22 @@ class MainActivity : BaseActivity(), ListItemsAdapter.ItemClickListener {
                 startActivity(intent)
             }
             CBMenu.ProductIDs.value -> {
+                showProgressDialog()
                 val queryParam = arrayOf("100")
                 CBPurchase.retrieveProductIDs(queryParam) {
                     when (it) {
                         is CBProductIDResult.ProductIds -> {
+                            hideProgressDialog()
                             val array = it.IDs.toTypedArray()
                             GlobalScope.launch(Dispatchers.Main) {
                                 alertListProductId(array)
                             }
                         }
                         is CBProductIDResult.Error -> {
-                            Log.e(TAG, " ${it.exp.message}")
+                            hideProgressDialog()
+                            Log.e(javaClass.simpleName, " ${it.exp.message}")
+                            val empty = arrayOf(it.exp.message)
+                            alertListProductId(empty)
                         }
                     }
                 }
@@ -123,6 +130,7 @@ class MainActivity : BaseActivity(), ListItemsAdapter.ItemClickListener {
                 getProductIdFromCustomer()
             }
             CBMenu.SubsStatus.value -> {
+                showProgressDialog()
                 mBillingViewModel?.retrieveSubscription("1000000894110088")
             }
             else ->{
@@ -167,28 +175,28 @@ class MainActivity : BaseActivity(), ListItemsAdapter.ItemClickListener {
         val input = dialog.findViewById<View>(R.id.productIdInput) as EditText
         val dialogButton = dialog.findViewById<View>(R.id.btn_ok) as Button
         dialogButton.setOnClickListener {
-            val productIdList = input.text.toString().split(",")
+            val productIdList = input.text.toString().trim().split(",")
             getProductIdList(productIdList.toCollection(ArrayList()))
             dialog.dismiss()
         }
         dialog.show()
     }
-    private fun getProductIdList(productIdList : ArrayList<String>){
+    private fun getProductIdList(productIdList: ArrayList<String>){
         CBPurchase.retrieveProducts(
             this,
             productIdList,
             object : CBCallback.ListProductsCallback<ArrayList<Products>> {
                 override fun onSuccess(productDetails: ArrayList<Products>) {
-                    if (productDetails.size>0) {
+                    if (productDetails.size > 0) {
                         GlobalScope.launch(Dispatchers.Main) {
                             launchProductDetailsScreen(gson.toJson(productDetails))
                         }
-                    }else{
+                    } else {
                         alertSuccess("Items not available to buy")
                     }
                 }
                 override fun onError(error: CBException) {
-                    Log.e(TAG, "Error:  ${error.message}")
+                    Log.e(javaClass.simpleName, "Error:  ${error.message}")
                     showDialog(error.message)
                 }
             })
