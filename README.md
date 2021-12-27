@@ -3,18 +3,19 @@ The official Chargebee Android SDK.
 
 After installing and initializing the SDK with the Chargebee site authentication, this SDK can be used for,
 
-1. Integrating with Play Store connect, processing in-app purchase subscriptions, and tracking them on your Chargebee account for a single source of subscription truth across Web subscriptions & Android IAP. Use this if you are selling digital goods or services, or are REQUIRED to use Google Play's in-app purchases as per their app review guidelines
+1. Integrating with Play Store, processing in-app purchase subscriptions, and tracking them on your Chargebee account for a single source of subscription truth across Web subscriptions & Android IAP. Use this if you are selling digital goods or services, or are REQUIRED to use Google Play's in-app purchases.
 
-2. Tokenizing credit card information while presenting your own UI. Use this if you are selling physical goods or offline services, or are NOT REQUIRED to use Apple's in-app purchases as per their app review guidelines
+2. Tokenizing credit card information while presenting your own UI. Use this if you are selling physical goods or offline services, or are NOT REQUIRED to use Google's in-app purchases.
 
 ## Requirements
 * Android 5.0 (API level 21) and above
 * [Android Gradle Plugin](https://developer.android.com/studio/releases/gradle-plugin) 4.0.0
 * [Gradle](https://gradle.org/releases/) 6.1.1+
 * [AndroidX](https://developer.android.com/jetpack/androidx/)
+* Java 8+ and Kotlin
 
 ## Installation
-The `Chargebee-Android` SDK can be installed by adding this to the `build.gradle` dependency as following below:
+The `Chargebee-Android` SDK can be installed by adding below dependency to the `build.gradle` file:
 
 ```kotlin
 implementation 'com.chargebee:chargebee-android:0.1.0'
@@ -26,7 +27,7 @@ To run the example project, clone the repo, and run the gradle build first.
 ## Configuration
 
 ### Configuration for using In-App Purchases
-To use the Chargebee Android SDK for making and managing in-app purchases, you must initialize the SDK with your Chargebee Site, Publishable API key and the SDK Key. You can find your API key, or create a new one, in your Chargebee account under Configure Chargebee > API Keys . Once you setup the Google Play Store integration on your Chargebee account, you can find the SDK Key under the name of Resource ID when you click on View Keys.
+To use the Chargebee Android SDK for making and managing in-app purchases, you must initialize the SDK with your Chargebee Site, full access API key and the SDK Key. You can find your API key, or create a new one, in your Chargebee account under Configure Chargebee > API Keys . Once you setup the Google Play Store integration on your Chargebee account, you can find the SDK Key under the name of App ID when you click Set up notifications.
 
 You can initialize the SDK during your app startup by including the following in your app delegate.
 
@@ -34,11 +35,11 @@ You can initialize the SDK during your app startup by including the following in
 import Chargebee
 
 Chargebee.configure(site= "your-site",
-                    publishableApiKey= "api_key",
+                    fullAccessApiKey= "api_key",
                     sdkKey= "sdk_key")
 ```
 ### Configuration for using tokenization only
-If you want to use the Chargebee Android SDK only for tokenizing credit card details, you can initialize the SDK with your Chargebee Site and API key alone. You can initialize the SDK during your app startup by including this in Android application class' onCreate method.
+If you want to use the Chargebee Android SDK only for tokenizing credit card details, you can initialize the SDK with your Chargebee Site and Publishable API key alone. You can initialize the SDK during your app startup by including this in Android application class' onCreate method.
 
 ```kotlin
 import com.chargebee.android.Chargebee
@@ -52,7 +53,7 @@ Chargebee.configure(site = "your-site", publishableApiKey = "api_key")
 
 ### Get all IAP Product Identifiers from Chargebee
 
-Every In-App Purchase subscription product that you configure in your Play Store Connect account, can be configured in Chargebee as a Plan. Start by retrieving the Google IAP Product IDs from your Chargebee account.
+Every In-App Purchase subscription product that you configure in your Play Store account, can be configured in Chargebee as a Plan. Start by retrieving the Google IAP Product IDs from your Chargebee account.
 
 ```kotlin
 CBPurchase.retrieveProductIDs(queryParam) {
@@ -102,7 +103,7 @@ CBPurchase.purchaseProduct(param, object : CBCallback.PurchaseCallback<PurchaseM
       }
 })
  ```
-The above function will handle the purchase against Google Store Connect, and send the IAP receipt for server-side receipt verification to your Chargebee account.
+The above function will handle the purchase against Google Play Store, and send the IAP token for server-side token verification to your Chargebee account.
 
 ### Get Subscription Status
 Use the Subscription ID returned by the previous function, to check for Subscription status against Chargebee, and for delivering purchased entitlements.
@@ -123,7 +124,7 @@ SubscriptionDetail.retrieveSubscription(subscriptionId) {
 ### Integrating credit card tokenization
 The following section describes how to use the SDK to directly tokenize credit card information if you are NOT REQUIRED to use Google's in-app purchases.
 
-If you are using Product Catalog 2.0 in your Chargebee site, then you can use the following functions to retrieve the product to be presented for users to purchase. 
+If you are using Product Catalog 2.0 in your Chargebee site, then you can use the following functions to retrieve the product to be presented for users to purchase.
 
 ### Get all Items
 
