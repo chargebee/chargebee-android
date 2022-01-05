@@ -15,7 +15,7 @@ internal class AuthResource : BaseResource(Chargebee.baseUrl) {
         val authDetail = CBAuthenticationBody.fromCBAuthBody(auth)
         val response = apiClient.create(AuthRepository::class.java)
             .authenticateClient(
-                Chargebee.encodedApiKey,CatalogVersion.V2.value,auth.sKey,authDetail.toFormBody())
+                Chargebee.encodedApiKey,Chargebee.platform,CatalogVersion.V2.value,auth.sKey,authDetail.toFormBody())
 
         Log.i(javaClass.simpleName, " Response :$response")
         return responseFromServer(
@@ -28,7 +28,7 @@ internal class AuthResource : BaseResource(Chargebee.baseUrl) {
         val authDetail = CBAuthenticationBody.fromCBAuthBody(auth)
         val response = apiClient.create(AuthRepository::class.java)
             .authenticateClient(
-                Chargebee.encodedApiKey,CatalogVersion.V2.value,auth.sKey,authDetail.toFormBody())
+                Chargebee.encodedApiKey,Chargebee.platform,CatalogVersion.V2.value,auth.sKey,authDetail.toFormBody())
 
         Log.i(javaClass.simpleName, " Response :$response")
         return responseFromServer(

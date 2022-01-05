@@ -15,7 +15,7 @@ internal class ReceiptResource : BaseResource(baseUrl = Chargebee.baseUrl){
         val paramDetail = CBReceiptRequestBody.fromCBReceiptReqBody(params)
         val response = apiClient.create(ReceiptRepository::class.java)
             .validateReceipt(
-                Chargebee.encodedApiKey,Chargebee.sdkKey,paramDetail.toCBReceiptReqBody())
+                Chargebee.encodedApiKey,Chargebee.platform,Chargebee.version,Chargebee.sdkKey,paramDetail.toCBReceiptReqBody())
 
         Log.i(javaClass.simpleName, " validateReceipt Response :$response")
         return responseFromServer(

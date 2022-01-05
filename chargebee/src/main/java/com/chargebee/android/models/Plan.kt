@@ -45,14 +45,14 @@ data class Plan(
         @JvmStatic
         @Throws(InvalidRequestException::class, OperationFailedException::class)
         fun retrievePlan(planId: String, completion : (ChargebeeResult<Any>) -> Unit) {
-            val logger = CBLogger(name = "plan", action = "retrieve_plan")
+            val logger = CBLogger(name = "plan", action = "getAllPlan")
             ResultHandler.safeExecuter({ PlanResource().retrievePlan(planId) }, completion, logger)
         }
 
         @JvmStatic
         @Throws(InvalidRequestException::class, OperationFailedException::class)
         fun retrieveAllPlans(params: Array<String>, completion : (ChargebeeResult<Any>) -> Unit) {
-            val logger = CBLogger(name = "plans", action = "retrieve_plans")
+            val logger = CBLogger(name = "plans", action = "getPlan")
             ResultHandler.safeExecuter({ PlanResource().retrieveAllPlans(params) }, completion, logger)
         }
 

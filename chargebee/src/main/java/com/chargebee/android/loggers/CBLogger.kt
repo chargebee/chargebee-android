@@ -15,13 +15,25 @@ internal class CBLogger(private val name: String,
         postLog(LogType.INFO)
     }
 
-    private suspend fun postLog(type: LogType, message: String? = null, code: Int? = null) {
+    private suspend fun postLog(
+        type: LogType,
+        message: String? = null,
+        code: Int? = null,
+        deviceModelName: String? = null,
+        platform: String? = null,
+        osVersion: String? = null,
+        sdkVersion: String? = null
+    ) {
         if (Chargebee.allowErrorLogging) {
             LoggerResource().log(
                 action,
                 type,
                 message,
-                code
+                code,
+                deviceModelName,
+                platform,
+                osVersion,
+                sdkVersion
             )
         }
     }

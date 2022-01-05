@@ -10,5 +10,5 @@ internal interface LoggerRepository {
     suspend fun log(@Body logDetail: LogDetail): Response<Void>
 }
 
-internal data class LogDetail(val data: Map<String, String>,
+internal data class LogDetail(val data: Map<String, String?>,
                             val type: String = "kvl")
