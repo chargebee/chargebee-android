@@ -31,7 +31,7 @@ object CBPurchase {
     }
     @JvmStatic
     fun retrieveProductIDs(params: Array<String>, completion : (CBProductIDResult<ArrayList<String>>) -> Unit) {
-        val queryParams = append(params,"Standard","app_store")
+        val queryParams = append(params,"Standard",Chargebee.channel)
         retrieveProductIDList(queryParams, completion)
     }
     @JvmStatic
@@ -76,13 +76,11 @@ object CBPurchase {
     fun validateReceipt(purchaseToken: String, products: Products, completion : (ChargebeeResult<Any>) -> Unit) {
         try {
             val logger = CBLogger(name = "buy", action = "process_purchase_command")
-            price = products.productPrice.drop(1).dropLast(2).replace(".","").replace(",","")
+            //price = products.productPrice.drop(1).dropLast(2).replace(".","").replace(",","")
 
             val params = Params(
                 purchaseToken,
                 products.productId,
-                price,
-                products.skuDetails.priceCurrencyCode,
                 Chargebee.site,
                 Chargebee.channel
             )

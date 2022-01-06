@@ -119,7 +119,7 @@ class MainActivity : BaseActivity(), ListItemsAdapter.ItemClickListener {
                         is CBProductIDResult.Error -> {
                             hideProgressDialog()
                             Log.e(javaClass.simpleName, " ${it.exp.message}")
-                            val empty = arrayOf(it.exp.message)
+                            val empty = arrayOf("Product IDs not found on this site for play store")
                             alertListProductId(empty)
                         }
                     }
@@ -202,4 +202,32 @@ class MainActivity : BaseActivity(), ListItemsAdapter.ItemClickListener {
             })
     }
 
+
+    private fun alertListProductId(list: Array<String>) {
+        val builder = AlertDialog.Builder(this)
+        builder.setTitle("Chargebee Product IDs")
+        if (list.isNotEmpty()) {
+            builder.setItems(
+                list
+            ) { dialog, which ->
+                Log.i(
+                    javaClass.simpleName,
+                    " Item clicked :" + list[which] + " position :" + which
+                )
+                val productIdList =  ArrayList<String>()
+                productIdList.add(list[which].trim())
+                getProductIdList(productIdList)
+            }
+        } else {
+            val empty = arrayOf("Product IDs not found on this site for play store")
+            builder.setItems(
+                empty
+            ) { dialog, which -> }
+        }
+        builder.setPositiveButton(
+            "Ok"
+        ) { dialogInterface, i -> }
+        val dialog = builder.create()
+        dialog.show()
+    }
 }

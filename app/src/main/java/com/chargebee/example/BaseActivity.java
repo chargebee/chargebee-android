@@ -73,30 +73,6 @@ public class BaseActivity extends AppCompatActivity {
                 }).show();
     }
 
-    public void alertListProductId(String[] list){
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle("Chargebee Product IDs");
-        if (list !=null && list.length>0) {
-            builder.setItems(list, new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(DialogInterface dialog, int which) {
-                }
-            });
-        }else{
-            String[] empty = {"Product IDs not found on this site for play store"};
-            builder.setItems(empty, new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(DialogInterface dialog, int which) {
-                }
-            });
-        }
-        builder.setPositiveButton("Ok", new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialogInterface, int i) { }
-        });
-        AlertDialog dialog = builder.create();
-        dialog.show();
-    }
     protected void showDialog(String msg){
         final Dialog dialog = new Dialog(this);
         dialog.setContentView(R.layout.dialog_layout);
