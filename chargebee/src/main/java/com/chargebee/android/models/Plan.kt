@@ -1,6 +1,10 @@
 package com.chargebee.android.models
 
+import android.text.TextUtils
 import com.chargebee.android.CBResult
+import com.chargebee.android.Chargebee
+import com.chargebee.android.ErrorDetail
+import com.chargebee.android.exceptions.CBException
 import com.chargebee.android.exceptions.ChargebeeResult
 import com.chargebee.android.exceptions.InvalidRequestException
 import com.chargebee.android.exceptions.OperationFailedException
@@ -46,13 +50,27 @@ data class Plan(
         @Throws(InvalidRequestException::class, OperationFailedException::class)
         fun retrievePlan(planId: String, completion : (ChargebeeResult<Any>) -> Unit) {
             val logger = CBLogger(name = "plan", action = "getAllPlan")
-            ResultHandler.safeExecuter({ PlanResource().retrievePlan(planId) }, completion, logger)
+            if (TextUtils.isEmpty(planId))
+                completion(ChargebeeResult.Error(
+                    exp = CBException(
+                        error = ErrorDetail(message = "Plan ID is empty", apiErrorCode = "400")
+                    )
+                ))
+            else
+             ResultHandler.safeExecuter({ PlanResource().retrievePlan(planId) }, completion, logger)
         }
 
         @JvmStatic
         @Throws(InvalidRequestException::class, OperationFailedException::class)
         fun retrieveAllPlans(params: Array<String>, completion : (ChargebeeResult<Any>) -> Unit) {
             val logger = CBLogger(name = "plans", action = "getPlan")
+            if (params.isNullOrEmpty())
+                completion(ChargebeeResult.Error(
+                    exp = CBException(
+                        error = ErrorDetail(message = "Query param is empty", apiErrorCode = "400")
+                    )
+                ))
+            else
             ResultHandler.safeExecuter({ PlanResource().retrieveAllPlans(params) }, completion, logger)
         }
 

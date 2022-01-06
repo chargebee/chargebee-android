@@ -19,7 +19,7 @@ object Chargebee {
     var version: String = CatalogVersion.V2.value
     var applicationId: String = ""
     const val channel: String = "play_store"
-    const val appName: String = "Chargebee"
+    var appName: String = "Chargebee"
     const val platform: String = "Android"
     const val sdkVersion: String = BuildConfig.VERSION_NAME
 
@@ -43,6 +43,7 @@ object Chargebee {
                     val response = it.data as CBAuthResponse
                     this.version = response.in_app_detail.product_catalog_version
                     this.applicationId = response.in_app_detail.app_id
+                    this.appName = response.in_app_detail.app_name
                 }
                 is ChargebeeResult.Error ->{
                     Log.i(javaClass.simpleName, "Exception from server :${it.exp.message}")
