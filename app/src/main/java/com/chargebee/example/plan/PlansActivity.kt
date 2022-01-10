@@ -8,6 +8,7 @@ import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.DefaultItemAnimator
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.chargebee.android.Chargebee
 import com.chargebee.android.ErrorDetail
 import com.chargebee.example.BaseActivity
 import com.chargebee.example.R
@@ -31,7 +32,7 @@ class PlansActivity : BaseActivity(), ItemsAdapter.ItemClickListener {
         this.mErrorTextView = findViewById(R.id.errorMessage)
         viewModel = PlanViewModel()
         showProgressDialog()
-        val queryParam = arrayOf("Standard", "app_store")
+        val queryParam = arrayOf("Standard", Chargebee.channel)
         viewModel!!.retrieveAllPlans(queryParam)
 
         viewModel?.mPlansResult?.observe(this, Observer {

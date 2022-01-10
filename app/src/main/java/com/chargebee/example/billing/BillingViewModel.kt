@@ -42,6 +42,7 @@ class BillingViewModel : ViewModel() {
         CBPurchase.validateReceipt(purchaseToken, products){
             when(it){
                 is ChargebeeResult.Success ->{
+                    Log.i(TAG, "Validate Receipt Response:  ${(it.data as CBReceiptResponse).in_app_subscription}")
                     subscriptionId = (it.data as CBReceiptResponse).in_app_subscription.subscription_id
                     retrieveSubscription(subscriptionId)
                 }
@@ -58,8 +59,16 @@ class BillingViewModel : ViewModel() {
     fun retrieveSubscription(subscriptionId: String) {
         SubscriptionDetail.retrieveSubscription(subscriptionId) {
             when(it){
-                is ChargebeeResult.Success ->{
-                    Log.i(TAG, "subscription status:  ${it.data}")
+                is ChargebeeResult.Success -> {
+                    Log.i(
+                        TAG,
+                        "subscription status:  ${(it.data as SubscriptionDetailsWrapper).subscription.status} ,activated_at : ${(it.data as SubscriptionDetailsWrapper).subscription.activated_at}" +
+                                " subscription id : ${(it.data as SubscriptionDetailsWrapper).subscription.id}" +
+                                " customer_id : ${(it.data as SubscriptionDetailsWrapper).subscription.customer_id}" +
+                                " current_term_start : ${(it.data as SubscriptionDetailsWrapper).subscription.current_term_start} " +
+                                " current_term_end : ${(it.data as SubscriptionDetailsWrapper).subscription.current_term_end}"
+                    )
+
                     subscriptionStatus.postValue((it.data as SubscriptionDetailsWrapper).subscription.status)
                 }
                 is ChargebeeResult.Error ->{

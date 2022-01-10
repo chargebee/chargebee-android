@@ -11,7 +11,8 @@ interface AuthRepository {
     suspend fun authenticateClient(
         @Header("Authorization") token: String = Chargebee.encodedApiKey,
         @Header("platform") platform: String = Chargebee.platform,
-        @Path("version") version: String,
-        @Path("sdkKey") sdkKey: String,
+        @Header("sdkVersion") sdkVersion: String = Chargebee.sdkVersion,
+        @Path("version") version: String = Chargebee.version,
+        @Path("sdkKey") sdkKey: String = Chargebee.sdkKey,
         @FieldMap data: Map<String, String>): Response<CBAuthResponse?>
 }

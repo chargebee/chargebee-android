@@ -12,19 +12,21 @@ import retrofit2.http.Query
 
 internal interface PlanRepository {
 
-    @GET("v2/plans/{planId}")
+    @GET("{version}/plans/{planId}")
     suspend fun retrievePlan(
         @Header("Authorization") token: String = Chargebee.encodedApiKey,
         @Header("platform") platform: String = Chargebee.platform,
-        @Header("version") version: String = Chargebee.version,
+        @Header("sdkVersion") sdkVersion: String = Chargebee.sdkVersion,
+        @Path("version") version: String = Chargebee.version,
         @Path("planId") planId: String
     ): Response<PlanWrapper?>
 
-    @GET("v2/plans")
+    @GET("{version}/plans")
     suspend fun retrieveAllPlans(
         @Header("Authorization") token: String = Chargebee.encodedApiKey,
         @Header("platform") platform: String = Chargebee.platform,
-        @Header("version") version: String = Chargebee.version,
+        @Header("sdkVersion") sdkVersion: String = Chargebee.sdkVersion,
+        @Path("version") version: String = Chargebee.version,
         @Query("sort_by[desc]") sort: String,
         @Query("channel") channel: String
     ): Response<PlansWrapper?>
