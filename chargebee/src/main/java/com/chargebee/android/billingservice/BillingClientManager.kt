@@ -134,6 +134,9 @@ class BillingClientManager constructor(
                        callBack.onError(CBException(ErrorDetail("Unknown error")))
                        Log.e(TAG, "exception :" + ex.message)
                    }
+               }else{
+                   Log.e(TAG, "Response Code :" + billingResult.responseCode)
+                   callBack.onError(CBException(ErrorDetail("Service Unavailable")))
                }
            }
        }catch (exp: CBException){

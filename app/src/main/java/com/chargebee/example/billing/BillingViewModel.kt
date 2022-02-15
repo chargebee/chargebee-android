@@ -1,5 +1,6 @@
 package com.chargebee.example.billing
 
+import android.os.Handler
 import android.util.Log
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -23,6 +24,7 @@ class BillingViewModel : ViewModel() {
     var subscriptionStatus: MutableLiveData<String?> = MutableLiveData()
     var error: MutableLiveData<String?> = MutableLiveData()
     private var subscriptionId: String = ""
+    val handler = Handler()
 
     fun purchaseProduct(param: Products) {
         CBPurchase.purchaseProduct(param, object : CBCallback.PurchaseCallback<PurchaseModel>{
@@ -45,7 +47,9 @@ class BillingViewModel : ViewModel() {
                     Log.i(TAG, "Validate Receipt Response:  ${(it.data as CBReceiptResponse).in_app_subscription}")
                     Log.i(TAG, "Subscription ID :  ${(it.data as CBReceiptResponse).in_app_subscription.subscription_id}")
                     subscriptionId = (it.data as CBReceiptResponse).in_app_subscription.subscription_id
-                    retrieveSubscription(subscriptionId)
+                    handler.postDelayed({
+                        retrieveSubscription(subscriptionId)
+                    }, 5000)
                 }
                 is ChargebeeResult.Error ->{
                     Log.e(TAG, "Exception from server - validateReceipt() :  ${it.exp.message}")
