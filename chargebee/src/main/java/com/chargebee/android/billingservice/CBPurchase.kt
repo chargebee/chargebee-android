@@ -134,7 +134,7 @@ object CBPurchase {
         }
     }
 
-    private fun retrieveProductIDList(params: Array<String>, completion: (CBProductIDResult<ArrayList<String>>) -> Unit){
+    fun retrieveProductIDList(params: Array<String>, completion: (CBProductIDResult<ArrayList<String>>) -> Unit){
         when(Chargebee.version){
             CatalogVersion.V1.value ->{
                 Plan.retrieveAllPlans(params){
