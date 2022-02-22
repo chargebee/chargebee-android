@@ -41,7 +41,7 @@ class SubscriptionResourceTest {
     fun test_subscriptionStatus_success(){
 
         val subscriptionDetail = SubscriptionDetail("123","item","active","","",
-        "","")
+        "")
         val queryParam = "0000987657"
         val lock = CountDownLatch(1)
         SubscriptionDetail.retrieveSubscription(queryParam) {
