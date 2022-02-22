@@ -17,7 +17,7 @@ internal interface PurchaseRepository {
         @Path("sdkKey") sdkKey: String, @Path("customerId") customerId: String
     ): Response<KeyValidationWrapper?>
 
-    @GET("v2/subscriptions/{subscription_id}")
+    @GET("v2/in_app_subscriptions/{subscription_id}")
     suspend fun retrieveSubscription(
         @Header("Authorization") token: String = Chargebee.encodedApiKey,
         @Header("platform") platform: String = Chargebee.platform,
