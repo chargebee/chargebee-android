@@ -8,7 +8,7 @@ import com.chargebee.android.resources.PurchaseResource
 import com.chargebee.android.resources.SubscriptionResource
 
 class SubscriptionDetail(val id: String,val customer_id: String, val status: String, val current_term_start: String, val current_term_end: String,
-        val activated_at: String) {
+        val activated_at: String, val plan_amount: String) {
     companion object{
         @JvmStatic
         @Throws(InvalidRequestException::class, OperationFailedException::class)
@@ -19,4 +19,4 @@ class SubscriptionDetail(val id: String,val customer_id: String, val status: Str
     }
 }
 
-data class SubscriptionDetailsWrapper(val subscription: SubscriptionDetail)
+data class SubscriptionDetailsWrapper(val cb_subscription: SubscriptionDetail)
