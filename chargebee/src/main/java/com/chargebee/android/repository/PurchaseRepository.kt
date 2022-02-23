@@ -13,7 +13,7 @@ internal interface PurchaseRepository {
     suspend fun validateSDKKey(
         @Header("Authorization") token: String = Chargebee.encodedApiKey,
         @Header("platform") platform: String = Chargebee.platform,
-        @Header("sdkVersion") sdkVersion: String = Chargebee.sdkVersion,
+        @Header("version") sdkVersion: String = Chargebee.sdkVersion,
         @Path("sdkKey") sdkKey: String, @Path("customerId") customerId: String
     ): Response<KeyValidationWrapper?>
 
@@ -21,7 +21,7 @@ internal interface PurchaseRepository {
     suspend fun retrieveSubscription(
         @Header("Authorization") token: String = Chargebee.encodedApiKey,
         @Header("platform") platform: String = Chargebee.platform,
-        @Header("sdkVersion") sdkVersion: String = Chargebee.sdkVersion,
+        @Header("version") sdkVersion: String = Chargebee.sdkVersion,
         @Path("subscription_id") subscriptionId: String
     ): Response<SubscriptionDetailsWrapper?>
 }

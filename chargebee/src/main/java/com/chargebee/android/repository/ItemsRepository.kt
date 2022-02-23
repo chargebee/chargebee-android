@@ -15,7 +15,7 @@ interface ItemsRepository {
     suspend fun retrieveAllItems(
         @Header("Authorization") token: String = Chargebee.encodedApiKey,
         @Header("platform") platform: String = Chargebee.platform,
-        @Header("sdkVersion") sdkVersion: String = Chargebee.sdkVersion,
+        @Header("version") sdkVersion: String = Chargebee.sdkVersion,
         @Query("limit") limit: String,
         @Query("sort_by[desc]") name: String,
         @Query("channel") channel: String
@@ -25,7 +25,7 @@ interface ItemsRepository {
     suspend fun retrieveItem(
         @Header("Authorization") token: String = Chargebee.encodedApiKey,
         @Header("platform") platform: String = Chargebee.platform,
-        @Header("sdkVersion") sdkVersion: String = Chargebee.sdkVersion,
+        @Header("version") sdkVersion: String = Chargebee.sdkVersion,
         @Path("itemId") itemId: String
     ): Response<ItemWrapper?>
 

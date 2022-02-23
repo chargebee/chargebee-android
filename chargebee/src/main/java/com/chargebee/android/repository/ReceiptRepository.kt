@@ -12,7 +12,7 @@ interface ReceiptRepository {
     suspend fun validateReceipt(
         @Header("Authorization") token: String = Chargebee.encodedApiKey,
         @Header("platform") platform: String = Chargebee.platform,
-        @Header("sdkVersion") sdkVersion: String = Chargebee.sdkVersion,
+        @Header("version") sdkVersion: String = Chargebee.sdkVersion,
         @Path("sdkKey") sdkKey: String = Chargebee.sdkKey,
         @FieldMap data: Map<String, String>): Response<CBReceiptResponse?>
 }

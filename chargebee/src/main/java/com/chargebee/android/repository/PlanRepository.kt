@@ -16,7 +16,7 @@ internal interface PlanRepository {
     suspend fun retrievePlan(
         @Header("Authorization") token: String = Chargebee.encodedApiKey,
         @Header("platform") platform: String = Chargebee.platform,
-        @Header("sdkVersion") sdkVersion: String = Chargebee.sdkVersion,
+        @Header("version") sdkVersion: String = Chargebee.sdkVersion,
         @Path("planId") planId: String
     ): Response<PlanWrapper?>
 
@@ -24,7 +24,7 @@ internal interface PlanRepository {
     suspend fun retrieveAllPlans(
         @Header("Authorization") token: String = Chargebee.encodedApiKey,
         @Header("platform") platform: String = Chargebee.platform,
-        @Header("sdkVersion") sdkVersion: String = Chargebee.sdkVersion,
+        @Header("version") sdkVersion: String = Chargebee.sdkVersion,
         @Query("sort_by[desc]") sort: String,
         @Query("channel") channel: String
     ): Response<PlansWrapper?>
