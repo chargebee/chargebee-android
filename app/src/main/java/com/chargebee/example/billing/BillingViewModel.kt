@@ -32,10 +32,16 @@ class BillingViewModel : ViewModel() {
                 productPurchaseResult.postValue(success)
             }
             override fun onError(error: CBException) {
-                cbException.postValue(Gson().fromJson<ErrorDetail>(
-                    error.message,
-                    ErrorDetail::class.java
-                ).message)
+                try {
+                    cbException.postValue(
+                        Gson().fromJson<ErrorDetail>(
+                            error.message,
+                            ErrorDetail::class.java
+                        ).message
+                    )
+                }catch (exp: Exception){
+                    Log.i(TAG, "Exception :${exp.message}")
+                }
             }
         })
     }
