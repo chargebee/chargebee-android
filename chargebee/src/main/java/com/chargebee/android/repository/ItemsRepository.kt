@@ -11,23 +11,21 @@ import retrofit2.http.Query
 
 interface ItemsRepository {
 
-    @GET("{version}/items")
+    @GET("v2/items")
     suspend fun retrieveAllItems(
         @Header("Authorization") token: String = Chargebee.encodedApiKey,
         @Header("platform") platform: String = Chargebee.platform,
-        @Header("sdkVersion") sdkVersion: String = Chargebee.sdkVersion,
-        @Path("version") version: String = Chargebee.version,
+        @Header("version") sdkVersion: String = Chargebee.sdkVersion,
         @Query("limit") limit: String,
         @Query("sort_by[desc]") name: String,
         @Query("channel") channel: String
     ): Response<ItemsWrapper?>
 
-    @GET("{version}/items/{itemId}")
+    @GET("v2/items/{itemId}")
     suspend fun retrieveItem(
         @Header("Authorization") token: String = Chargebee.encodedApiKey,
         @Header("platform") platform: String = Chargebee.platform,
-        @Header("sdkVersion") sdkVersion: String = Chargebee.sdkVersion,
-        @Path("version") version: String = Chargebee.version,
+        @Header("version") sdkVersion: String = Chargebee.sdkVersion,
         @Path("itemId") itemId: String
     ): Response<ItemWrapper?>
 

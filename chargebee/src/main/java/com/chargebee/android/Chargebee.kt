@@ -16,7 +16,7 @@ object Chargebee {
     var sdkKey: String = ""
     var baseUrl: String = ""
     var allowErrorLogging: Boolean = true
-    var version: String = CatalogVersion.V2.value
+    var version: String = CatalogVersion.Unknown.value
     var applicationId: String = ""
     const val channel: String = "play_store"
     var appName: String = "Chargebee"
@@ -28,8 +28,6 @@ object Chargebee {
         this.site = site
         this.encodedApiKey = Credentials.basic(publishableApiKey, "")
         this.baseUrl = "https://${site}.chargebee.com/api/"
-       //  this.baseUrl = "https://${site}.predev37.in/api/"  //check Plans API
-       //  this.baseUrl = "https://${site}.predev51.in/api/"  //Process purchase API
         this.allowErrorLogging = allowErrorLogging
         this.sdkKey = sdkKey
         val auth = Auth(sdkKey,applicationId,appName, channel)
@@ -39,6 +37,7 @@ object Chargebee {
         CBAuthentication.authenticate(auth) {
             when(it){
                 is ChargebeeResult.Success ->{
+                    Log.i(javaClass.simpleName, "Environment Setup Completed")
                     Log.i(javaClass.simpleName, " Response :${it.data}")
                     val response = it.data as CBAuthResponse
                     this.version = response.in_app_detail.product_catalog_version
@@ -47,6 +46,7 @@ object Chargebee {
                 }
                 is ChargebeeResult.Error ->{
                     Log.i(javaClass.simpleName, "Exception from server :${it.exp.message}")
+                    this.version = CatalogVersion.Unknown.value
                 }
             }
         }

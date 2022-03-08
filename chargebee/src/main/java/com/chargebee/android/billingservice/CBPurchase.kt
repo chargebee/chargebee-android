@@ -134,7 +134,7 @@ object CBPurchase {
         }
     }
 
-    private fun retrieveProductIDList(params: Array<String>, completion: (CBProductIDResult<ArrayList<String>>) -> Unit){
+    fun retrieveProductIDList(params: Array<String>, completion: (CBProductIDResult<ArrayList<String>>) -> Unit){
         when(Chargebee.version){
             CatalogVersion.V1.value ->{
                 Plan.retrieveAllPlans(params){
@@ -144,9 +144,11 @@ object CBPurchase {
                             val productsList = (it.data as PlansWrapper).list
                             productIdList.clear()
                             for (plan in  productsList){
-                                if (plan.plan.channel.trim() == Chargebee.channel.trim()){
-                                    val id = plan.plan.id.split("-")
-                                    productIdList.add(id[0])
+                                if (!TextUtils.isEmpty(plan.plan.channel)) {
+                                    if (plan.plan.channel.trim() == Chargebee.channel.trim()) {
+                                        val id = plan.plan.id.split("-")
+                                        productIdList.add(id[0])
+                                    }
                                 }
                             }
                             completion(CBProductIDResult.ProductIds(productIdList))

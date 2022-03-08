@@ -204,8 +204,12 @@ class BillingClientManager constructor(
             BillingClient.BillingResponseCode.SERVICE_DISCONNECTED -> {
                 connectToBillingService()
             }
+            BillingClient.BillingResponseCode.ITEM_UNAVAILABLE -> {
+                Log.e(TAG, "onPurchasesUpdated ITEM_UNAVAILABLE")
+                purchaseCallBack?.onError(CBException(ErrorDetail("Item Unavailable")))
+            }
             else -> {
-                Log.e(TAG, "Failed to onPurchasesUpdated")
+                Log.e(TAG, "Failed to onPurchasesUpdated"+billingResult.responseCode)
                 purchaseCallBack?.onError(CBException(ErrorDetail("Unknown error")))
             }
         }
