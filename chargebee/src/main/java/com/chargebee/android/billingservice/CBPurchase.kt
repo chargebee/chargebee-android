@@ -137,7 +137,7 @@ object CBPurchase {
     private fun retrieveProductIDList(params: Array<String>, completion: (CBProductIDResult<ArrayList<String>>) -> Unit){
         when(Chargebee.version){
             CatalogVersion.V1.value ->{
-                Plan.retrieveAllPlans(params){
+                Chargebee.retrieveAllPlans(params){
                     when (it) {
                         is ChargebeeResult.Success -> {
                             Log.i(javaClass.simpleName, "list plan ID's :  ${it.data}")
@@ -159,7 +159,7 @@ object CBPurchase {
                 }
             }
             CatalogVersion.V2.value ->{
-                Items.retrieveAllItems(params){
+                Chargebee.retrieveAllItems(params){
                     when (it) {
                         is ChargebeeResult.Success -> {
                             Log.i(javaClass.simpleName, "list item ID's :  ${it.data}")

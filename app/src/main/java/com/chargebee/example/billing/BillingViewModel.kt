@@ -3,6 +3,7 @@ package com.chargebee.example.billing
 import android.util.Log
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import com.chargebee.android.Chargebee
 import com.chargebee.android.ErrorDetail
 import com.chargebee.android.billingservice.CBCallback
 import com.chargebee.android.billingservice.CBPurchase
@@ -57,7 +58,7 @@ class BillingViewModel : ViewModel() {
         }
     }
     fun retrieveSubscription(subscriptionId: String) {
-        SubscriptionDetail.retrieveSubscription(subscriptionId) {
+        Chargebee.retrieveSubscription(subscriptionId) {
             when(it){
                 is ChargebeeResult.Success -> {
                     Log.i(

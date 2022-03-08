@@ -3,6 +3,7 @@ package com.chargebee.example.plan
 import android.util.Log
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import com.chargebee.android.Chargebee
 import com.chargebee.android.exceptions.ChargebeeResult
 import com.chargebee.android.models.*
 
@@ -14,7 +15,7 @@ class PlanViewModel : ViewModel() {
     var mPlansList = ArrayList<String>()
 
     fun retrievePlan(planId: String) {
-        Plan.retrievePlan(planId) {
+        Chargebee.retrievePlan(planId) {
             when(it){
                 is ChargebeeResult.Success -> {
                     planResult.postValue((it.data as PlanWrapper?)?.plan)
@@ -28,7 +29,7 @@ class PlanViewModel : ViewModel() {
 
 
     fun retrieveAllPlans(queryParam: Array<String>) {
-        Plan.retrieveAllPlans(queryParam) {
+        Chargebee.retrieveAllPlans(queryParam) {
             when (it) {
                 is ChargebeeResult.Success -> {
                     Log.i(javaClass.simpleName, "list plans :  ${it.data}")
