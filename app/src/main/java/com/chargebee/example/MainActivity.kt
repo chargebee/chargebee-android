@@ -119,8 +119,11 @@ class MainActivity : BaseActivity(), ListItemsAdapter.ItemClickListener {
                         is CBProductIDResult.Error -> {
                             hideProgressDialog()
                             Log.e(javaClass.simpleName, " ${it.exp.message}")
-                            val empty = arrayOf("Product IDs not found on this site for play store")
-                            alertListProductId(empty)
+                            GlobalScope.launch(Dispatchers.Main) {
+                                val empty =
+                                    arrayOf("Product IDs not found on this site for play store")
+                                alertListProductId(empty)
+                            }
                         }
                     }
                 }

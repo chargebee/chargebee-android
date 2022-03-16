@@ -1,5 +1,6 @@
 package com.chargebee.example.billing
 
+import android.os.Handler
 import android.util.Log
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -24,6 +25,7 @@ class BillingViewModel : ViewModel() {
     var subscriptionStatus: MutableLiveData<String?> = MutableLiveData()
     var error: MutableLiveData<String?> = MutableLiveData()
     private var subscriptionId: String = ""
+    val handler = Handler()
 
     fun purchaseProduct(param: Products) {
         CBPurchase.purchaseProduct(param, object : CBCallback.PurchaseCallback<PurchaseModel>{
@@ -31,10 +33,16 @@ class BillingViewModel : ViewModel() {
                 productPurchaseResult.postValue(success)
             }
             override fun onError(error: CBException) {
-                cbException.postValue(Gson().fromJson<ErrorDetail>(
-                    error.message,
-                    ErrorDetail::class.java
-                ).message)
+                try {
+                    cbException.postValue(
+                        Gson().fromJson<ErrorDetail>(
+                            error.message,
+                            ErrorDetail::class.java
+                        ).message
+                    )
+                }catch (exp: Exception){
+                    Log.i(TAG, "Exception :${exp.message}")
+                }
             }
         })
     }
@@ -44,8 +52,11 @@ class BillingViewModel : ViewModel() {
             when(it){
                 is ChargebeeResult.Success ->{
                     Log.i(TAG, "Validate Receipt Response:  ${(it.data as CBReceiptResponse).in_app_subscription}")
+                    Log.i(TAG, "Subscription ID :  ${(it.data as CBReceiptResponse).in_app_subscription.subscription_id}")
                     subscriptionId = (it.data as CBReceiptResponse).in_app_subscription.subscription_id
-                    retrieveSubscription(subscriptionId)
+                    handler.postDelayed({
+                        retrieveSubscription(subscriptionId)
+                    }, 5000)
                 }
                 is ChargebeeResult.Error ->{
                     Log.e(TAG, "Exception from server - validateReceipt() :  ${it.exp.message}")
@@ -63,14 +74,15 @@ class BillingViewModel : ViewModel() {
                 is ChargebeeResult.Success -> {
                     Log.i(
                         TAG,
-                        "subscription status:  ${(it.data as SubscriptionDetailsWrapper).subscription.status} ,activated_at : ${(it.data as SubscriptionDetailsWrapper).subscription.activated_at}" +
-                                " subscription id : ${(it.data as SubscriptionDetailsWrapper).subscription.id}" +
-                                " customer_id : ${(it.data as SubscriptionDetailsWrapper).subscription.customer_id}" +
-                                " current_term_start : ${(it.data as SubscriptionDetailsWrapper).subscription.current_term_start} " +
-                                " current_term_end : ${(it.data as SubscriptionDetailsWrapper).subscription.current_term_end}"
+                        "subscription status:  ${(it.data as SubscriptionDetailsWrapper).cb_subscription.status} ,activated_at : ${(it.data as SubscriptionDetailsWrapper).cb_subscription.activated_at}" +
+                                " subscription id : ${(it.data as SubscriptionDetailsWrapper).cb_subscription.id}" +
+                                " customer_id : ${(it.data as SubscriptionDetailsWrapper).cb_subscription.customer_id}" +
+                                " current_term_start : ${(it.data as SubscriptionDetailsWrapper).cb_subscription.current_term_start} " +
+                                " current_term_end : ${(it.data as SubscriptionDetailsWrapper).cb_subscription.current_term_end}" +
+                                " plan_amount : ${(it.data as SubscriptionDetailsWrapper).cb_subscription.plan_amount}"
                     )
 
-                    subscriptionStatus.postValue((it.data as SubscriptionDetailsWrapper).subscription.status)
+                    subscriptionStatus.postValue((it.data as SubscriptionDetailsWrapper).cb_subscription.status)
                 }
                 is ChargebeeResult.Error ->{
                     Log.e(TAG, "Exception from server- retrieveSubscription() :  ${it.exp.message}")

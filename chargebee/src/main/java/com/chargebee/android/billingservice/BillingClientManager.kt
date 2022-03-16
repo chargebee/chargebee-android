@@ -134,6 +134,9 @@ class BillingClientManager constructor(
                        callBack.onError(CBException(ErrorDetail("Unknown error")))
                        Log.e(TAG, "exception :" + ex.message)
                    }
+               }else{
+                   Log.e(TAG, "Response Code :" + billingResult.responseCode)
+                   callBack.onError(CBException(ErrorDetail("Service Unavailable")))
                }
            }
        }catch (exp: CBException){
@@ -201,8 +204,12 @@ class BillingClientManager constructor(
             BillingClient.BillingResponseCode.SERVICE_DISCONNECTED -> {
                 connectToBillingService()
             }
+            BillingClient.BillingResponseCode.ITEM_UNAVAILABLE -> {
+                Log.e(TAG, "onPurchasesUpdated ITEM_UNAVAILABLE")
+                purchaseCallBack?.onError(CBException(ErrorDetail("Item Unavailable")))
+            }
             else -> {
-                Log.e(TAG, "Failed to onPurchasesUpdated")
+                Log.e(TAG, "Failed to onPurchasesUpdated"+billingResult.responseCode)
                 purchaseCallBack?.onError(CBException(ErrorDetail("Unknown error")))
             }
         }

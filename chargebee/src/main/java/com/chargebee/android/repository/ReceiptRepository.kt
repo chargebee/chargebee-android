@@ -8,12 +8,11 @@ import retrofit2.http.*
 interface ReceiptRepository {
 
     @FormUrlEncoded
-    @POST("{version}/in_app_subscriptions/{sdkKey}/process_purchase_command/")
+    @POST("v2/in_app_subscriptions/{sdkKey}/process_purchase_command/")
     suspend fun validateReceipt(
         @Header("Authorization") token: String = Chargebee.encodedApiKey,
         @Header("platform") platform: String = Chargebee.platform,
-        @Header("sdkVersion") sdkVersion: String = Chargebee.sdkVersion,
-        @Path("version") version: String = Chargebee.version,
+        @Header("version") sdkVersion: String = Chargebee.sdkVersion,
         @Path("sdkKey") sdkKey: String = Chargebee.sdkKey,
         @FieldMap data: Map<String, String>): Response<CBReceiptResponse?>
 }

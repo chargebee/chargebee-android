@@ -9,21 +9,19 @@ import retrofit2.http.Header
 import retrofit2.http.Path
 
 internal interface PurchaseRepository {
-    @GET("{version}/plans/{sdkKey}")
+    @GET("v2/plans/{sdkKey}")
     suspend fun validateSDKKey(
         @Header("Authorization") token: String = Chargebee.encodedApiKey,
         @Header("platform") platform: String = Chargebee.platform,
-        @Header("sdkVersion") sdkVersion: String = Chargebee.sdkVersion,
-        @Path("version") version: String = Chargebee.version,
+        @Header("version") sdkVersion: String = Chargebee.sdkVersion,
         @Path("sdkKey") sdkKey: String, @Path("customerId") customerId: String
     ): Response<KeyValidationWrapper?>
 
-    @GET("{version}/subscriptions/{subscription_id}")
+    @GET("v2/in_app_subscriptions/{subscription_id}")
     suspend fun retrieveSubscription(
         @Header("Authorization") token: String = Chargebee.encodedApiKey,
         @Header("platform") platform: String = Chargebee.platform,
-        @Header("sdkVersion") sdkVersion: String = Chargebee.sdkVersion,
-        @Path("version") version: String = Chargebee.version,
+        @Header("version") sdkVersion: String = Chargebee.sdkVersion,
         @Path("subscription_id") subscriptionId: String
     ): Response<SubscriptionDetailsWrapper?>
 }
