@@ -297,13 +297,13 @@ class BillingClientManager constructor(
                     mProgressBarListener?.onHideProgressBar()
                     Log.i(
                         TAG,
-                        "subscription status:  ${(it.data as SubscriptionDetailsWrapper).subscription.status} ,activated_at : ${(it.data).subscription.activated_at}" +
-                                " subscription id : ${(it.data).subscription.id}" +
-                                " customer_id : ${(it.data).subscription.customer_id}" +
-                                " current_term_start : ${(it.data).subscription.current_term_start} " +
-                                " current_term_end : ${(it.data).subscription.current_term_end}"
+                        "subscription status:  ${(it.data as SubscriptionDetailsWrapper).cb_subscription.status} ,activated_at : ${(it.data).cb_subscription.activated_at}" +
+                                " subscription id : ${(it.data).cb_subscription.id}" +
+                                " customer_id : ${(it.data).cb_subscription.customer_id}" +
+                                " current_term_start : ${(it.data).cb_subscription.current_term_start} " +
+                                " current_term_end : ${(it.data).cb_subscription.current_term_end}"
                     )
-                    purchaseCallBack?.onSuccess((it.data).subscription.status)
+                    purchaseCallBack?.onSuccess((it.data).cb_subscription.status)
                 }
                 is ChargebeeResult.Error -> {
                     mProgressBarListener?.onHideProgressBar()
