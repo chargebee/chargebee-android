@@ -29,7 +29,11 @@ class BillingViewModel : ViewModel() {
                 productPurchaseResult.postValue(status)
             }
             override fun onError(error: CBException) {
-                cbException.postValue(error.message)
+                try {
+                    cbException.postValue(error.message)
+                }catch (exp: Exception){
+                    Log.i(TAG, "Exception :${exp.message}")
+                }
             }
         })
     }
@@ -58,14 +62,15 @@ class BillingViewModel : ViewModel() {
                 is ChargebeeResult.Success -> {
                     Log.i(
                         TAG,
-                        "subscription status:  ${(it.data as SubscriptionDetailsWrapper).subscription.status} ,activated_at : ${(it.data as SubscriptionDetailsWrapper).subscription.activated_at}" +
-                                " subscription id : ${(it.data as SubscriptionDetailsWrapper).subscription.id}" +
-                                " customer_id : ${(it.data as SubscriptionDetailsWrapper).subscription.customer_id}" +
-                                " current_term_start : ${(it.data as SubscriptionDetailsWrapper).subscription.current_term_start} " +
-                                " current_term_end : ${(it.data as SubscriptionDetailsWrapper).subscription.current_term_end}"
+                        "subscription status:  ${(it.data as SubscriptionDetailsWrapper).cb_subscription.status} ,activated_at : ${(it.data as SubscriptionDetailsWrapper).cb_subscription.activated_at}" +
+                                " subscription id : ${(it.data as SubscriptionDetailsWrapper).cb_subscription.id}" +
+                                " customer_id : ${(it.data as SubscriptionDetailsWrapper).cb_subscription.customer_id}" +
+                                " current_term_start : ${(it.data as SubscriptionDetailsWrapper).cb_subscription.current_term_start} " +
+                                " current_term_end : ${(it.data as SubscriptionDetailsWrapper).cb_subscription.current_term_end}" +
+                                " plan_amount : ${(it.data as SubscriptionDetailsWrapper).cb_subscription.plan_amount}"
                     )
 
-                    subscriptionStatus.postValue((it.data as SubscriptionDetailsWrapper).subscription.status)
+                    subscriptionStatus.postValue((it.data as SubscriptionDetailsWrapper).cb_subscription.status)
                 }
                 is ChargebeeResult.Error ->{
                     Log.e(TAG, "Exception from server- retrieveSubscription() :  ${it.exp.message}")

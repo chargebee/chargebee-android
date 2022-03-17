@@ -16,7 +16,7 @@ import com.chargebee.android.models.SubscriptionDetailsWrapper
 import com.chargebee.android.network.CBReceiptResponse
 import java.util.*
 
-class BillingClientManager(
+class BillingClientManager constructor(
     context: Context, skuType: String,
     skuList: ArrayList<String>, callBack: CBCallback.ListProductsCallback<ArrayList<CBProduct>>
 ) : BillingClientStateListener, PurchasesUpdatedListener {
@@ -146,6 +146,9 @@ class BillingClientManager(
                        callBack.onError(CBException(ErrorDetail("Unknown error")))
                        Log.e(TAG, "exception :" + ex.message)
                    }
+               }else{
+                   Log.e(TAG, "Response Code :" + billingResult.responseCode)
+                   callBack.onError(CBException(ErrorDetail("Service Unavailable")))
                }
            }
        }catch (exp: CBException){
@@ -225,9 +228,13 @@ class BillingClientManager(
                 mProgressBarListener?.onHideProgressBar()
                 connectToBillingService()
             }
+            BillingClient.BillingResponseCode.ITEM_UNAVAILABLE -> {
+                Log.e(TAG, "onPurchasesUpdated ITEM_UNAVAILABLE")
+                purchaseCallBack?.onError(CBException(ErrorDetail("Item Unavailable")))
+            }
             else -> {
+                Log.e(TAG, "Failed to onPurchasesUpdated"+billingResult.responseCode)
                 mProgressBarListener?.onHideProgressBar()
-                Log.e(TAG, "Failed to onPurchasesUpdated")
                 purchaseCallBack?.onError(CBException(ErrorDetail("Unknown error")))
             }
         }
