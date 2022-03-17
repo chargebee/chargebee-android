@@ -14,7 +14,7 @@ import com.chargebee.android.billingservice.PurchaseModel
 import com.chargebee.android.exceptions.CBException
 import com.chargebee.android.exceptions.CBProductIDResult
 import com.chargebee.android.exceptions.ChargebeeResult
-import com.chargebee.android.models.Products
+import com.chargebee.android.models.CBProduct
 import com.chargebee.android.network.CBReceiptRequestBody
 import com.chargebee.android.network.CBReceiptResponse
 import com.chargebee.android.network.Params
@@ -50,8 +50,8 @@ class BillingClientManagerTest  {
     lateinit var skuDetails: SkuDetails
 
     var mContext: Context? = null
-    private var callBack : ListProductsCallback<ArrayList<Products>>? = null
-    private var callBackPurchase : CBCallback.PurchaseCallback<PurchaseModel>? = null
+    private var callBack : ListProductsCallback<ArrayList<CBProduct>>? = null
+    private var callBackPurchase : CBCallback.PurchaseCallback<String>? = null
     val productIdList = arrayListOf("merchant.pro.android", "merchant.premium.android")
 
     @Before
@@ -96,12 +96,12 @@ class BillingClientManagerTest  {
                 CBPurchase.retrieveProducts(
                     it,
                     productIdList,
-                    object : ListProductsCallback<ArrayList<Products>> {
-                        override fun onSuccess(productDetails: ArrayList<Products>) {
+                    object : ListProductsCallback<ArrayList<CBProduct>> {
+                        override fun onSuccess(productDetails: ArrayList<CBProduct>) {
                             println("List products :$productDetails")
                             assertThat(
                                 productDetails,
-                                instanceOf(Products::class.java)
+                                instanceOf(CBProduct::class.java)
                             )
                         }
 
@@ -122,12 +122,12 @@ class BillingClientManagerTest  {
                 CBPurchase.retrieveProducts(
                     it,
                     productIdList,
-                    object : ListProductsCallback<ArrayList<Products>> {
-                        override fun onSuccess(productDetails: ArrayList<Products>) {
+                    object : ListProductsCallback<ArrayList<CBProduct>> {
+                        override fun onSuccess(productDetails: ArrayList<CBProduct>) {
                             println("List products :$productDetails")
                             assertThat(
                                 productDetails,
-                                instanceOf(Products::class.java)
+                                instanceOf(CBProduct::class.java)
                             )
                         }
 
@@ -247,15 +247,15 @@ class BillingClientManagerTest  {
     fun test_purchaseProduct_success(){
         // val jsonDetails = "{\"productId\":\"merchant.premium.android\",\"type\":\"subs\",\"title\":\"Premium Plan (Chargebee Example)\",\"name\":\"Premium Plan\",\"price\":\"₹2,650.00\",\"price_amount_micros\":2650000000,\"price_currency_code\":\"INR\",\"description\":\"Every 6 Months\",\"subscriptionPeriod\":\"P6M\",\"skuDetailsToken\":\"AEuhp4J0KiD1Bsj3Yq2mHPBRNHUBdzs4nTJY3PWRR8neE-22MJNssuDzH2VLFKv35Ov8\"}"
 
-        val products = Products("","","", skuDetails,true)
+        val products = CBProduct("","","", skuDetails,true)
         val lock = CountDownLatch(1)
         CoroutineScope(Dispatchers.IO).launch {
             CBPurchase.purchaseProduct(
-                products,
-                object : CBCallback.PurchaseCallback<PurchaseModel> {
-                    override fun onSuccess(success: PurchaseModel) {
+                products,"",
+                object : CBCallback.PurchaseCallback<String> {
+                    override fun onSuccess(status: String) {
                         lock.countDown()
-                        assertThat(success, instanceOf(PurchaseModel::class.java))
+                        assertThat(status, true)
                     }
 
                     override fun onError(error: CBException) {
@@ -269,7 +269,7 @@ class BillingClientManagerTest  {
 
         CoroutineScope(Dispatchers.IO).launch {
             Mockito.`when`(callBackPurchase?.let {
-                billingClient?.purchase(products, it)
+                billingClient?.purchase(products,"", it)
             }).thenReturn(Unit)
             callBackPurchase?.let {
                 verify(billingClient, times(1))?.purchase(products,purchaseCallBack = it)
@@ -281,13 +281,13 @@ class BillingClientManagerTest  {
     fun test_purchaseProduct_error(){
         val jsonDetails = "{\"productId\":\"merchant.premium.android\",\"type\":\"subs\",\"title\":\"Premium Plan (Chargebee Example)\",\"name\":\"Premium Plan\",\"price\":\"₹2,650.00\",\"price_amount_micros\":2650000000,\"price_currency_code\":\"INR\",\"description\":\"Every 6 Months\",\"subscriptionPeriod\":\"P6M\",\"skuDetailsToken\":\"AEuhp4J0KiD1Bsj3Yq2mHPBRNHUBdzs4nTJY3PWRR8neE-22MJNssuDzH2VLFKv35Ov8\"}"
 
-        val products = Products("","","", skuDetails,true)
+        val products = CBProduct("","","", skuDetails,true)
         CoroutineScope(Dispatchers.IO).launch {
             CBPurchase.purchaseProduct(
-                products,
-                object : CBCallback.PurchaseCallback<PurchaseModel> {
-                    override fun onSuccess(success: PurchaseModel) {
-                        assertThat(success, instanceOf(PurchaseModel::class.java))
+                products,"",
+                object : CBCallback.PurchaseCallback<String> {
+                    override fun onSuccess(status: String) {
+                        assertThat(status, true)
                     }
 
                     override fun onError(error: CBException) {
@@ -301,7 +301,7 @@ class BillingClientManagerTest  {
         val purchaseToken = "56sadmnagdjsd"
         val jsonDetails = "{\"productId\":\"merchant.premium.android\",\"type\":\"subs\",\"title\":\"Premium Plan (Chargebee Example)\",\"name\":\"Premium Plan\",\"price\":\"₹2,650.00\",\"price_amount_micros\":2650000000,\"price_currency_code\":\"INR\",\"description\":\"Every 6 Months\",\"subscriptionPeriod\":\"P6M\",\"skuDetailsToken\":\"AEuhp4J0KiD1Bsj3Yq2mHPBRNHUBdzs4nTJY3PWRR8neE-22MJNssuDzH2VLFKv35Ov8\"}"
 
-        val products = Products("merchant.premium.android","Premium Plan (Chargebee Example)","₹2,650.00", skuDetails,true)
+        val products = CBProduct("merchant.premium.android","Premium Plan (Chargebee Example)","₹2,650.00", skuDetails,true)
         val lock = CountDownLatch(1)
         CoroutineScope(Dispatchers.IO).launch {
             CBPurchase.validateReceipt(purchaseToken, products) {
@@ -344,7 +344,7 @@ class BillingClientManagerTest  {
         val jsonDetails = "{\"productId\":\"merchant.premium.test.android\",\"type\":\"subs\",\"title\":\"Premium Plan (Chargebee Example)\",\"name\":\"Premium Plan\",\"price\":\"₹2,650.00\",\"price_amount_micros\":2650000000,\"price_currency_code\":\"INR\",\"description\":\"Every 6 Months\",\"subscriptionPeriod\":\"P6M\",\"skuDetailsToken\":\"AEuhp4J0KiD1Bsj3Yq2mHPBRNHUBdzs4nTJY3PWRR8neE-22MJNssuDzH2VLFKv35Ov8\"}"
 
         // val skuDetails: SkuDetails? = null
-        val products = Products("merchant.premium.test.android","Premium Plan (Chargebee Example)","₹2,650.00", skuDetails,true)
+        val products = CBProduct("merchant.premium.test.android","Premium Plan (Chargebee Example)","₹2,650.00", skuDetails,true)
         CoroutineScope(Dispatchers.IO).launch {
             CBPurchase.validateReceipt(purchaseToken, products) {
                 when (it) {

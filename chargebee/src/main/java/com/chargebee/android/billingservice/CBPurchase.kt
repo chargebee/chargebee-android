@@ -73,14 +73,14 @@ object CBPurchase {
 
     @JvmStatic
     @Throws(InvalidRequestException::class, OperationFailedException::class)
-    fun validateReceipt(purchaseToken: String, products: CBProduct, completion : (ChargebeeResult<Any>) -> Unit) {
+    fun validateReceipt(purchaseToken: String, product: CBProduct, completion : (ChargebeeResult<Any>) -> Unit) {
         try {
             val logger = CBLogger(name = "buy", action = "process_purchase_command")
             //price = products.productPrice.drop(1).dropLast(2).replace(".","").replace(",","")
 
             val params = Params(
                 purchaseToken,
-                products.productId,
+                product.productId,
                 Chargebee.site,
                 Chargebee.channel
             )
