@@ -14,8 +14,7 @@ internal class ItemsResource: BaseResource(Chargebee.baseUrl){
 
         Log.i(javaClass.simpleName, " Response :$itemsResponse")
         return responseFromServer(
-            itemsResponse,
-            ErrorDetail::class.java)
+            itemsResponse)
     }
 
     suspend fun retrieveItem(itemId: String): ChargebeeResult<Any> {
@@ -23,8 +22,7 @@ internal class ItemsResource: BaseResource(Chargebee.baseUrl){
 
         Log.i(javaClass.simpleName, " Response :$itemsResponse")
         return responseFromServer(
-            itemsResponse,
-            ErrorDetail::class.java)
+            itemsResponse)
     }
 
 }

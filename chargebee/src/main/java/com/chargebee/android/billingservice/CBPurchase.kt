@@ -5,6 +5,7 @@ import android.text.TextUtils
 import android.util.Log
 import com.chargebee.android.Chargebee
 import com.chargebee.android.ErrorDetail
+import com.chargebee.android.ProgressBarListener
 import com.chargebee.android.exceptions.*
 import com.chargebee.android.loggers.CBLogger
 import com.chargebee.android.models.*
@@ -15,7 +16,6 @@ import com.chargebee.android.network.CBAuthentication
 import com.chargebee.android.network.Params
 import com.chargebee.android.resources.CatalogVersion
 import com.chargebee.android.resources.ReceiptResource
-import okhttp3.Credentials
 import java.util.ArrayList
 object CBPurchase {
 
@@ -35,7 +35,7 @@ object CBPurchase {
         retrieveProductIDList(queryParams, completion)
     }
     @JvmStatic
-    fun retrieveProducts(context: Context, params: ArrayList<String>, callBack : CBCallback.ListProductsCallback<ArrayList<Products>>) {
+    fun retrieveProducts(context: Context, params: ArrayList<String>, callBack : CBCallback.ListProductsCallback<ArrayList<CBProduct>>) {
         try {
             billingClientManager = BillingClientManager(context,SkuType.SUBS, params, callBack)
            /* GlobalScope.launch {
@@ -47,14 +47,14 @@ object CBPurchase {
     }
     @JvmStatic
     fun purchaseProduct(
-        params: Products,
-        callback: CBCallback.PurchaseCallback<PurchaseModel>) {
+        product: CBProduct, customerID: String,
+        callback: CBCallback.PurchaseCallback<String>) {
         if (!TextUtils.isEmpty(Chargebee.sdkKey)){
             CBAuthentication.isSDKKeyValid(Chargebee.sdkKey){
                 when(it){
                     is ChargebeeResult.Success -> {
                         if (billingClientManager?.isBillingClientReady() == true && billingClientManager?.isFeatureSupported() == true) {
-                            billingClientManager?.purchase(params, callback)
+                            billingClientManager?.purchase(product, customerID, callback)
                         } else {
                             callback.onError(CBException(ErrorDetail("Play services not available")))
                         }
@@ -73,7 +73,7 @@ object CBPurchase {
 
     @JvmStatic
     @Throws(InvalidRequestException::class, OperationFailedException::class)
-    fun validateReceipt(purchaseToken: String, products: Products, completion : (ChargebeeResult<Any>) -> Unit) {
+    fun validateReceipt(purchaseToken: String, products: CBProduct, completion : (ChargebeeResult<Any>) -> Unit) {
         try {
             val logger = CBLogger(name = "buy", action = "process_purchase_command")
             //price = products.productPrice.drop(1).dropLast(2).replace(".","").replace(",","")

@@ -6,17 +6,18 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 import androidx.recyclerview.widget.RecyclerView;
-import com.chargebee.android.models.Products;
+
+import com.chargebee.android.models.CBProduct;
 import com.chargebee.example.R;
 import java.util.List;
 
 public class ProductListAdapter extends RecyclerView.Adapter<ProductListAdapter.ViewHolder> {
 
-    private List<Products> mProductsList;
+    private List<CBProduct> mProductsList;
     private ProductListAdapter.ProductClickListener mClickListener;
     private Context mContext = null;
 
-    public ProductListAdapter(Context context, List<Products> mProductsList, ProductClickListener mClickListener) {
+    public ProductListAdapter(Context context, List<CBProduct> mProductsList, ProductClickListener mClickListener) {
         mContext = context;
         this.mProductsList = mProductsList;
         this.mClickListener = mClickListener;
@@ -30,7 +31,7 @@ public class ProductListAdapter extends RecyclerView.Adapter<ProductListAdapter.
 
     @Override
     public void onBindViewHolder(ProductListAdapter.ViewHolder holder, int position) {
-        Products products = mProductsList.get(position);
+        CBProduct products = mProductsList.get(position);
         holder.mTextViewTitle.setText(products.getProductId());
         holder.mTextViewPrice.setText(products.getProductPrice());
         if (products.getSubStatus()) {

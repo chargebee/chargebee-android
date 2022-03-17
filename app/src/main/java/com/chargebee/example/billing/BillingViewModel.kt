@@ -7,56 +7,51 @@ import com.chargebee.android.Chargebee
 import com.chargebee.android.ErrorDetail
 import com.chargebee.android.billingservice.CBCallback
 import com.chargebee.android.billingservice.CBPurchase
-import com.chargebee.android.billingservice.PurchaseModel
 import com.chargebee.android.exceptions.CBException
 import com.chargebee.android.exceptions.ChargebeeResult
-import com.chargebee.android.models.Products
-import com.chargebee.android.models.SubscriptionDetail
+import com.chargebee.android.models.CBProduct
 import com.chargebee.android.models.SubscriptionDetailsWrapper
-import com.chargebee.android.network.CBReceiptResponse
 import com.google.gson.Gson
 
 class BillingViewModel : ViewModel() {
 
     private val TAG = "BillingViewModel"
-    var productPurchaseResult: MutableLiveData<PurchaseModel?> = MutableLiveData()
+    var productPurchaseResult: MutableLiveData<String?> = MutableLiveData()
     var cbException: MutableLiveData<String?> = MutableLiveData()
     var subscriptionStatus: MutableLiveData<String?> = MutableLiveData()
     var error: MutableLiveData<String?> = MutableLiveData()
     private var subscriptionId: String = ""
 
-    fun purchaseProduct(param: Products) {
-        CBPurchase.purchaseProduct(param, object : CBCallback.PurchaseCallback<PurchaseModel>{
-            override fun onSuccess(success: PurchaseModel) {
-                productPurchaseResult.postValue(success)
+    fun purchaseProduct(product: CBProduct, customerID: String) {
+
+        CBPurchase.purchaseProduct(product, customerID,  object : CBCallback.PurchaseCallback<String>{
+            override fun onSuccess(status: String) {
+                productPurchaseResult.postValue(status)
             }
             override fun onError(error: CBException) {
-                cbException.postValue(Gson().fromJson<ErrorDetail>(
-                    error.message,
-                    ErrorDetail::class.java
-                ).message)
+                cbException.postValue(error.message)
             }
         })
     }
 
-    fun validateReceipt(purchaseToken: String, products: Products) {
-        CBPurchase.validateReceipt(purchaseToken, products){
-            when(it){
-                is ChargebeeResult.Success ->{
-                    Log.i(TAG, "Validate Receipt Response:  ${(it.data as CBReceiptResponse).in_app_subscription}")
-                    subscriptionId = (it.data as CBReceiptResponse).in_app_subscription.subscription_id
-                    retrieveSubscription(subscriptionId)
-                }
-                is ChargebeeResult.Error ->{
-                    Log.e(TAG, "Exception from server - validateReceipt() :  ${it.exp.message}")
-                    error.postValue(Gson().fromJson<ErrorDetail>(
-                        it.exp.message,
-                        ErrorDetail::class.java
-                    ).message)
-                }
-            }
-        }
-    }
+//    fun validateReceipt(purchaseToken: String, products: CBProduct) {
+//        CBPurchase.validateReceipt(purchaseToken, products){
+//            when(it){
+//                is ChargebeeResult.Success ->{
+//                    Log.i(TAG, "Validate Receipt Response:  ${(it.data as CBReceiptResponse).in_app_subscription}")
+//                    subscriptionId = (it.data as CBReceiptResponse).in_app_subscription.subscription_id
+//                    retrieveSubscription(subscriptionId)
+//                }
+//                is ChargebeeResult.Error ->{
+//                    Log.e(TAG, "Exception from server - validateReceipt() :  ${it.exp.message}")
+//                    error.postValue(Gson().fromJson<ErrorDetail>(
+//                        it.exp.message,
+//                        ErrorDetail::class.java
+//                    ).message)
+//                }
+//            }
+//        }
+//    }
     fun retrieveSubscription(subscriptionId: String) {
         Chargebee.retrieveSubscription(subscriptionId) {
             when(it){

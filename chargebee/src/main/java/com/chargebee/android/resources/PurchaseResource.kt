@@ -19,7 +19,6 @@ internal class PurchaseResource : BaseResource(Chargebee.baseUrl) {
     suspend fun retrieveSubscription(subscriptionId: String): ChargebeeResult<Any> {
         val subscriptionResponse = apiClient.create(PurchaseRepository::class.java).retrieveSubscription(subscriptionId = subscriptionId )
         return responseFromServer(
-            subscriptionResponse,
-            ErrorDetail::class.java)
+            subscriptionResponse)
     }
 }

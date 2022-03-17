@@ -13,8 +13,7 @@ internal class SubscriptionResource : BaseResource(Chargebee.baseUrl) {
             .retrieveSubscription(subscriptionId = subscriptionId)
         Log.i(javaClass.simpleName, " Response :$subscriptionResponse")
         return responseFromServer(
-            subscriptionResponse,
-            ErrorDetail::class.java
+            subscriptionResponse
         )
     }
 

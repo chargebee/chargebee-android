@@ -18,7 +18,7 @@ import com.chargebee.android.billingservice.CBCallback
 import com.chargebee.android.billingservice.CBPurchase
 import com.chargebee.android.exceptions.CBException
 import com.chargebee.android.exceptions.CBProductIDResult
-import com.chargebee.android.models.Products
+import com.chargebee.android.models.CBProduct
 import com.chargebee.example.adapter.ListItemsAdapter
 import com.chargebee.example.addon.AddonActivity
 import com.chargebee.example.billing.BillingActivity
@@ -173,7 +173,9 @@ class MainActivity : BaseActivity(), ListItemsAdapter.ItemClickListener {
         val dialog = Dialog(this)
         dialog.setContentView(R.layout.dialog_input_layout)
         val input = dialog.findViewById<View>(R.id.productIdInput) as EditText
+        input.hint = "Please enter Product IDs(Comma separated)"
         val dialogButton = dialog.findViewById<View>(R.id.btn_ok) as Button
+        dialogButton.text = "Submit"
         dialogButton.setOnClickListener {
             val productIdList = input.text.toString().trim().split(",")
             getProductIdList(productIdList.toCollection(ArrayList()))
@@ -185,11 +187,11 @@ class MainActivity : BaseActivity(), ListItemsAdapter.ItemClickListener {
         CBPurchase.retrieveProducts(
             this,
             productIdList,
-            object : CBCallback.ListProductsCallback<ArrayList<Products>> {
-                override fun onSuccess(productDetails: ArrayList<Products>) {
-                    if (productDetails.size > 0) {
+            object : CBCallback.ListProductsCallback<ArrayList<CBProduct>> {
+                override fun onSuccess(productIDs: ArrayList<CBProduct>) {
+                    if (productIDs.size > 0) {
                         GlobalScope.launch(Dispatchers.Main) {
-                            launchProductDetailsScreen(gson.toJson(productDetails))
+                            launchProductDetailsScreen(gson.toJson(productIDs))
                         }
                     } else {
                         alertSuccess("Items not available to buy")
