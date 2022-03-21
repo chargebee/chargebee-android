@@ -268,7 +268,7 @@ class BillingClientManager constructor(
 
     }
 
-    fun validateReceipt(purchaseToken: String, product: CBProduct) {
+    private fun validateReceipt(purchaseToken: String, product: CBProduct) {
         CBPurchase.validateReceipt(purchaseToken, product){
             when(it){
                 is ChargebeeResult.Success -> {
@@ -277,37 +277,17 @@ class BillingClientManager constructor(
                         "Validate Receipt Response:  ${(it.data as CBReceiptResponse).in_app_subscription}"
                     )
                     val subscriptionId = (it.data).in_app_subscription.subscription_id
-                    if (subscriptionId.isEmpty())
+                    Log.i(TAG, "Subscription ID:  $subscriptionId")
+                    if (subscriptionId.isEmpty()){
                         purchaseCallBack?.onError(CBException(ErrorDetail(message = "Invalid Purchase")))
-
-                    retrieveSubscription(subscriptionId)
+                        purchaseCallBack?.onSuccess(subscriptionId,false)
+                    }else {
+                        purchaseCallBack?.onSuccess(subscriptionId,true)
+                    }
                 }
                 is ChargebeeResult.Error -> {
                     mProgressBarListener?.onHideProgressBar()
                     Log.e(TAG, "Exception from server - validateReceipt() :  ${it.exp.message}")
-                    purchaseCallBack?.onError(CBException(ErrorDetail(it.exp.message)))
-                }
-            }
-        }
-    }
-    private fun retrieveSubscription(subscriptionId: String) {
-        Chargebee.retrieveSubscription(subscriptionId) {
-            when(it){
-                is ChargebeeResult.Success -> {
-                    mProgressBarListener?.onHideProgressBar()
-                    Log.i(
-                        TAG,
-                        "subscription status:  ${(it.data as SubscriptionDetailsWrapper).cb_subscription.status} ,activated_at : ${(it.data).cb_subscription.activated_at}" +
-                                " subscription id : ${(it.data).cb_subscription.id}" +
-                                " customer_id : ${(it.data).cb_subscription.customer_id}" +
-                                " current_term_start : ${(it.data).cb_subscription.current_term_start} " +
-                                " current_term_end : ${(it.data).cb_subscription.current_term_end}"
-                    )
-                    purchaseCallBack?.onSuccess((it.data).cb_subscription.status)
-                }
-                is ChargebeeResult.Error -> {
-                    mProgressBarListener?.onHideProgressBar()
-                    Log.e(TAG, "Exception from server- retrieveSubscription() :  ${it.exp.message}")
                     purchaseCallBack?.onError(CBException(ErrorDetail(it.exp.message)))
                 }
             }

@@ -16,7 +16,7 @@ import com.google.gson.Gson
 class BillingViewModel : ViewModel() {
 
     private val TAG = "BillingViewModel"
-    var productPurchaseResult: MutableLiveData<String?> = MutableLiveData()
+    var productPurchaseResult: MutableLiveData<Boolean> = MutableLiveData()
     var cbException: MutableLiveData<String?> = MutableLiveData()
     var subscriptionStatus: MutableLiveData<String?> = MutableLiveData()
     var error: MutableLiveData<String?> = MutableLiveData()
@@ -25,7 +25,8 @@ class BillingViewModel : ViewModel() {
     fun purchaseProduct(product: CBProduct, customerID: String) {
 
         CBPurchase.purchaseProduct(product, customerID,  object : CBCallback.PurchaseCallback<String>{
-            override fun onSuccess(status: String) {
+            override fun onSuccess(subscriptionID: String, status:Boolean) {
+                Log.i(TAG, "Subscription ID:  $subscriptionID")
                 productPurchaseResult.postValue(status)
             }
             override fun onError(error: CBException) {
@@ -38,24 +39,6 @@ class BillingViewModel : ViewModel() {
         })
     }
 
-//    fun validateReceipt(purchaseToken: String, products: CBProduct) {
-//        CBPurchase.validateReceipt(purchaseToken, products){
-//            when(it){
-//                is ChargebeeResult.Success ->{
-//                    Log.i(TAG, "Validate Receipt Response:  ${(it.data as CBReceiptResponse).in_app_subscription}")
-//                    subscriptionId = (it.data as CBReceiptResponse).in_app_subscription.subscription_id
-//                    retrieveSubscription(subscriptionId)
-//                }
-//                is ChargebeeResult.Error ->{
-//                    Log.e(TAG, "Exception from server - validateReceipt() :  ${it.exp.message}")
-//                    error.postValue(Gson().fromJson<ErrorDetail>(
-//                        it.exp.message,
-//                        ErrorDetail::class.java
-//                    ).message)
-//                }
-//            }
-//        }
-//    }
     fun retrieveSubscription(subscriptionId: String) {
         Chargebee.retrieveSubscription(subscriptionId) {
             when(it){

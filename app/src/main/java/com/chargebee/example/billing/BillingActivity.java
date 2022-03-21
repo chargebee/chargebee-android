@@ -55,7 +55,11 @@ public class BillingActivity extends BaseActivity implements ProductListAdapter.
         this.billingViewModel.getProductPurchaseResult().observe(this, status -> {
             hideProgressDialog();
             updateSubscribeStatus();
-            alertSuccess(status);
+            if(status) {
+                alertSuccess("Success");
+            }else{
+                alertSuccess("Failure");
+            }
         });
 
         this.billingViewModel.getSubscriptionStatus().observe(this, status -> {

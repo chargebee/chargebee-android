@@ -13,7 +13,7 @@ interface CBCallback {
         fun onError(error: CBException)
     }
     interface PurchaseCallback<T> {
-        fun onSuccess(status: String)
+        fun onSuccess(subscriptionID: String, status: Boolean)
         fun onError(error: CBException)
     }
 

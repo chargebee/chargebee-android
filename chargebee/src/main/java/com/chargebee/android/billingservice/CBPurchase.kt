@@ -77,7 +77,7 @@ object CBPurchase {
         try {
             val logger = CBLogger(name = "buy", action = "process_purchase_command")
             //price = products.productPrice.drop(1).dropLast(2).replace(".","").replace(",","")
-
+            //product.skuDetails.priceCurrencyCode
             val params = Params(
                 purchaseToken,
                 product.productId,
