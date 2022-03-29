@@ -3,6 +3,7 @@ package com.chargebee.example.token
 import android.util.Log
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import com.chargebee.android.Chargebee
 import com.chargebee.android.models.Token
 import com.chargebee.android.exceptions.InvalidRequestException
 import com.chargebee.android.exceptions.OperationFailedException
@@ -15,7 +16,7 @@ class TokenViewModel : ViewModel() {
     }
 
     fun create(paymentDetail: PaymentDetail) {
-        Token.createTempToken(paymentDetail) {
+        Chargebee.createTempToken(paymentDetail) {
             try {
                 val cbTempToken = it.getData()
                 Log.d("success", cbTempToken)

@@ -59,7 +59,7 @@ internal fun <T, E : ChargebeeError> fromResponse(response: Response<T?>, type: 
     return Failure(error = errorParser, statusCode = response.code())
 }
 
-internal fun <T, E : ChargebeeError> responseFromServer(response: Response<T?>, type: Class<E>): ChargebeeResult<T> {
+internal fun <T> responseFromServer(response: Response<T?>): ChargebeeResult<T> {
     if (response.isSuccessful) {
         response.code().let {
             when {
@@ -104,4 +104,9 @@ internal fun <T, E : ChargebeeError> responseFromServer(response: Response<T?>, 
             error = ErrorDetail(response.errorBody()?.string())
         )
     )
+}
+
+interface ProgressBarListener{
+    fun onShowProgressBar()
+    fun onHideProgressBar()
 }

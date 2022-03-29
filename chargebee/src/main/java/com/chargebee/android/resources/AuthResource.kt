@@ -18,8 +18,7 @@ internal class AuthResource : BaseResource(Chargebee.baseUrl) {
 
         Log.i(javaClass.simpleName, " Response :$response")
         return responseFromServer(
-            response,
-            ErrorDetail::class.java
+            response
         )
     }
 

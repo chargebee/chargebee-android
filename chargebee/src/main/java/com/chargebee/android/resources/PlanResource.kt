@@ -14,8 +14,7 @@ internal class PlanResource: BaseResource(Chargebee.baseUrl) {
 
         Log.i(javaClass.simpleName, " Response :$planResponse")
         return responseFromServer(
-            planResponse,
-        ErrorDetail::class.java)
+            planResponse)
     }
 
     suspend fun retrieveAllPlans(params: Array<String>): ChargebeeResult<Any> {
@@ -23,7 +22,6 @@ internal class PlanResource: BaseResource(Chargebee.baseUrl) {
 
         Log.i(javaClass.simpleName, " Response :$itemsResponse")
         return responseFromServer(
-            itemsResponse,
-            ErrorDetail::class.java)
+            itemsResponse)
     }
 }

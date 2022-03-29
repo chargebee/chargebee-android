@@ -3,6 +3,7 @@ package com.chargebee.example.items
 import android.util.Log
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import com.chargebee.android.Chargebee
 import com.chargebee.android.exceptions.ChargebeeResult
 import com.chargebee.android.models.ItemWrapper
 import com.chargebee.android.models.Items
@@ -16,7 +17,7 @@ class ItemsViewModel : ViewModel() {
     var mItemsList = ArrayList<String>()
 
     fun retrieveAllItems(queryParam: Array<String>) {
-        Items.retrieveAllItems(queryParam) {
+        Chargebee.retrieveAllItems(queryParam) {
             when (it) {
                 is ChargebeeResult.Success -> {
                     Log.i(javaClass.simpleName, "list items :  ${it.data}")
@@ -32,7 +33,7 @@ class ItemsViewModel : ViewModel() {
     }
 
     fun retrieveItem(itemId: String) {
-        Items.retrieveItem(itemId) {
+        Chargebee.retrieveItem(itemId) {
             when (it) {
                 is ChargebeeResult.Success -> {
                     Log.i(javaClass.simpleName, "list items :  ${it.data}")

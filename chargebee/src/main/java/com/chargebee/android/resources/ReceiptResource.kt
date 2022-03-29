@@ -18,8 +18,7 @@ internal class ReceiptResource : BaseResource(baseUrl = Chargebee.baseUrl){
 
         Log.i(javaClass.simpleName, " validateReceipt Response :$response")
         return responseFromServer(
-            response,
-            ErrorDetail::class.java
+            response
         )
     }
 

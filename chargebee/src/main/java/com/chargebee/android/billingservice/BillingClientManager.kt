@@ -6,14 +6,19 @@ import android.os.Handler
 import android.os.Looper
 import android.util.Log
 import com.android.billingclient.api.*
+import com.chargebee.android.Chargebee
 import com.chargebee.android.ErrorDetail
+import com.chargebee.android.ProgressBarListener
 import com.chargebee.android.exceptions.CBException
-import com.chargebee.android.models.Products
+import com.chargebee.android.exceptions.ChargebeeResult
+import com.chargebee.android.models.CBProduct
+import com.chargebee.android.models.SubscriptionDetailsWrapper
+import com.chargebee.android.network.CBReceiptResponse
 import java.util.*
 
 class BillingClientManager constructor(
     context: Context, skuType: String,
-    skuList: ArrayList<String>, callBack: CBCallback.ListProductsCallback<ArrayList<Products>>
+    skuList: ArrayList<String>, callBack: CBCallback.ListProductsCallback<ArrayList<CBProduct>>
 ) : BillingClientStateListener, PurchasesUpdatedListener {
 
     private val CONNECT_TIMER_START_MILLISECONDS = 1L * 1000L
@@ -21,15 +26,22 @@ class BillingClientManager constructor(
     var mContext : Context? = null
     private val handler = Handler(Looper.getMainLooper())
     private var skuType : String? = null
-    private var listIds = arrayListOf<String>()
-    private var callBack : CBCallback.ListProductsCallback<ArrayList<Products>>? = null
-    private var purchaseCallBack: CBCallback.PurchaseCallback<PurchaseModel>? = null
-    private val skusWithSkuDetails = arrayListOf<Products>()
+    private var skuList = arrayListOf<String>()
+    private var callBack : CBCallback.ListProductsCallback<ArrayList<CBProduct>>? = null
+    private var purchaseCallBack: CBCallback.PurchaseCallback<String>? = null
+    private val skusWithSkuDetails = arrayListOf<CBProduct>()
     private val TAG = "BillingClientManager"
+    var customerID : String = ""
+    var product: CBProduct? = null
+   companion object {
+       lateinit var mProgressBarListener: Any
+   }
+
+    var mProgressBarListener: ProgressBarListener? = null
 
     init {
         mContext = context
-        listIds = skuList
+        this.skuList = skuList
         this.skuType =skuType
         this.callBack = callBack
         startBillingServiceConnection()
@@ -45,9 +57,9 @@ class BillingClientManager constructor(
             BillingClient.BillingResponseCode.OK -> {
                 Log.i(
                     TAG,
-                    "onBillingSetupFinished() -> successfully for ${billingClient?.toString()}."
+                    "onBillingSetupFinished() -> successfully for ${billingClient.toString()}."
                 )
-                callBack?.let { loadProductDetails(BillingClient.SkuType.SUBS, listIds, it) }
+                callBack?.let { loadProductDetails(BillingClient.SkuType.SUBS, skuList, it) }
             }
             BillingClient.BillingResponseCode.FEATURE_NOT_SUPPORTED,
             BillingClient.BillingResponseCode.BILLING_UNAVAILABLE -> {
@@ -101,7 +113,7 @@ class BillingClientManager constructor(
 
     private fun loadProductDetails(
         @BillingClient.SkuType skuType: String,
-        skuList: ArrayList<String>, callBack: CBCallback.ListProductsCallback<ArrayList<Products>>
+        skuList: ArrayList<String>, callBack: CBCallback.ListProductsCallback<ArrayList<CBProduct>>
     ) {
        try {
            val params = SkuDetailsParams
@@ -118,17 +130,17 @@ class BillingClientManager constructor(
                if (billingResult.responseCode == BillingClient.BillingResponseCode.OK && skuDetailsList != null) {
                    try {
                        skusWithSkuDetails.clear()
-                       for (details in skuDetailsList) {
-                           Log.i(TAG, "Product details :$details")
-                           val products = Products(
-                               details.sku,
-                               details.title,
-                               details.price,
-                               details,
+                       for (skuProduct in skuDetailsList) {
+                           val product = CBProduct(
+                               skuProduct.sku,
+                               skuProduct.title,
+                               skuProduct.price,
+                               skuProduct,
                                false
                            )
-                           skusWithSkuDetails.add(products)
+                           skusWithSkuDetails.add(product)
                        }
+                       Log.i(TAG, "Product details :$skusWithSkuDetails")
                        callBack.onSuccess(productIDs = skusWithSkuDetails)
                    }catch (ex: CBException){
                        callBack.onError(CBException(ErrorDetail("Unknown error")))
@@ -146,12 +158,22 @@ class BillingClientManager constructor(
 
     }
 
-    fun purchase(param: Products, purchaseCallBack: CBCallback.PurchaseCallback<PurchaseModel>) {
+    fun purchase(
+        product: CBProduct,
+        customerID: String? = "",
+        purchaseCallBack: CBCallback.PurchaseCallback<String>
+    ) {
         this.purchaseCallBack = purchaseCallBack
-        val skuDetails = param.skuDetails
+        this.product = product
+        val skuDetails = product.skuDetails
+        if (customerID != null) {
+            this.customerID = customerID
+        }
         val params = BillingFlowParams.newBuilder()
             .setSkuDetails(skuDetails)
             .build()
+
+        mProgressBarListener?.onHideProgressBar()
 
         billingClient.launchBillingFlow(mContext as Activity, params)
             .takeIf { billingResult -> billingResult.responseCode != BillingClient.BillingResponseCode.OK
@@ -197,11 +219,13 @@ class BillingClientManager constructor(
                 }
             }
             BillingClient.BillingResponseCode.ITEM_ALREADY_OWNED -> {
+                mProgressBarListener?.onHideProgressBar()
                 // call queryPurchases to verify and process all owned items
                 Log.e(TAG, "onPurchasesUpdated ITEM_ALREADY_OWNED")
                 purchaseCallBack?.onError(CBException(ErrorDetail("Item already owned")))
             }
             BillingClient.BillingResponseCode.SERVICE_DISCONNECTED -> {
+                mProgressBarListener?.onHideProgressBar()
                 connectToBillingService()
             }
             BillingClient.BillingResponseCode.ITEM_UNAVAILABLE -> {
@@ -210,6 +234,7 @@ class BillingClientManager constructor(
             }
             else -> {
                 Log.e(TAG, "Failed to onPurchasesUpdated"+billingResult.responseCode)
+                mProgressBarListener?.onHideProgressBar()
                 purchaseCallBack?.onError(CBException(ErrorDetail("Unknown error")))
             }
         }
@@ -222,29 +247,51 @@ class BillingClientManager constructor(
                 .build()
             billingClient.acknowledgePurchase(params) { billingResult ->
                 if (billingResult.responseCode == BillingClient.BillingResponseCode.OK) {
+                    mProgressBarListener?.onShowProgressBar()
                     try {
-                        val purchaseModel = purchase.accountIdentifiers?.let {
-                            PurchaseModel(
-                                purchase.purchaseToken,
-                                purchase.isAcknowledged,
-                                purchase.purchaseTime,
-                                it,
-                                purchase.orderId,
-                                purchase.isAutoRenewing,
-                                purchase.packageName
-                            )
+                        if (purchase.purchaseToken.isEmpty()){
+                            Log.i(TAG, "Receipt Not Found")
+                            mProgressBarListener?.onHideProgressBar()
+                        }else {
+                            Log.i(TAG, "Google Purchase - success")
+                            product?.let { validateReceipt(purchase.purchaseToken, it) }
                         }
-                        if (purchaseModel != null) {
-                            purchaseCallBack?.onSuccess(purchaseModel)
-                        }
+
                     } catch (ex: CBException) {
-                        Log.e("error", ex.toString())
+                        mProgressBarListener?.onHideProgressBar()
+                        Log.e("Error", ex.toString())
                         purchaseCallBack?.onError(ex)
                     }
                 }
             }
         }
 
+    }
+
+    private fun validateReceipt(purchaseToken: String, product: CBProduct) {
+        CBPurchase.validateReceipt(purchaseToken, product){
+            when(it){
+                is ChargebeeResult.Success -> {
+                    Log.i(
+                        TAG,
+                        "Validate Receipt Response:  ${(it.data as CBReceiptResponse).in_app_subscription}"
+                    )
+                    val subscriptionId = (it.data).in_app_subscription.subscription_id
+                    Log.i(TAG, "Subscription ID:  $subscriptionId")
+                    if (subscriptionId.isEmpty()){
+                        purchaseCallBack?.onError(CBException(ErrorDetail(message = "Invalid Purchase")))
+                        purchaseCallBack?.onSuccess(subscriptionId,false)
+                    }else {
+                        purchaseCallBack?.onSuccess(subscriptionId,true)
+                    }
+                }
+                is ChargebeeResult.Error -> {
+                    mProgressBarListener?.onHideProgressBar()
+                    Log.e(TAG, "Exception from server - validateReceipt() :  ${it.exp.message}")
+                    purchaseCallBack?.onError(CBException(ErrorDetail(it.exp.message)))
+                }
+            }
+        }
     }
 
     fun queryAllPurchases(){
