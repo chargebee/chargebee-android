@@ -18,7 +18,7 @@ After installing and initializing the SDK with the Chargebee site authentication
 The `Chargebee-Android` SDK can be installed by adding below dependency to the `build.gradle` file:
 
 ```kotlin
-implementation 'com.chargebee:chargebee-android:0.1.0'
+implementation 'com.chargebee:chargebee-android:1.0.0'
 ```
 
 ## Example project
@@ -109,7 +109,7 @@ The above function will handle the purchase against Google Play Store, and send 
 Use the Subscription ID returned by the previous function, to check for Subscription status against Chargebee, and for delivering purchased entitlements.
 
 ```kotlin
-SubscriptionDetail.retrieveSubscription(subscriptionId) {
+Chargebee.retrieveSubscription(subscriptionId) {
        when(it){
              is ChargebeeResult.Success ->{
                   Log.i(TAG, "subscription status:  ${it.status}")
@@ -129,7 +129,7 @@ If you are using Product Catalog 2.0 in your Chargebee site, then you can use th
 ### Get all Items
 
 ```kotlin
-Items.retrieveAllItems(queryParam) {
+Chargebee.retrieveAllItems(queryParam) {
        when (it) {
            is ChargebeeResult.Success -> {
                  Log.i(javaClass.simpleName, "list items :  ${it.data}")
@@ -145,7 +145,7 @@ For eg. query params above can be "sort_by[desc]" : "name" OR "limit": "100".
 ### Get Item Details
 
 ```kotlin
-Items.retrieveItem(queryParam) {
+Chargebee.retrieveItem(queryParam) {
        when (it) {
            is ChargebeeResult.Success -> {
                  Log.i(javaClass.simpleName, "item details :  ${it.data}")
@@ -161,7 +161,7 @@ If you are using Product Catalog 1.0 in your Chargebee site, then you can use an
 ### Get All Plans
 
 ```kotlin
-Plan.retrieveAllPlans(queryParam) {
+Chargebee.retrieveAllPlans(queryParam) {
        when (it) {
            is ChargebeeResult.Success -> {
                  Log.i(javaClass.simpleName, "list Plans :  ${it.data}")
@@ -177,7 +177,7 @@ For eg. query params above can be "sort_by[desc]" : "name" OR "limit": "100".
 ### Get Plan Details
 
 ```kotlin
-Plan.retrievePlan(queryParam) {
+Chargebee.retrievePlan(queryParam) {
        when (it) {
            is ChargebeeResult.Success -> {
                  Log.i(javaClass.simpleName, "Plan details :  ${it.data}")
@@ -192,7 +192,7 @@ Plan.retrievePlan(queryParam) {
 ### Get Addon Details
 
 ```kotlin
-Addon.retrieve("addonId") { addonResult ->
+Chargebee.retrieve("addonId") { addonResult ->
     try {
         val addon = addonResult.getData()
         Log.d("success", addon.toString())
@@ -218,7 +218,7 @@ val paymentDetail = PaymentDetail(
     currencyCode = "USD",
     type = PaymentMethodType.CARD,
     card = card)
-Token.createTempToken(paymentDetail) { tokenResult ->
+Chargebee.createTempToken(paymentDetail) { tokenResult ->
     try {
         val cbTempToken = tokenResult.getData()
         Log.d("success", cbTempToken)
