@@ -1,15 +1,19 @@
 package com.chargebee.example.plan;
 
-import androidx.appcompat.app.AppCompatActivity;
-
 import android.os.Bundle;
+import android.util.Log;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 
+import com.chargebee.android.ErrorDetail;
+import com.chargebee.android.models.Plan;
+import com.chargebee.example.BaseActivity;
 import com.chargebee.example.R;
+import com.google.gson.Gson;
+import com.google.gson.JsonObject;
 
-public class PlanInJavaActivity extends AppCompatActivity {
+public class PlanInJavaActivity extends BaseActivity {
 
     private PlanViewModel viewModel;
     private EditText planIdInput;
@@ -32,16 +36,19 @@ public class PlanInJavaActivity extends AppCompatActivity {
 
         this.viewModel = new PlanViewModel();
 
-        this.viewModel.planResult.observe(this, plan -> {
+        this.viewModel.getPlanResult().observe(this, plan -> {
+            hideProgressDialog();
             planName.setText(plan.getName());
             planPricingText.setText(plan.getPricingModel());
         });
 
-        this.viewModel.planError.observe(this, message -> {
-            errorText.setText(message);
+        this.viewModel.getPlanError().observe(this, message -> {
+            hideProgressDialog();
+            errorText.setText(new Gson().fromJson(message, ErrorDetail.class).getMessage());
         });
         this.planButton.setOnClickListener(view -> {
             this.clearFields();
+            showProgressDialog();
             this.viewModel.retrievePlan(planIdInput.getText().toString());
         });
     }

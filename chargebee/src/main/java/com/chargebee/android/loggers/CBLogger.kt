@@ -4,7 +4,7 @@ import com.chargebee.android.Chargebee
 import com.chargebee.android.resources.LogType
 import com.chargebee.android.resources.LoggerResource
 
-internal class CBLogger(private val name: String,
+class CBLogger(private val name: String,
             private val action: String) {
 
     suspend fun error(message: String, code: Int? = null) {
@@ -15,13 +15,25 @@ internal class CBLogger(private val name: String,
         postLog(LogType.INFO)
     }
 
-    private suspend fun postLog(type: LogType, message: String? = null, code: Int? = null) {
+    private suspend fun postLog(
+        type: LogType,
+        message: String? = null,
+        code: Int? = null,
+        deviceModelName: String? = null,
+        platform: String? = null,
+        osVersion: String? = null,
+        sdkVersion: String? = null
+    ) {
         if (Chargebee.allowErrorLogging) {
             LoggerResource().log(
                 action,
                 type,
                 message,
-                code
+                code,
+                deviceModelName,
+                platform,
+                osVersion,
+                sdkVersion
             )
         }
     }

@@ -1,11 +1,5 @@
 package com.chargebee.android.models
 
-import com.chargebee.android.CBResult
-import com.chargebee.android.exceptions.InvalidRequestException
-import com.chargebee.android.exceptions.OperationFailedException
-import com.chargebee.android.loggers.CBLogger
-import com.chargebee.android.resources.PlanResource
-
 data class Plan(
     val id: String,
     val name: String,
@@ -23,6 +17,7 @@ data class Plan(
     val isShippable: Boolean,
     val updatedAt: Long,
     val giftable: Boolean,
+    val channel: String,
     val resourceVersion: Long,
     val `object`: String,
     val chargeModel: String,
@@ -30,16 +25,8 @@ data class Plan(
     val currencyCode: String,
     val showDescriptionInInvoices: Boolean,
     val showDescriptionInQuotes: Boolean
-) {
-    companion object {
-        @JvmStatic
-        @Throws(InvalidRequestException::class, OperationFailedException::class)
-        fun retrieve(planId: String, completion: (CBResult<Plan>) -> Unit) {
-            val logger = CBLogger(name = "plan", action = "retrieve_plan")
-            ResultHandler.safeExecute({ PlanResource().retrieve(planId) }, completion, logger)
-        }
+)
 
-    }
-}
+data class PlansWrapper(val list: ArrayList<PlanWrapper>)
 
-internal data class PlanWrapper(val plan: Plan)
+data class PlanWrapper(val plan: Plan)

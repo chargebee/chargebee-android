@@ -1,11 +1,8 @@
 package com.chargebee.android
 
+import com.chargebee.android.exceptions.*
 import com.google.gson.FieldNamingPolicy
 import com.google.gson.GsonBuilder
-import com.chargebee.android.exceptions.CBException
-import com.chargebee.android.exceptions.InvalidRequestException
-import com.chargebee.android.exceptions.OperationFailedException
-import com.chargebee.android.exceptions.PaymentException
 import com.chargebee.android.gateway.stripe.StripeError
 import retrofit2.Response
 import java.lang.Exception
@@ -60,4 +57,56 @@ internal fun <T, E : ChargebeeError> fromResponse(response: Response<T?>, type: 
         null
     }
     return Failure(error = errorParser, statusCode = response.code())
+}
+
+internal fun <T> responseFromServer(response: Response<T?>): ChargebeeResult<T> {
+    if (response.isSuccessful) {
+        response.code().let {
+            when {
+                it == 200 -> {
+                    val value = response.body()
+                    if (value != null)
+                        return ChargebeeResult.Success(value)
+                    return ChargebeeResult.Error(
+                        exp = CBException(
+                            error = ErrorDetail(
+                                response.errorBody()?.string()
+                            )
+                        )
+                    )
+                }
+                it == 401 -> {
+                    return ChargebeeResult.Error(
+                        exp = CBException(
+                            error = ErrorDetail(response.errorBody()?.string())
+                        )
+                    )
+                }
+                it >= 500 -> {
+                    return ChargebeeResult.Error(
+                        exp = CBException(
+                            error = ErrorDetail(response.errorBody()?.string())
+                        )
+                    )
+                }
+                else -> {
+                    return ChargebeeResult.Error(
+                        exp = CBException(
+                            error = ErrorDetail(response.errorBody()?.string())
+                        )
+                    )
+                }
+            }
+        }
+    }
+    return ChargebeeResult.Error(
+        exp = CBException(
+            error = ErrorDetail(response.errorBody()?.string())
+        )
+    )
+}
+
+interface ProgressBarListener{
+    fun onShowProgressBar()
+    fun onHideProgressBar()
 }

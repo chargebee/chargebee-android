@@ -1,3 +1,9 @@
 <resources>
     <string name="app_name">Chargebee Example</string>
+
+    <string name="dialog_title">Chargebee</string>
+    <string name="dialog_message">Success! The token is : </string>
+    <string name="dialog_button">Ok</string>
+    <string name="status_subscribe">Subscribe</string>
+    <string name="status_subscribed">Subscribed</string>
 </resources>
