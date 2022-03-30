@@ -32,18 +32,15 @@ object Chargebee {
     const val platform: String = "Android"
     const val sdkVersion: String = BuildConfig.VERSION_NAME
 
-    fun configure(site: String, publishableApiKey: String, allowErrorLogging: Boolean = true, sdkKey: String ) {
+    fun configure(site: String, publishableApiKey: String, allowErrorLogging: Boolean = true, sdkKey: String, packageName: String ) {
+        this.applicationId = packageName
         this.publishableApiKey = publishableApiKey
         this.site = site
         this.encodedApiKey = Credentials.basic(publishableApiKey, "")
         this.baseUrl = "https://${site}.chargebee.com/api/"
-       //  this.baseUrl = "https://${site}.predev37.in/api/"  //check Plans API
-       //  this.baseUrl = "https://${site}.predev51.in/api/"  //Process purchase API
         this.allowErrorLogging = allowErrorLogging
         this.sdkKey = sdkKey
         val auth = Auth(sdkKey,applicationId,appName, channel)
-
-        Log.i(javaClass.simpleName, " encodedApiKey :"+encodedApiKey)
 
         CBAuthentication.authenticate(auth) {
             when(it){

@@ -129,7 +129,6 @@ class MainActivity : BaseActivity(), ListItemsAdapter.ItemClickListener {
                 }
             }
             CBMenu.GetProducts.value -> {
-                //val SUBS_SKUS = arrayListOf("merchant.pro.android", "merchant.premium.android")
                 getProductIdFromCustomer()
             }
             CBMenu.SubsStatus.value -> {
@@ -166,7 +165,7 @@ class MainActivity : BaseActivity(), ListItemsAdapter.ItemClickListener {
                     siteNameEditText.text.toString(),
                     apiKeyEditText.text.toString(),
                     true,
-                    sdkKeyEditText.text.toString()
+                    sdkKeyEditText.text.toString(), this.packageName
                 )
         }
         builder.show()
