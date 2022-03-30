@@ -40,7 +40,6 @@ class ItemsActivity : BaseActivity(), ItemsAdapter.ItemClickListener {
             if (it != null) {
                 mItemsList = it
                 setItemListAdapter()
-                Log.i(javaClass.simpleName, "mItemsList  :  $mItemsList")
             }
         })
 

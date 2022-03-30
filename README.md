@@ -35,8 +35,8 @@ You can initialize the SDK during your app startup by including the following in
 import Chargebee
 
 Chargebee.configure(site= "your-site",
-                    fullAccessApiKey= "api_key",
-                    sdkKey= "sdk_key")
+                    publishableApiKey= "api_key",
+                    sdkKey= "sdk_key",packageName = "packageName")
 ```
 ### Configuration for using tokenization only
 If you want to use the Chargebee Android SDK only for tokenizing credit card details, you can initialize the SDK with your Chargebee Site and Publishable API key alone. You can initialize the SDK during your app startup by including this in Android application class' onCreate method.
@@ -92,10 +92,12 @@ You can present any of the above products to your users for them to purchase.
 ### Buy / Subscribe Product
 When the user chooses the product to purchase, pass in the product and customer identifiers to the following function.
 
+customer id - optional Parameter We need the unique ID of your customer for customer_id. If your unique list of customers is maintained in your database or a 3rd party system , send us the unique ID from there. If you rely on Chargebee for the unique list of customers, then you can send us a random unique string for this ID
 ```kotlin
-CBPurchase.purchaseProduct(param, object : CBCallback.PurchaseCallback<PurchaseModel>{
-      override fun onSuccess(data: PurchaseModel) {
-        Log.i(TAG, "subscription details:  ${data.status}")       
+CBPurchase.purchaseProduct(product="CBProduct", customerID="customerID", object : CBCallback.PurchaseCallback<PurchaseModel>{
+      override fun onSuccess(subscriptionID: String, status:Boolean) {
+        Log.i(TAG, "${status}") 
+        Log.i(TAG, "${subscriptionID}")    
       }
       override fun onError(error: CBException) {
         Log.e(TAG, "Error:  ${error.message}")
