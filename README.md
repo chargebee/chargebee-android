@@ -75,7 +75,7 @@ The above function will determine your product catalog version in Chargebee and 
 You can then convert these to Google IAP Product objects with the following function.
 
 ```kotlin
-CBPurchase.retrieveProducts(this, productIdList,
+CBPurchase.retrieveProducts(this, productIdList= "[Product ID's from Google Play Console]",
       object : CBCallback.ListProductsCallback<ArrayList<Products>> {
                override fun onSuccess(productDetails: ArrayList<Products>) {
                      Log.i(TAG, "List of Products:  $productDetails")
