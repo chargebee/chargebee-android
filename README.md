@@ -18,7 +18,7 @@ After installing and initializing the SDK with the Chargebee site authentication
 The `Chargebee-Android` SDK can be installed by adding below dependency to the `build.gradle` file:
 
 ```kotlin
-implementation 'com.chargebee:chargebee-android:1.0.0'
+implementation 'com.chargebee:chargebee-android:1.0.1'
 ```
 
 ## Example project
