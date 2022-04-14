@@ -32,7 +32,8 @@ object Chargebee {
     const val platform: String = "Android"
     const val sdkVersion: String = BuildConfig.VERSION_NAME
 
-    fun configure(site: String, publishableApiKey: String, allowErrorLogging: Boolean = true, sdkKey: String, packageName: String ) {
+    /* Configure the app details with chargebee system */
+    fun configure(site: String, publishableApiKey: String, allowErrorLogging: Boolean = true, sdkKey: String="", packageName: String="" ) {
         this.applicationId = packageName
         this.publishableApiKey = publishableApiKey
         this.site = site
@@ -54,17 +55,21 @@ object Chargebee {
                 }
                 is ChargebeeResult.Error ->{
                     Log.i(javaClass.simpleName, "Exception from server :${it.exp.message}")
+                    Log.i(javaClass.simpleName, "Note: pre-requisites configuration is mandatory for SDK to work. Learn more - https://www.chargebee.com/docs/2.0/mobile-playstore-connect.html")
                     this.version = CatalogVersion.Unknown.value
                 }
             }
         }
     }
 
+    /* Get the subscription details from chargebee system */
     @Throws(InvalidRequestException::class, OperationFailedException::class)
     fun retrieveSubscription(subscriptionId: String, completion: (ChargebeeResult<Any>) -> Unit) {
         val logger = CBLogger(name = "Subscription", action = "Fetch Subscription")
         ResultHandler.safeExecuter({ SubscriptionResource().retrieveSubscription(subscriptionId) }, completion, logger)
     }
+
+    /* Get the Plan details from chargebee system */
     @Throws(InvalidRequestException::class, OperationFailedException::class)
     fun retrievePlan(planId: String, completion : (ChargebeeResult<Any>) -> Unit) {
         val logger = CBLogger(name = "plan", action = "getAllPlan")
@@ -78,6 +83,7 @@ object Chargebee {
             ResultHandler.safeExecuter({ PlanResource().retrievePlan(planId) }, completion, logger)
     }
 
+    /* Get the list of Plan's from chargebee system */
     @Throws(InvalidRequestException::class, OperationFailedException::class)
     fun retrieveAllPlans(params: Array<String>, completion : (ChargebeeResult<Any>) -> Unit) {
         val logger = CBLogger(name = "plans", action = "getPlan")
@@ -90,6 +96,8 @@ object Chargebee {
         else
             ResultHandler.safeExecuter({ PlanResource().retrieveAllPlans(params) }, completion, logger)
     }
+
+    /* Get the list of Items's from chargebee system */
     @Throws(InvalidRequestException::class, OperationFailedException::class)
     fun retrieveAllItems(params: Array<String>, completion : (ChargebeeResult<Any>) -> Unit) {
         val logger = CBLogger(name = "items", action = "getAllItems")
@@ -102,6 +110,8 @@ object Chargebee {
         else
             ResultHandler.safeExecuter({ ItemsResource().retrieveAllItems(params) }, completion, logger)
     }
+
+    /* Get the Item details from chargebee system */
     @Throws(InvalidRequestException::class, OperationFailedException::class)
     fun retrieveItem(itemId: String, completion : (ChargebeeResult<Any>) -> Unit) {
         val logger = CBLogger(name = "item", action = "getItem")
