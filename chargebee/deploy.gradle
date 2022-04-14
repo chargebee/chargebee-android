@@ -52,7 +52,7 @@ publishing {
 
             pom {
                 name.set("Chargebee Android")
-                description.set("Chargebee Android SDK aims at simplifying recurring payments integration")
+                description.set("Chargebee’s Android SDK will support making and managing in-app purchase subscriptions")
                 url.set("https://www.chargebee.com")
                 licenses {
                     license {
@@ -63,9 +63,12 @@ publishing {
                 }
                 developers {
                     developer {
-                        id.set("cb-haripriyan")
-                        name.set("Haripriyan")
-                        email.set("hari@chargebeeinc.com")
+                        id.set("cb-imayaselvan ")
+                        name.set("Imayaselvan")
+                        email.set("imayaselvan@chargebee.com")
+                        id.set("cb-amutha")
+                        name.set("Amutha")
+                        email.set("amutha.c@chargebee.com")
                     }
                 }
                 scm {
