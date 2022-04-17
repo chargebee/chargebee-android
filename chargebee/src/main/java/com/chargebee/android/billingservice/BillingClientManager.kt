@@ -6,13 +6,11 @@ import android.os.Handler
 import android.os.Looper
 import android.util.Log
 import com.android.billingclient.api.*
-import com.chargebee.android.Chargebee
 import com.chargebee.android.ErrorDetail
 import com.chargebee.android.ProgressBarListener
 import com.chargebee.android.exceptions.CBException
 import com.chargebee.android.exceptions.ChargebeeResult
 import com.chargebee.android.models.CBProduct
-import com.chargebee.android.models.SubscriptionDetailsWrapper
 import com.chargebee.android.network.CBReceiptResponse
 import java.util.*
 
@@ -48,10 +46,12 @@ class BillingClientManager constructor(
 
     }
 
+    /* Called to notify that the connection to the billing service was lost*/
     override fun onBillingServiceDisconnected() {
         connectToBillingService()
     }
 
+    /* The listener method will be called when the billing client setup process complete */
     override fun onBillingSetupFinished(billingResult: BillingResult) {
         when (billingResult.responseCode) {
             BillingClient.BillingResponseCode.OK -> {
@@ -93,6 +93,7 @@ class BillingClientManager constructor(
         }
     }
 
+    /* Method used to configure and create a instance of billing client */
     fun startBillingServiceConnection() {
         billingClient = mContext?.let {
             BillingClient.newBuilder(it)
@@ -102,6 +103,7 @@ class BillingClientManager constructor(
 
         connectToBillingService()
     }
+    /* Connect the billing client service */
     private fun connectToBillingService() {
         if (!billingClient.isReady) {
             handler.postDelayed(
@@ -111,6 +113,7 @@ class BillingClientManager constructor(
         }
     }
 
+    /* Get the SKU/Products from Play Console */
     private fun loadProductDetails(
         @BillingClient.SkuType skuType: String,
         skuList: ArrayList<String>, callBack: CBCallback.ListProductsCallback<ArrayList<CBProduct>>
@@ -158,6 +161,7 @@ class BillingClientManager constructor(
 
     }
 
+    /* Purchase the product: Initiates the billing flow for an In-app-purchase  */
     fun purchase(
         product: CBProduct,
         customerID: String? = "",
@@ -183,6 +187,7 @@ class BillingClientManager constructor(
 
     }
 
+    /* Checks if the specified feature is supported by the Play Store */
     fun isFeatureSupported(): Boolean {
         try {
             val featureSupportedResult = billingClient.isFeatureSupported(BillingClient.FeatureType.SUBSCRIPTIONS)
@@ -200,10 +205,12 @@ class BillingClientManager constructor(
         return false
     }
 
+    /* Checks if the billing client connected to the service */
     fun isBillingClientReady(): Boolean{
         return billingClient.isReady
     }
 
+    /* Google Play calls this method to deliver the result of the Purchase Process/Operation */
     override fun onPurchasesUpdated(billingResult: BillingResult, purchases: MutableList<Purchase>?) {
         when (billingResult.responseCode) {
             BillingClient.BillingResponseCode.OK -> {
@@ -240,6 +247,7 @@ class BillingClientManager constructor(
         }
     }
 
+    /* Acknowledge the Purchases */
     private fun acknowledgePurchase(purchase: Purchase) {
         if (!purchase.isAcknowledged) {
             val params = AcknowledgePurchaseParams.newBuilder()
@@ -268,6 +276,7 @@ class BillingClientManager constructor(
 
     }
 
+    /* Chargebee method called here to validate receipt */
     private fun validateReceipt(purchaseToken: String, product: CBProduct) {
         CBPurchase.validateReceipt(purchaseToken, product){
             when(it){
