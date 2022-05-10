@@ -16,5 +16,12 @@ internal class SubscriptionResource : BaseResource(Chargebee.baseUrl) {
             subscriptionResponse
         )
     }
-
+    suspend fun retrieveSubscriptions(queryParam: Array<String>): ChargebeeResult<Any> {
+        val subscriptionResponse = apiClient.create(PurchaseRepository::class.java)
+            .retrieveSubscriptions(customerId = queryParam[0], channel = queryParam[1])
+        Log.i(javaClass.simpleName, " Response :$subscriptionResponse")
+        return responseFromServer(
+            subscriptionResponse
+        )
+    }
 }

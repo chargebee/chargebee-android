@@ -48,6 +48,7 @@ object Chargebee {
                 is ChargebeeResult.Success ->{
                     Log.i(javaClass.simpleName, "Environment Setup Completed")
                     Log.i(javaClass.simpleName, " Response :${it.data}")
+                    Log.i(javaClass.simpleName, "Note: pre-requisites configuration is mandatory for SDK to work. Learn more - https://www.chargebee.com/docs/2.0/mobile-playstore-connect.html")
                     val response = it.data as CBAuthResponse
                     this.version = response.in_app_detail.product_catalog_version
                     this.applicationId = response.in_app_detail.app_id
@@ -67,6 +68,32 @@ object Chargebee {
     fun retrieveSubscription(subscriptionId: String, completion: (ChargebeeResult<Any>) -> Unit) {
         val logger = CBLogger(name = "Subscription", action = "Fetch Subscription")
         ResultHandler.safeExecuter({ SubscriptionResource().retrieveSubscription(subscriptionId) }, completion, logger)
+    }
+    /* Get the subscriptions list from chargebee system by using Customer Id */
+    @Throws(InvalidRequestException::class, OperationFailedException::class)
+    fun retrieveSubscriptions(queryParam: Array<String>, completion: (ChargebeeResult<Any>) -> Unit) {
+        val logger = CBLogger(name = "Subscription", action = "Fetch Subscription by using CustomerId")
+        if (queryParam.isNotEmpty()) {
+            if (TextUtils.isEmpty(queryParam[0])){
+                completion(ChargebeeResult.Error(
+                    exp = CBException(
+                        error = ErrorDetail(message = "Customer ID is empty", apiErrorCode = "400")
+                    )
+                ))
+            }else {
+                ResultHandler.safeExecuter(
+                    { SubscriptionResource().retrieveSubscriptions(queryParam) },
+                    completion,
+                    logger
+                )
+            }
+        }else{
+            completion(ChargebeeResult.Error(
+                exp = CBException(
+                    error = ErrorDetail(message = "Array/Query Param is empty", apiErrorCode = "400")
+                )
+            ))
+        }
     }
 
     /* Get the Plan details from chargebee system */

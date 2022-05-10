@@ -27,6 +27,7 @@ import com.chargebee.example.items.ItemActivity
 import com.chargebee.example.items.ItemsActivity
 import com.chargebee.example.plan.PlanInJavaActivity
 import com.chargebee.example.plan.PlansActivity
+import com.chargebee.example.subscription.SubscriptionActivity
 import com.chargebee.example.token.TokenizeActivity
 import com.chargebee.example.util.CBMenu
 import com.chargebee.example.util.Constants.PRODUCTS_LIST_KEY
@@ -132,8 +133,12 @@ class MainActivity : BaseActivity(), ListItemsAdapter.ItemClickListener {
                 getProductIdFromCustomer()
             }
             CBMenu.SubsStatus.value -> {
-                showProgressDialog()
-                mBillingViewModel?.retrieveSubscription("1000000894110088")
+                val intent = Intent(this, SubscriptionActivity::class.java)
+                startActivity(intent)
+            }
+            CBMenu.SubsList.value -> {
+                val intent = Intent(this, SubscriptionActivity::class.java)
+                startActivity(intent)
             }
             else ->{
 
