@@ -10,6 +10,7 @@ import com.chargebee.android.billingservice.CBPurchase
 import com.chargebee.android.exceptions.CBException
 import com.chargebee.android.exceptions.ChargebeeResult
 import com.chargebee.android.models.CBProduct
+import com.chargebee.android.models.CBSubscription
 import com.chargebee.android.models.SubscriptionDetailsWrapper
 import com.google.gson.Gson
 
@@ -19,6 +20,7 @@ class BillingViewModel : ViewModel() {
     var productPurchaseResult: MutableLiveData<Boolean> = MutableLiveData()
     var cbException: MutableLiveData<String?> = MutableLiveData()
     var subscriptionStatus: MutableLiveData<String?> = MutableLiveData()
+    var subscriptionList: MutableLiveData<ArrayList<SubscriptionDetailsWrapper>?> = MutableLiveData()
     var error: MutableLiveData<String?> = MutableLiveData()
     private var subscriptionId: String = ""
 
@@ -56,6 +58,22 @@ class BillingViewModel : ViewModel() {
                 }
                 is ChargebeeResult.Error ->{
                     Log.e(TAG, "Exception from server- retrieveSubscription() :  ${it.exp.message}")
+                    error.postValue(Gson().fromJson<ErrorDetail>(
+                        it.exp.message,
+                        ErrorDetail::class.java
+                    ).message)
+                }
+            }
+        }
+    }
+    fun retrieveSubscriptionsByCustomerId(queryParam: Array<String>) {
+        Chargebee.retrieveSubscriptions(queryParam) {
+            when(it){
+                is ChargebeeResult.Success -> {
+                    subscriptionList.postValue((it.data as CBSubscription).list)
+                }
+                is ChargebeeResult.Error ->{
+                    Log.e(TAG, "Exception from server- retrieveSubscriptions() :  ${it.exp.message}")
                     error.postValue(Gson().fromJson<ErrorDetail>(
                         it.exp.message,
                         ErrorDetail::class.java
