@@ -18,18 +18,36 @@ After installing and initializing the SDK with the Chargebee site authentication
 The `Chargebee-Android` SDK can be installed by adding below dependency to the `build.gradle` file:
 
 ```kotlin
-implementation 'com.chargebee:chargebee-android:1.0.1'
+implementation 'com.chargebee:chargebee-android:1.0.2'
 ```
 
 ## Example project
-To run the example project, clone the repo, and run the gradle build first.
+This is an optional step that helps you verify the SDK implementation using this example project. You can download or clone the example project via GitHub.
+
+To run the example project, follow these steps.
+
+1. Clone the repo - https://github.com/chargebee/chargebee-android.
+
+2. Run build.gradle from the Example directory.
 
 ## Configuration
+There are two types of configuration.
 
-### Configuration for using In-App Purchases
-To use the Chargebee Android SDK for making and managing in-app purchases, you must initialize the SDK with your Chargebee Site, full access API key and the SDK Key. You can find your API key, or create a new one, in your Chargebee account under Configure Chargebee > API Keys . Once you setup the Google Play Store integration on your Chargebee account, you can find the SDK Key under the name of App ID when you click Set up notifications.
+* Configuration for In-App Purchases
 
-You can initialize the SDK during your app startup by including the following in your app delegate.
+* Configuration for credit card using tokenization
+
+### Configuration for In-App Purchases
+To configure the Chargebee Android SDK for completing and managing In-App Purchases, follow these steps.
+
+1. [Integrate](https://www.chargebee.com/docs/2.0/mobile-playstore-connect.html) Google Play Store with your [Chargebee site](https://app.chargebee.com/sites/select).
+
+2. On the **Sync Overview** page of the web app, click **Set up notifications** and use the generated [App ID](https://www.chargebee.com/docs/1.0/mobile-playstore-notifications.html#app-id) value as **SDK Key**.
+
+3. On the Chargebee site, navigate to **Settings** > **Configure Chargebee** > [API Keys](https://www.chargebee.com/docs/2.0/api_keys.html#create-an-api-key) to create a new [Publishable API Key](https://www.chargebee.com/docs/2.0/api_keys.html#types-of-api-keys_publishable-key) or use an existing Publishable API Key. 
+**Note:** During the publishable API key creation you must allow **read-only** access to plans/items otherwise this key will not work in the following step. Read [more](https://www.chargebee.com/docs/2.0/api_keys.html#types-of-api-keys_publishable-key).
+
+4. Initialize the SDK with your Chargebee site, **Publishable API Key**, and SDK Key by including the following snippets in your app delegate during app startup.
 
 ```kotlin
 import Chargebee
@@ -38,8 +56,12 @@ Chargebee.configure(site= "your-site",
                     publishableApiKey= "api_key",
                     sdkKey= "sdk_key",packageName = "packageName")
 ```
-### Configuration for using tokenization only
-If you want to use the Chargebee Android SDK only for tokenizing credit card details, you can initialize the SDK with your Chargebee Site and Publishable API key alone. You can initialize the SDK during your app startup by including this in Android application class' onCreate method.
+### Configuration for credit card using tokenization
+To configure SDK only for tokenizing credit card details, follow these steps.
+
+1. Initialize the SDK with your Chargebee Site and Publishable/Full Access Key.
+
+2. Initialize the SDK during your app startup by including this in the Android application class' [onCreate](https://developer.android.com/reference/android/app/Activity#onCreate(android.os.Bundle)) method.
 
 ```kotlin
 import com.chargebee.android.Chargebee
@@ -47,13 +69,21 @@ import com.chargebee.android.Chargebee
 Chargebee.configure(site = "your-site", publishableApiKey = "api_key")
 
 ```
-## Usage
+## Integration
+This section describes the SDK integration processes.
+
+* Integrating In-App Purchases
+
+* Integrating credit card tokenizationConfigure
 
 ### Integrating In-App Purchases
+The following section describes how to use the SDK to integrate In-App Purchase information. For details on In-App Purchase, read more [here](https://www.chargebee.com/docs/2.0/mobile-in-app-purchases.html).
 
 ### Get all IAP Product Identifiers from Chargebee
 
 Every In-App Purchase subscription product that you configure in your Play Store account, can be configured in Chargebee as a Plan. Start by retrieving the Google IAP Product IDs from your Chargebee account.
+
+**Note:**  Use retrieveProductIDs when the Play Store plans already exist in Chargebee.
 
 ```kotlin
 CBPurchase.retrieveProductIDs(queryParam) {
@@ -68,11 +98,11 @@ CBPurchase.retrieveProductIDs(queryParam) {
     }
 }
 ```
-For eg. query params above can be "limit": "100".
+For eg. query params above can be **"limit": "100"**.
 
 The above function will determine your product catalog version in Chargebee and hit the relevant APIs automatically, to retrieve the Chargebee Plans that correspond to Google IAP products, along with their Google IAP Product IDs.
 ### Get IAP Products
-You can then convert these to Google IAP Product objects with the following function.
+Retrieve the Google IAP Product using the following function.
 
 ```kotlin
 CBPurchase.retrieveProducts(this, productIdList= "[Product ID's from Google Play Console]",
@@ -89,10 +119,11 @@ CBPurchase.retrieveProducts(this, productIdList= "[Product ID's from Google Play
 ```
 You can present any of the above products to your users for them to purchase.
 
-### Buy / Subscribe Product
-When the user chooses the product to purchase, pass in the product and customer identifiers to the following function.
+### Buy or Subscribe Product
+Pass the product and customer identifiers to the following function when the user chooses the product to purchase.
 
-customer id - optional Parameter We need the unique ID of your customer for customer_id. If your unique list of customers is maintained in your database or a 3rd party system , send us the unique ID from there. If you rely on Chargebee for the unique list of customers, then you can send us a random unique string for this ID
+customerId - Optional parameter. We need the unique ID of your customer as customerId. If your unique list of customers is maintained in your database or a third-party system, send us the unique ID from that source.
+
 ```kotlin
 CBPurchase.purchaseProduct(product="CBProduct", customerID="customerID", object : CBCallback.PurchaseCallback<PurchaseModel>{
       override fun onSuccess(subscriptionID: String, status:Boolean) {
@@ -105,10 +136,33 @@ CBPurchase.purchaseProduct(product="CBProduct", customerID="customerID", object 
       }
 })
  ```
-The above function will handle the purchase against Google Play Store, and send the IAP token for server-side token verification to your Chargebee account.
+The above function will handle the purchase against Google Play Store and send the IAP token for server-side token verification to your Chargebee account. Use the Subscription ID returned by the above function, to check for Subscription status on Chargebee and confirm the access - granted or denied.
 
-### Get Subscription Status
-Use the Subscription ID returned by the previous function, to check for Subscription status against Chargebee, and for delivering purchased entitlements.
+### Get Subscription Status for Existing Subscribers
+The following are methods for checking the subscription status of a subscriber who already purchased the product.
+
+### Get Subscription Status for Existing Subscribers using Query Parameters
+Use query parameters - Subscription ID, Customer ID, or Status for checking the Subscription status on Chargebee and confirm the access - granted or denied.
+
+```kotlin
+Chargebee.retrieveSubscriptions(queryParam= "[Array of String]") {
+       when(it){
+             is ChargebeeResult.Success ->{
+                  Log.i(TAG, "subscription list in array:  ${it}")
+                  Log.i(TAG, "subscription status:  ${it?.get(0)?.cb_subscription?.status}")
+             }
+             is ChargebeeResult.Error ->{
+                  Log.e(TAG, "Error :  ${it.exp.message}")
+                  // Handle error here  
+             }
+       }
+}   
+```
+For example, query parameters can be passed as **"customer_id" : "id", "subscription_id": "id", or "status": "active"**.
+
+### Get Subscription Status for Existing Subscribers using Subscription ID
+
+Use only Subscription ID for checking the Subscription status on Chargebee and confirm the access - granted or denied.
 
 ```kotlin
 Chargebee.retrieveSubscription(subscriptionId) {
@@ -129,6 +183,7 @@ The following section describes how to use the SDK to directly tokenize credit c
 If you are using Product Catalog 2.0 in your Chargebee site, then you can use the following functions to retrieve the product to be presented for users to purchase.
 
 ### Get all Items
+You can retrieve the list of items by using the following function.
 
 ```kotlin
 Chargebee.retrieveAllItems(queryParam) {
@@ -142,9 +197,10 @@ Chargebee.retrieveAllItems(queryParam) {
        }
 }  
 ```
-For eg. query params above can be "sort_by[desc]" : "name" OR "limit": "100".
+For example, query parameters can be passed as **"sort_by[desc]" : "name" OR "limit": "100"**.
 
 ### Get Item Details
+You can retrieve specific item details by using the following function. Use the Item ID you received from the previous function - Get all items.
 
 ```kotlin
 Chargebee.retrieveItem(queryParam) {
@@ -161,6 +217,7 @@ Chargebee.retrieveItem(queryParam) {
 If you are using Product Catalog 1.0 in your Chargebee site, then you can use any of the following relevant functions to retrieve the product to be presented for users to purchase.
 
 ### Get All Plans
+You can retrieve the list of plans by using the following function.
 
 ```kotlin
 Chargebee.retrieveAllPlans(queryParam) {
@@ -174,9 +231,10 @@ Chargebee.retrieveAllPlans(queryParam) {
        }
 }  
 ```
-For eg. query params above can be "sort_by[desc]" : "name" OR "limit": "100".
+For example, query parameters can be passed as **"sort_by[desc]" : "name" OR "limit": "100"**.
 
 ### Get Plan Details
+You can retrieve specific plan details by passing plan ID in the following function.
 
 ```kotlin
 Chargebee.retrievePlan(queryParam) {
@@ -192,6 +250,7 @@ Chargebee.retrievePlan(queryParam) {
 ```
 
 ### Get Addon Details
+You can retrieve specific addon details by passing addon ID in the following function.
 
 ```kotlin
 Chargebee.retrieve("addonId") { addonResult ->
@@ -248,4 +307,4 @@ Please refer to the [Chargebee API Docs](https://apidocs.chargebee.com/docs/api)
 
 ## License
 
-Chargebee is available under the MIT license. See the LICENSE file for more info.
+Chargebee is available under the [MIT license](https://opensource.org/licenses/MIT). See the LICENSE file for more info.
