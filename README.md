@@ -1,13 +1,16 @@
 # Chargebee Android
-The official Chargebee Android SDK.
+This is Chargebee’s Android Software Development Kit (SDK). This SDK makes it efficient and comfortable to build a seamless subscription experience in your Android app. 
 
-After installing and initializing the SDK with the Chargebee site authentication, this SDK can be used for,
+Post-installation, initialization, and authentication with the Chargebee site, this SDK will support the following process.
 
-1. Integrating with Play Store, processing in-app purchase subscriptions, and tracking them on your Chargebee account for a single source of subscription truth across Web subscriptions & Android IAP. Use this if you are selling digital goods or services, or are REQUIRED to use Google Play's in-app purchases.
+1. **Sync In-App Subscriptions with Chargebee:** [Integrate](https://www.chargebee.com/docs/2.0/mobile-playstore-connect.html#chargebee-configuration) Chargebee with Google Play Store to process in-app purchase subscriptions, and track them on your Chargebee account for a single source of truth for subscriptions across the Web and Google Play Store. Use this if you are selling digital goods or services, or are REQUIRED to use Google Play's in-app purchases. 
+**For SDK methods to work, ensure that [prerequisites](https://www.chargebee.com/docs/2.0/mobile-playstore-connect.html#prerequisites-configuration) are configured in Chargebee.** 
 
-2. Tokenizing credit card information while presenting your own UI. Use this if you are selling physical goods or offline services, or are NOT REQUIRED to use Google's in-app purchases.
+2. **Tokenisation of credit card:** Tokenize credit card information while presenting your user interface. Use this if you are selling physical goods or offline services or are NOT REQUIRED to use Google's in-app purchases.
 
 ## Requirements
+The following requirements must be set up before installing Chargebee’s Android SDK.
+
 * Android 5.0 (API level 21) and above
 * [Android Gradle Plugin](https://developer.android.com/studio/releases/gradle-plugin) 4.0.0
 * [Gradle](https://gradle.org/releases/) 6.1.1+
