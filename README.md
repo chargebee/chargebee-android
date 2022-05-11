@@ -53,7 +53,7 @@ To configure the Chargebee Android SDK for completing and managing In-App Purcha
 4. Initialize the SDK with your Chargebee site, **Publishable API Key**, and SDK Key by including the following snippets in your app delegate during app startup.
 
 ```kotlin
-import Chargebee
+import com.chargebee.android.Chargebee
 
 Chargebee.configure(site= "your-site",
                     publishableApiKey= "api_key",
