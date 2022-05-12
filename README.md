@@ -317,8 +317,8 @@ Chargebee is available under the [MIT license](https://opensource.org/licenses/M
 <details>
   <summary>Click here to expand...</summary>
   
-  ## Chargebee Android
-  =====================
+  Chargebee Android
+  =================
   
   This is Chargebee's Android Software Development Kit (SDK). This SDK makes it efficient and comfortable to build a seamless subscription experience in your Android app.
   
@@ -328,8 +328,9 @@ Chargebee is available under the [MIT license](https://opensource.org/licenses/M
       **For SDK methods to work, ensure that **[**prerequisites**](https://www.chargebee.com/docs/2.0/mobile-playstore-connect.html#prerequisites-configuration)**  are configured in Chargebee.**
   
   -   **Tokenisation of credit card**: Tokenize credit card information while presenting your user interface. Use this if you are selling physical goods or offline services or are NOT REQUIRED to use Google's in-app purchases as per their [app review guidelines](https://support.google.com/googleplay/android-developer/answer/9858738).
-  ## Requirements
-  ---------------
+  
+  Requirements
+  ------------
   
   The following requirements must be set up before installing Chargebee's Android SDK.
   
@@ -338,16 +339,17 @@ Chargebee is available under the [MIT license](https://opensource.org/licenses/M
   -   [Gradle](https://gradle.org/releases/) 6.1.1+
   -   [AndroidX](https://developer.android.com/jetpack/androidx/)
   -   [Java 8+](https://www.oracle.com/java/technologies/downloads/#java8) and [Kotlin](https://kotlinlang.org/)
-  ## Installation
-  ---------------
+  
+  Installation
+  ------------
   
   To install Chargebee's Android SDK, add the following dependency to the build.gradle file.
   
   ```
   implementation 'com.chargebee:chargebee-android:1.0.2'
   ```
-  ## Example project
-  ------------------
+  Example project
+  ---------------
   
   This is an optional step that helps you  verify the SDK implementation using this example project. You can download or clone the example project via GitHub.
   
@@ -356,8 +358,8 @@ Chargebee is available under the [MIT license](https://opensource.org/licenses/M
   1.  Clone the repo - https://github.com/chargebee/chargebee-android.
   2.  Run build.gradle from the Example directory.
   
-  ## Configuration
-  ----------------
+  Configuration
+  -------------
   
   There are two types of configuration.
   -   Configuration for In-App Purchases
