@@ -21,7 +21,7 @@ The following requirements must be set up before installing Chargebee’s Androi
 The `Chargebee-Android` SDK can be installed by adding below dependency to the `build.gradle` file:
 
 ```kotlin
-implementation 'com.chargebee:chargebee-android:1.0.2'
+implementation 'com.chargebee:chargebee-android:1.0.3'
 ```
 
 ## Example project
@@ -82,28 +82,6 @@ This section describes the SDK integration processes.
 ### Integrating In-App Purchases
 The following section describes how to use the SDK to integrate In-App Purchase information. For details on In-App Purchase, read more [here](https://www.chargebee.com/docs/2.0/mobile-in-app-purchases.html).
 
-### Get all IAP Product Identifiers from Chargebee
-
-Every In-App Purchase subscription product that you configure in your Play Store account, can be configured in Chargebee as a Plan. Start by retrieving the Google IAP Product IDs from your Chargebee account.
-
-**Note:**  Use retrieveProductIDs when the Play Store plans already exist in Chargebee.
-
-```kotlin
-CBPurchase.retrieveProductIDs(queryParam) {
-    when (it) {
-        is CBProductIDResult.ProductIds -> {
-            val array = it.IDs.toTypedArray()
-        }
-        is CBProductIDResult.Error -> {
-           Log.e(TAG, " ${it.exp.message}")
-            // Handle error here
-        }
-    }
-}
-```
-For eg. query params above can be **"limit": "100"**.
-
-The above function will determine your product catalog version in Chargebee and hit the relevant APIs automatically, to retrieve the Chargebee Plans that correspond to Google IAP products, along with their Google IAP Product IDs.
 ### Get IAP Products
 Retrieve the Google IAP Product using the following function.
 
@@ -183,6 +161,7 @@ Chargebee.retrieveSubscription(subscriptionId) {
 ### Integrating credit card tokenization
 The following section describes how to use the SDK to directly tokenize credit card information if you are NOT REQUIRED to use Google's in-app purchases.
 
+### Product Catalog 2.0
 If you are using Product Catalog 2.0 in your Chargebee site, then you can use the following functions to retrieve the product to be presented for users to purchase.
 
 ### Get all Items
@@ -217,6 +196,8 @@ Chargebee.retrieveItem(queryParam) {
        }
 }  
 ```
+
+### Product Catalog 1.0
 If you are using Product Catalog 1.0 in your Chargebee site, then you can use any of the following relevant functions to retrieve the product to be presented for users to purchase.
 
 ### Get All Plans
@@ -407,28 +388,6 @@ Chargebee is available under the [MIT license](https://opensource.org/licenses/M
   ### Integrating In-App Purchases
   
   The following section describes how to use the SDK to integrate In-App Purchase information. For details on In-App Purchase, read more [here](https://www.chargebee.com/docs/2.0/mobile-in-app-purchases.html).
-  
-  #### Get all IAP Product Identifiers from Chargebee
-  
-  Every In-App Purchase subscription product that you configure in your Play Store account, can be configured in Chargebee as a Plan. Start by retrieving the Google IAP Product IDs from your Chargebee account.
-  **Note**: Use `retrieveProductIDs` when the Play Store plans already exist in Chargebee. Currently, we do not support uploading Google products to Chargebee. Therefore, to enlist a product in Chargebee you must create a subscription. For displaying products to the end-user, it is recommended to retrieve them from Google.
-  
-  ```
-  CBPurchase.retrieveProductIDs(queryParam) {
-      when (it) {
-          is CBProductIDResult.ProductIds -> {
-              val array = it.IDs.toTypedArray()
-          }
-          is CBProductIDResult.Error -> {
-             Log.e(TAG, " ${it.exp.message}")
-              // Handle error here
-          }
-      }
-  }
-  ```
-  For example, query parameters can be passed as **"limit": "100"**.
-  
-  The above function will automatically determine your product catalog version in Chargebee and call the relevant APIs to retrieve the Chargebee Plans that correspond to Google IAP products and their Google IAP Product IDs.
   
   #### Get IAP Products
   
