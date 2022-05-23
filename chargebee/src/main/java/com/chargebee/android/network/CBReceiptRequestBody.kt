@@ -19,7 +19,7 @@ internal class CBReceiptRequestBody(   val receipt: String,
         return mapOf(
             "receipt" to this.receipt,
             "product[id]" to this.productId,
-            "customerId" to this.customerId,
+            "customer[id]" to this.customerId,
             "channel" to this.channel
         )
     }
