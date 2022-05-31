@@ -116,7 +116,7 @@ public class BillingActivity extends BaseActivity implements ProductListAdapter.
     }
 
     private void updateSubscribeStatus(){
-        productList.get(position).setSubStatus(true);
+        //productList.get(position).setSubStatus(true);
         productListAdapter.notifyDataSetChanged();
     }
 

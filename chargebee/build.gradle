@@ -42,7 +42,7 @@ dependencies {
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.2.0'
 
     // Google play billing library
-    implementation 'com.android.billingclient:billing-ktx:4.0.0'
+    implementation 'com.android.billingclient:billing-ktx:5.0.0'
 
     // AssertJ
     testImplementation "org.assertj:assertj-core:$assertj_version"

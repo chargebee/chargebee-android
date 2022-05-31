@@ -34,13 +34,13 @@ public class ProductListAdapter extends RecyclerView.Adapter<ProductListAdapter.
         CBProduct products = mProductsList.get(position);
         holder.mTextViewTitle.setText(products.getProductId());
         holder.mTextViewPrice.setText(products.getProductPrice());
-        if (products.getSubStatus()) {
-            holder.mTextViewSubscribe.setText(R.string.status_subscribed);
-            holder.mTextViewSubscribe.setTextColor(mContext.getResources().getColor(R.color.success_green));
-        }else {
+//        if (products.getSubStatus()) {
+//            holder.mTextViewSubscribe.setText(R.string.status_subscribed);
+//            holder.mTextViewSubscribe.setTextColor(mContext.getResources().getColor(R.color.success_green));
+//        }else {
             holder.mTextViewSubscribe.setText(R.string.status_subscribe);
             holder.mTextViewSubscribe.setTextColor(mContext.getResources().getColor(R.color.colorAccent));
-        }
+       // }
 
     }
 
