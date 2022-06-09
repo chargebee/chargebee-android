@@ -7,6 +7,7 @@ enum class GPErrorCode(val errorMsg: String) {
     PurchasePending("Purchase is pending"),
     PurchaseUnspecified("Unspecified state of the purchase"),
     PurchaseInvalid("Failure of purchase"),
+    PurchaseReceiptNotFound("Receipt not found"),
     CanceledPurchase("User pressed back or canceled a dialog for purchase"),
     ProductNotOwned("Failure to consume purchase since item is not owned"),
     ProductAlreadyOwned("Failure to purchase since item is already owned"),
