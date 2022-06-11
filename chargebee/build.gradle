@@ -9,7 +9,7 @@ android {
         minSdkVersion 21
         targetSdkVersion 30
         versionCode 1
-        versionName "1.0.2"
+        versionName "1.0.3"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles "consumer-rules.pro"
@@ -43,6 +43,7 @@ dependencies {
 
     // Google play billing library
     implementation 'com.android.billingclient:billing-ktx:4.0.0'
+    implementation 'com.squareup.okhttp3:logging-interceptor:4.2.1'
 
     // AssertJ
     testImplementation "org.assertj:assertj-core:$assertj_version"

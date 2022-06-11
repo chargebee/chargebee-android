@@ -4,6 +4,7 @@ import android.app.Activity
 import android.content.Context
 import android.os.Handler
 import android.os.Looper
+import android.text.TextUtils
 import android.util.Log
 import com.android.billingclient.api.*
 import com.chargebee.android.ErrorDetail
@@ -28,7 +29,7 @@ class BillingClientManager constructor(
     private var purchaseCallBack: CBCallback.PurchaseCallback<String>? = null
     private val skusWithSkuDetails = arrayListOf<CBProduct>()
     private val TAG = "BillingClientManager"
-    var customerID : String = ""
+    var customerID : String = "null"
     lateinit var product: CBProduct
 
     init {
@@ -157,13 +158,14 @@ class BillingClientManager constructor(
     /* Purchase the product: Initiates the billing flow for an In-app-purchase  */
     fun purchase(
         product: CBProduct,
-        customerID: String? = "",
+        customerID: String = "",
         purchaseCallBack: CBCallback.PurchaseCallback<String>
     ) {
         this.purchaseCallBack = purchaseCallBack
         this.product = product
         val skuDetails = product.skuDetails
-        if (customerID != null) {
+
+        if (!(TextUtils.isEmpty(customerID))) {
             this.customerID = customerID
         }
         val params = BillingFlowParams.newBuilder()
@@ -275,28 +277,28 @@ class BillingClientManager constructor(
 
     /* Chargebee method called here to validate receipt */
     private fun validateReceipt(purchaseToken: String, product: CBProduct) {
-        try {
-            CBPurchase.validateReceipt(purchaseToken, product){
-                when(it){
-                    is ChargebeeResult.Success -> {
-                        Log.i(
-                            TAG,
-                            "Validate Receipt Response:  ${(it.data as CBReceiptResponse).in_app_subscription}"
-                        )
-                        val subscriptionId = (it.data).in_app_subscription.subscription_id
-                        Log.i(TAG, "Subscription ID:  $subscriptionId")
-                        if (subscriptionId.isEmpty()){
-                            purchaseCallBack?.onError(CBException(ErrorDetail(GPErrorCode.PurchaseInvalid.errorMsg)))
-                        }else {
-                            purchaseCallBack?.onSuccess(subscriptionId,true)
-                        }
-                    }
-                    is ChargebeeResult.Error -> {
-                        Log.e(TAG, "Exception from Server- validateReceipt()  ID:  ${it.exp.message}")
-                        purchaseCallBack?.onError(CBException(ErrorDetail(it.exp.message)))
+        try{
+        CBPurchase.validateReceipt(purchaseToken, customerID, product) {
+            when(it) {
+                is ChargebeeResult.Success -> {
+                    Log.i(
+                        TAG,
+                        "Validate Receipt Response:  ${(it.data as CBReceiptResponse).in_app_subscription}"
+                    )
+                    val subscriptionId = (it.data).in_app_subscription.subscription_id
+                    Log.i(TAG, "Subscription ID:  $subscriptionId")
+                    if (subscriptionId.isEmpty()){
+                        purchaseCallBack?.onError(CBException(ErrorDetail(GPErrorCode.PurchaseInvalid.errorMsg)))
+                    }else {
+                        purchaseCallBack?.onSuccess(subscriptionId,true)
                     }
                 }
+                is ChargebeeResult.Error -> {
+                    Log.e(TAG, "Exception from Server - validateReceipt() :  ${it.exp.message}")
+                    purchaseCallBack?.onError(CBException(ErrorDetail(it.exp.message)))
+                }
             }
+        }
         }catch (exp: Exception){
             Log.e(TAG, "Exception from Server- validateReceipt() :  ${exp.message}")
             purchaseCallBack?.onError(CBException(ErrorDetail(exp.message)))
