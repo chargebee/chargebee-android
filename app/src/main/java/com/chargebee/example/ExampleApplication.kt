@@ -12,7 +12,7 @@ class ExampleApplication: Application() {
 
         if (isInternetAvailable(this))
         // Please add site/app details as required
-        Chargebee.configure(site = "omni1-test.integrations.predev51.in", publishableApiKey= "test_rpKneFyplowONFtdHgnlpxh6ccdcQXNUcu",sdkKey= "cb-c22aotcegja5lbjbty5yjzt3tq", packageName = this.packageName)
+        Chargebee.configure(site = "", publishableApiKey= "",sdkKey= "", packageName = this.packageName)
 
     }
 
