@@ -6,6 +6,7 @@ import com.chargebee.android.Failure
 import com.chargebee.android.exceptions.CBException
 import com.chargebee.android.exceptions.ChargebeeResult
 import com.chargebee.android.loggers.CBLogger
+import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -36,20 +37,31 @@ internal class ResultHandler {
             completion: (ChargebeeResult<T>) -> Unit,
             logger: CBLogger? = null
         ) {
-            CoroutineScope(Dispatchers.IO).launch {
-                val result: ChargebeeResult<T> = try {
-                    logger?.info()
-                    codeBlock()
-                } catch (ex: CBException) {
-                    logger?.error(ex.message ?: "failed", ex.httpStatusCode)
-                    ChargebeeResult.Error(ex)
-                } catch (ex: Exception) {
-                    logger?.error(ex.message ?: "failed")
-                    ChargebeeResult.Error(exp = CBException(ErrorDetail(ex.message)))
+            try {
+                CoroutineScope(Dispatchers.IO + coroutineExceptionHandler()).launch {
+                    val result: ChargebeeResult<T> = try {
+                        logger?.info()
+                        codeBlock()
+                    } catch (ex: CBException) {
+                        logger?.error(ex.message ?: "failed", ex.httpStatusCode)
+                        ChargebeeResult.Error(ex)
+                    } catch (ex: Exception) {
+                        logger?.error(ex.message ?: "failed")
+                        ChargebeeResult.Error(exp = CBException(ErrorDetail(ex.message)))
+                    }
+                    completion(result)
                 }
-                completion(result)
+            }catch (exp: Exception){
+                println("Exception in safeExecuter() ${exp.message}")
             }
 
+        }
+        private fun coroutineExceptionHandler() : CoroutineExceptionHandler {
+            val coroutineExceptionHandler = CoroutineExceptionHandler{_, throwable ->
+                throwable.printStackTrace()
+                println("CoroutineExceptionHandler got ${throwable.message}")
+            }
+            return coroutineExceptionHandler
         }
     }
 }

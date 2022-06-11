@@ -60,10 +60,9 @@ internal fun <T, E : ChargebeeError> fromResponse(response: Response<T?>, type: 
 }
 
 internal fun <T> responseFromServer(response: Response<T?>): ChargebeeResult<T> {
-    if (response.isSuccessful) {
         response.code().let {
-            when {
-                it == 200 -> {
+            when(it) {
+                200 -> {
                     val value = response.body()
                     if (value != null)
                         return ChargebeeResult.Success(value)
@@ -75,14 +74,14 @@ internal fun <T> responseFromServer(response: Response<T?>): ChargebeeResult<T> 
                         )
                     )
                 }
-                it == 401 -> {
+                401 -> {
                     return ChargebeeResult.Error(
                         exp = CBException(
                             error = ErrorDetail(response.errorBody()?.string())
                         )
                     )
                 }
-                it >= 500 -> {
+                400, 500 -> {
                     return ChargebeeResult.Error(
                         exp = CBException(
                             error = ErrorDetail(response.errorBody()?.string())
@@ -98,12 +97,6 @@ internal fun <T> responseFromServer(response: Response<T?>): ChargebeeResult<T> 
                 }
             }
         }
-    }
-    return ChargebeeResult.Error(
-        exp = CBException(
-            error = ErrorDetail(response.errorBody()?.string())
-        )
-    )
 }
 
 interface ProgressBarListener{
