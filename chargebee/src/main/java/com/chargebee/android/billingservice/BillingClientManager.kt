@@ -88,7 +88,7 @@ class BillingClientManager constructor(
     }
 
     /* Method used to configure and create a instance of billing client */
-    fun startBillingServiceConnection() {
+    private fun startBillingServiceConnection() {
         billingClient = mContext?.let {
             BillingClient.newBuilder(it)
                 .enablePendingPurchases()
@@ -285,16 +285,22 @@ class BillingClientManager constructor(
                         TAG,
                         "Validate Receipt Response:  ${(it.data as CBReceiptResponse).in_app_subscription}"
                     )
-                    val subscriptionId = (it.data).in_app_subscription.subscription_id
-                    Log.i(TAG, "Subscription ID:  $subscriptionId")
-                    if (subscriptionId.isEmpty()){
+                    billingClient.endConnection()
+                    if (it.data.in_app_subscription != null){
+                        val subscriptionId = (it.data).in_app_subscription.subscription_id
+                        Log.i(TAG, "Subscription ID:  $subscriptionId")
+                        if (subscriptionId.isEmpty()) {
+                            purchaseCallBack?.onError(CBException(ErrorDetail(GPErrorCode.PurchaseInvalid.errorMsg)))
+                        } else {
+                            purchaseCallBack?.onSuccess(subscriptionId, true)
+                        }
+                    }else{
                         purchaseCallBack?.onError(CBException(ErrorDetail(GPErrorCode.PurchaseInvalid.errorMsg)))
-                    }else {
-                        purchaseCallBack?.onSuccess(subscriptionId,true)
                     }
                 }
                 is ChargebeeResult.Error -> {
                     Log.e(TAG, "Exception from Server - validateReceipt() :  ${it.exp.message}")
+                    billingClient.endConnection()
                     purchaseCallBack?.onError(CBException(ErrorDetail(it.exp.message)))
                 }
             }

@@ -59,7 +59,7 @@ internal class ResultHandler {
         private fun coroutineExceptionHandler() : CoroutineExceptionHandler {
             val coroutineExceptionHandler = CoroutineExceptionHandler{_, throwable ->
                 throwable.printStackTrace()
-                println("CoroutineExceptionHandler got ${throwable.message}")
+                println("CoroutineExceptionHandler: ${throwable.message}")
             }
             return coroutineExceptionHandler
         }
