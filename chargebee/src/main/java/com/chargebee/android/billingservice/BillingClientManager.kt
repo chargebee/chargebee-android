@@ -29,7 +29,7 @@ class BillingClientManager constructor(
     private var purchaseCallBack: CBCallback.PurchaseCallback<String>? = null
     private val skusWithSkuDetails = arrayListOf<CBProduct>()
     private val TAG = "BillingClientManager"
-    var customerID : String = "null"
+    var customerID : String = ""
     lateinit var product: CBProduct
 
     init {
@@ -262,6 +262,8 @@ class BillingClientManager constructor(
                         }else {
                             Log.i(TAG, "Google Purchase - success")
                             Log.i(TAG, "Purchase Token -${purchase.purchaseToken}")
+                            billingClient.endConnection()
+
                             validateReceipt(purchase.purchaseToken, product)
                         }
 
@@ -281,20 +283,21 @@ class BillingClientManager constructor(
         CBPurchase.validateReceipt(purchaseToken, customerID, product) {
             when(it) {
                 is ChargebeeResult.Success -> {
+                    billingClient.endConnection()
                     Log.i(
                         TAG,
                         "Validate Receipt Response:  ${(it.data as CBReceiptResponse).in_app_subscription}"
                     )
-                    billingClient.endConnection()
                     if (it.data.in_app_subscription != null){
                         val subscriptionId = (it.data).in_app_subscription.subscription_id
                         Log.i(TAG, "Subscription ID:  $subscriptionId")
                         if (subscriptionId.isEmpty()) {
-                            purchaseCallBack?.onError(CBException(ErrorDetail(GPErrorCode.PurchaseInvalid.errorMsg)))
+                            purchaseCallBack?.onSuccess(subscriptionId, false)
                         } else {
                             purchaseCallBack?.onSuccess(subscriptionId, true)
                         }
                     }else{
+                        billingClient.endConnection()
                         purchaseCallBack?.onError(CBException(ErrorDetail(GPErrorCode.PurchaseInvalid.errorMsg)))
                     }
                 }
@@ -306,6 +309,7 @@ class BillingClientManager constructor(
             }
         }
         }catch (exp: Exception){
+            billingClient.endConnection()
             Log.e(TAG, "Exception from Server- validateReceipt() :  ${exp.message}")
             purchaseCallBack?.onError(CBException(ErrorDetail(exp.message)))
         }
