@@ -28,7 +28,7 @@ public class BillingActivity extends BaseActivity implements ProductListAdapter.
     private ProductListAdapter productListAdapter = null;
     private LinearLayoutManager linearLayoutManager;
     private RecyclerView mItemsRecyclerView = null;
-    private BillingViewModel billingViewModel= new BillingViewModel();
+    private BillingViewModel billingViewModel;
     private static final String TAG = "BillingActivity";
     private int position = 0;
 
@@ -36,6 +36,8 @@ public class BillingActivity extends BaseActivity implements ProductListAdapter.
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_product_list);
+
+        this.billingViewModel= new BillingViewModel();
 
         mItemsRecyclerView = findViewById(R.id.rv_product_list);
         String productDetails = getIntent().getStringExtra(PRODUCTS_LIST_KEY);
@@ -107,12 +109,15 @@ public class BillingActivity extends BaseActivity implements ProductListAdapter.
             public void onClick(View v) {
                 showProgressDialog();
                 String customerId = input.getText().toString();
-                BillingClientManager.mProgressBarListener = this;
-                billingViewModel.purchaseProduct(productList.get(position), customerId);
+                purchaseProduct(customerId);
                 dialog.dismiss();
             }
         });
         dialog.show();
+    }
+
+    private void purchaseProduct(String customerId){
+        this.billingViewModel.purchaseProduct(productList.get(position), customerId);
     }
 
     private void updateSubscribeStatus(){

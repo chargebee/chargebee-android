@@ -32,8 +32,8 @@ import com.chargebee.example.token.TokenizeActivity
 import com.chargebee.example.util.CBMenu
 import com.chargebee.example.util.Constants.PRODUCTS_LIST_KEY
 import com.google.gson.Gson
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 
 class MainActivity : BaseActivity(), ListItemsAdapter.ItemClickListener {
@@ -113,14 +113,14 @@ class MainActivity : BaseActivity(), ListItemsAdapter.ItemClickListener {
                         is CBProductIDResult.ProductIds -> {
                             hideProgressDialog()
                             val array = it.IDs.toTypedArray()
-                            GlobalScope.launch(Dispatchers.Main) {
+                            CoroutineScope(Dispatchers.Main).launch {
                                 alertListProductId(array)
                             }
                         }
                         is CBProductIDResult.Error -> {
                             hideProgressDialog()
                             Log.e(javaClass.simpleName, " ${it.exp.message}")
-                            GlobalScope.launch(Dispatchers.Main) {
+                            CoroutineScope(Dispatchers.Main).launch {
                                 val empty =
                                     arrayOf("Product IDs not found on this site for play store")
                                 alertListProductId(empty)
@@ -132,16 +132,13 @@ class MainActivity : BaseActivity(), ListItemsAdapter.ItemClickListener {
             CBMenu.GetProducts.value -> {
                 getProductIdFromCustomer()
             }
-            CBMenu.SubsStatus.value -> {
-                val intent = Intent(this, SubscriptionActivity::class.java)
-                startActivity(intent)
-            }
+            CBMenu.SubsStatus.value,
             CBMenu.SubsList.value -> {
                 val intent = Intent(this, SubscriptionActivity::class.java)
                 startActivity(intent)
             }
             else ->{
-
+                Log.i(javaClass.simpleName, " Not implemented" )
             }
         }
     }
@@ -196,12 +193,12 @@ class MainActivity : BaseActivity(), ListItemsAdapter.ItemClickListener {
             productIdList,
             object : CBCallback.ListProductsCallback<ArrayList<CBProduct>> {
                 override fun onSuccess(productIDs: ArrayList<CBProduct>) {
-                    if (productIDs.size > 0) {
-                        GlobalScope.launch(Dispatchers.Main) {
-                            launchProductDetailsScreen(gson.toJson(productIDs))
+                    CoroutineScope(Dispatchers.Main).launch {
+                        if (productIDs.size > 0) {
+                                launchProductDetailsScreen(gson.toJson(productIDs))
+                        } else {
+                            alertSuccess("Items not available to buy")
                         }
-                    } else {
-                        alertSuccess("Items not available to buy")
                     }
                 }
                 override fun onError(error: CBException) {

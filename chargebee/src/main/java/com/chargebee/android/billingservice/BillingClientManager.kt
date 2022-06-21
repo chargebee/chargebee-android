@@ -8,7 +8,6 @@ import android.text.TextUtils
 import android.util.Log
 import com.android.billingclient.api.*
 import com.chargebee.android.ErrorDetail
-import com.chargebee.android.ProgressBarListener
 import com.chargebee.android.exceptions.CBException
 import com.chargebee.android.exceptions.ChargebeeResult
 import com.chargebee.android.models.CBProduct
@@ -26,17 +25,12 @@ class BillingClientManager constructor(
     private val handler = Handler(Looper.getMainLooper())
     private var skuType : String? = null
     private var skuList = arrayListOf<String>()
-    private var callBack : CBCallback.ListProductsCallback<ArrayList<CBProduct>>? = null
+    private var callBack : CBCallback.ListProductsCallback<ArrayList<CBProduct>>
     private var purchaseCallBack: CBCallback.PurchaseCallback<String>? = null
     private val skusWithSkuDetails = arrayListOf<CBProduct>()
     private val TAG = "BillingClientManager"
-    var customerID : String = "null"
-    var product: CBProduct? = null
-   companion object {
-       lateinit var mProgressBarListener: Any
-   }
-
-    var mProgressBarListener: ProgressBarListener? = null
+    var customerID : String = ""
+    lateinit var product: CBProduct
 
     init {
         mContext = context
@@ -60,11 +54,11 @@ class BillingClientManager constructor(
                     TAG,
                     "onBillingSetupFinished() -> successfully for ${billingClient.toString()}."
                 )
-                callBack?.let { loadProductDetails(BillingClient.SkuType.SUBS, skuList, it) }
+                loadProductDetails(BillingClient.SkuType.SUBS, skuList, callBack)
             }
             BillingClient.BillingResponseCode.FEATURE_NOT_SUPPORTED,
             BillingClient.BillingResponseCode.BILLING_UNAVAILABLE -> {
-                callBack?.onError(CBException(ErrorDetail(GPErrorCode.BillingUnavailable.errorMsg)))
+                callBack.onError(CBException(ErrorDetail(GPErrorCode.BillingUnavailable.errorMsg)))
                 Log.i(TAG, "onBillingSetupFinished() -> with error: ${billingResult.debugMessage}")
             }
             BillingClient.BillingResponseCode.SERVICE_DISCONNECTED,
@@ -81,7 +75,6 @@ class BillingClientManager constructor(
                 )
             }
             BillingClient.BillingResponseCode.DEVELOPER_ERROR -> {
-                // Client is already in the process of connecting to billing service
                 Log.i(
                     TAG,
                     "onBillingSetupFinished() -> Client is already in the process of connecting to billing service"
@@ -95,7 +88,7 @@ class BillingClientManager constructor(
     }
 
     /* Method used to configure and create a instance of billing client */
-    fun startBillingServiceConnection() {
+    private fun startBillingServiceConnection() {
         billingClient = mContext?.let {
             BillingClient.newBuilder(it)
                 .enablePendingPurchases()
@@ -147,7 +140,7 @@ class BillingClientManager constructor(
                        Log.i(TAG, "Product details :$skusWithSkuDetails")
                        callBack.onSuccess(productIDs = skusWithSkuDetails)
                    }catch (ex: CBException){
-                       callBack.onError(CBException(ErrorDetail("Unknown error")))
+                       callBack.onError(CBException(ErrorDetail(GPErrorCode.UnknownError.errorMsg)))
                        Log.e(TAG, "exception :" + ex.message)
                    }
                }else{
@@ -157,7 +150,7 @@ class BillingClientManager constructor(
            }
        }catch (exp: CBException){
            Log.e(TAG, "exception :$exp.message")
-           callBack.onError(CBException(ErrorDetail("failed")))
+           callBack.onError(CBException(ErrorDetail("${exp.message}")))
        }
 
     }
@@ -178,8 +171,6 @@ class BillingClientManager constructor(
         val params = BillingFlowParams.newBuilder()
             .setSkuDetails(skuDetails)
             .build()
-
-        mProgressBarListener?.onHideProgressBar()
 
         billingClient.launchBillingFlow(mContext as Activity, params)
             .takeIf { billingResult -> billingResult.responseCode != BillingClient.BillingResponseCode.OK
@@ -222,29 +213,36 @@ class BillingClientManager constructor(
                             acknowledgePurchase(purchase)
                         }
                         Purchase.PurchaseState.PENDING -> {
-                            purchaseCallBack?.onError(CBException(ErrorDetail("Your purchase is pending state, you need to complete it from store")))
+                            purchaseCallBack?.onError(CBException(ErrorDetail(GPErrorCode.PurchasePending.errorMsg)))
+                        }
+                        Purchase.PurchaseState.UNSPECIFIED_STATE -> {
+                            purchaseCallBack?.onError(CBException(ErrorDetail(GPErrorCode.PurchaseUnspecified.errorMsg)))
                         }
                     }
                 }
             }
             BillingClient.BillingResponseCode.ITEM_ALREADY_OWNED -> {
-                mProgressBarListener?.onHideProgressBar()
-                // call queryPurchases to verify and process all owned items
-                Log.e(TAG, "onPurchasesUpdated ITEM_ALREADY_OWNED")
-                purchaseCallBack?.onError(CBException(ErrorDetail("Item already owned")))
+                Log.e(TAG, "onPurchasesUpdated: ITEM_ALREADY_OWNED")
+                purchaseCallBack?.onError(CBException(ErrorDetail(GPErrorCode.ProductAlreadyOwned.errorMsg)))
             }
             BillingClient.BillingResponseCode.SERVICE_DISCONNECTED -> {
-                mProgressBarListener?.onHideProgressBar()
                 connectToBillingService()
             }
             BillingClient.BillingResponseCode.ITEM_UNAVAILABLE -> {
-                Log.e(TAG, "onPurchasesUpdated ITEM_UNAVAILABLE")
-                purchaseCallBack?.onError(CBException(ErrorDetail("Item Unavailable")))
+                Log.e(TAG, "onPurchasesUpdated: ITEM_UNAVAILABLE")
+                purchaseCallBack?.onError(CBException(ErrorDetail(GPErrorCode.ProductUnavailable.errorMsg)))
+            }
+            BillingClient.BillingResponseCode.USER_CANCELED ->{
+                Log.e(TAG, "onPurchasesUpdated : USER_CANCELED ")
+                purchaseCallBack?.onError(CBException(ErrorDetail(GPErrorCode.CanceledPurchase.errorMsg)))
+            }
+            BillingClient.BillingResponseCode.ITEM_NOT_OWNED ->{
+                Log.e(TAG, "onPurchasesUpdated : ITEM_NOT_OWNED ")
+                purchaseCallBack?.onError(CBException(ErrorDetail(GPErrorCode.ProductNotOwned.errorMsg)))
             }
             else -> {
-                Log.e(TAG, "Failed to onPurchasesUpdated"+billingResult.responseCode)
-                mProgressBarListener?.onHideProgressBar()
-                purchaseCallBack?.onError(CBException(ErrorDetail("Unknown error")))
+                Log.e(TAG, "Failed to PurchasesUpdated"+billingResult.responseCode)
+                purchaseCallBack?.onError(CBException(ErrorDetail(GPErrorCode.UnknownError.errorMsg)))
             }
         }
     }
@@ -257,20 +255,21 @@ class BillingClientManager constructor(
                 .build()
             billingClient.acknowledgePurchase(params) { billingResult ->
                 if (billingResult.responseCode == BillingClient.BillingResponseCode.OK) {
-                    mProgressBarListener?.onShowProgressBar()
                     try {
                         if (purchase.purchaseToken.isEmpty()){
-                            Log.i(TAG, "Receipt Not Found")
-                            mProgressBarListener?.onHideProgressBar()
+                            Log.e(TAG, "Receipt Not Found")
+                            purchaseCallBack?.onError(CBException(ErrorDetail(message = GPErrorCode.PurchaseReceiptNotFound.errorMsg)))
                         }else {
                             Log.i(TAG, "Google Purchase - success")
-                            product?.let { validateReceipt(purchase.purchaseToken, it) }
+                            Log.i(TAG, "Purchase Token -${purchase.purchaseToken}")
+                            billingClient.endConnection()
+
+                            validateReceipt(purchase.purchaseToken, product)
                         }
 
                     } catch (ex: CBException) {
-                        mProgressBarListener?.onHideProgressBar()
                         Log.e("Error", ex.toString())
-                        purchaseCallBack?.onError(ex)
+                        purchaseCallBack?.onError(CBException(ErrorDetail(message = ex.message)))
                     }
                 }
             }
@@ -280,28 +279,39 @@ class BillingClientManager constructor(
 
     /* Chargebee method called here to validate receipt */
     private fun validateReceipt(purchaseToken: String, product: CBProduct) {
-        CBPurchase.validateReceipt(purchaseToken, customerID, product){
-            when(it){
+        try{
+        CBPurchase.validateReceipt(purchaseToken, customerID, product) {
+            when(it) {
                 is ChargebeeResult.Success -> {
+                    billingClient.endConnection()
                     Log.i(
                         TAG,
                         "Validate Receipt Response:  ${(it.data as CBReceiptResponse).in_app_subscription}"
                     )
-                    val subscriptionId = (it.data).in_app_subscription.subscription_id
-                    Log.i(TAG, "Subscription ID:  $subscriptionId")
-                    if (subscriptionId.isEmpty()){
-                        purchaseCallBack?.onError(CBException(ErrorDetail(message = "Invalid Purchase")))
-                        purchaseCallBack?.onSuccess(subscriptionId,false)
-                    }else {
-                        purchaseCallBack?.onSuccess(subscriptionId,true)
+                    if (it.data.in_app_subscription != null){
+                        val subscriptionId = (it.data).in_app_subscription.subscription_id
+                        Log.i(TAG, "Subscription ID:  $subscriptionId")
+                        if (subscriptionId.isEmpty()) {
+                            purchaseCallBack?.onSuccess(subscriptionId, false)
+                        } else {
+                            purchaseCallBack?.onSuccess(subscriptionId, true)
+                        }
+                    }else{
+                        billingClient.endConnection()
+                        purchaseCallBack?.onError(CBException(ErrorDetail(GPErrorCode.PurchaseInvalid.errorMsg)))
                     }
                 }
                 is ChargebeeResult.Error -> {
-                    mProgressBarListener?.onHideProgressBar()
-                    Log.e(TAG, "Exception from server - validateReceipt() :  ${it.exp.message}")
+                    Log.e(TAG, "Exception from Server - validateReceipt() :  ${it.exp.message}")
+                    billingClient.endConnection()
                     purchaseCallBack?.onError(CBException(ErrorDetail(it.exp.message)))
                 }
             }
+        }
+        }catch (exp: Exception){
+            billingClient.endConnection()
+            Log.e(TAG, "Exception from Server- validateReceipt() :  ${exp.message}")
+            purchaseCallBack?.onError(CBException(ErrorDetail(exp.message)))
         }
     }
 

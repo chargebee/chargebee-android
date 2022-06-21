@@ -23,6 +23,13 @@ internal class CBReceiptRequestBody(   val receipt: String,
             "channel" to this.channel
         )
     }
+    fun toMap(): Map<String, String> {
+        return mapOf(
+            "receipt" to this.receipt,
+            "product[id]" to this.productId,
+            "channel" to this.channel
+        )
+    }
 }
 
 data class Params(

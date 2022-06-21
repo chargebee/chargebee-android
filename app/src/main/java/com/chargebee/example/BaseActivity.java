@@ -64,7 +64,7 @@ public class BaseActivity extends AppCompatActivity {
         new AlertDialog.Builder(this)
                 .setIcon(android.R.drawable.ic_dialog_info)
                 .setTitle("Chargebee")
-                .setMessage("Subscription Status :"+subcriptionStatus)
+                .setMessage(subcriptionStatus)
                 .setPositiveButton("Ok", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialogInterface, int i) {
