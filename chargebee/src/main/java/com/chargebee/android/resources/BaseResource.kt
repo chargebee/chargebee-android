@@ -22,7 +22,7 @@ internal open class BaseResource(baseUrl: String) {
 
         apiClient = Retrofit.Builder()
             .baseUrl(baseUrl)
-            .client(client)
+            //.client(client)
             .addConverterFactory(GsonConverterFactory.create(gson))
             .build()
     }
