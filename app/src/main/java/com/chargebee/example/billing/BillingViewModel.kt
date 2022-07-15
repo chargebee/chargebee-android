@@ -48,7 +48,7 @@ class BillingViewModel : ViewModel() {
                     Log.i(
                         TAG,
                         "subscription status:  ${(it.data as SubscriptionDetailsWrapper).cb_subscription.status} ,activated_at : ${(it.data as SubscriptionDetailsWrapper).cb_subscription.activated_at}" +
-                                " subscription id : ${(it.data as SubscriptionDetailsWrapper).cb_subscription.id}" +
+                                " subscription id : ${(it.data as SubscriptionDetailsWrapper).cb_subscription.subscription_id}" +
                                 " customer_id : ${(it.data as SubscriptionDetailsWrapper).cb_subscription.customer_id}" +
                                 " current_term_start : ${(it.data as SubscriptionDetailsWrapper).cb_subscription.current_term_start} " +
                                 " current_term_end : ${(it.data as SubscriptionDetailsWrapper).cb_subscription.current_term_end}"
@@ -66,8 +66,8 @@ class BillingViewModel : ViewModel() {
             }
         }
     }
-    fun retrieveSubscriptionsByCustomerId(queryParam: Array<String>) {
-        Chargebee.retrieveSubscriptions(queryParam) {
+    fun retrieveSubscriptionsByCustomerId(queryParams: Map<String, String>) {
+        Chargebee.retrieveSubscriptions(queryParams) {
             when(it){
                 is ChargebeeResult.Success -> {
                     subscriptionList.postValue((it.data as CBSubscription).list)

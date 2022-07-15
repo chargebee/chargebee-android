@@ -43,9 +43,14 @@ class SubscriptionActivity : BaseActivity() {
 
         mCustomerIdButton.setOnClickListener{
             showProgressDialog()
-            val id = mCustomerIdInput.text.toString()
-            val queryParam = arrayOf(id, Chargebee.channel)
-            mBillingViewModel?.retrieveSubscriptionsByCustomerId(queryParam)
+            val userInput = mCustomerIdInput.text.toString() // For example: customer_id=Abc,channel=play_store,status=Active
+
+            val queryParams = userInput.split(",").associate {
+                val (left, right) = it.split("=")
+                left to right.toString()
+            }
+
+            mBillingViewModel?.retrieveSubscriptionsByCustomerId(queryParams)
         }
 
         mSubscriptionIdButton.setOnClickListener{

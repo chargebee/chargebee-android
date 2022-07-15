@@ -71,22 +71,15 @@ object Chargebee {
     }
     /* Get the subscriptions list from chargebee system by using Customer Id */
     @Throws(InvalidRequestException::class, OperationFailedException::class)
-    fun retrieveSubscriptions(queryParam: Array<String>, completion: (ChargebeeResult<Any>) -> Unit) {
+    fun retrieveSubscriptions(queryParams: Map<String, String>, completion: (ChargebeeResult<Any>) -> Unit) {
         val logger = CBLogger(name = "Subscription", action = "Fetch Subscription by using CustomerId")
-        if (queryParam.isNotEmpty()) {
-            if (TextUtils.isEmpty(queryParam[0])){
-                completion(ChargebeeResult.Error(
-                    exp = CBException(
-                        error = ErrorDetail(message = "Customer ID is empty", apiErrorCode = "400")
-                    )
-                ))
-            }else {
+        if (queryParams.isNotEmpty()) {
+
                 ResultHandler.safeExecuter(
-                    { SubscriptionResource().retrieveSubscriptions(queryParam) },
+                    { SubscriptionResource().retrieveSubscriptions(queryParams) },
                     completion,
                     logger
                 )
-            }
         }else{
             completion(ChargebeeResult.Error(
                 exp = CBException(
