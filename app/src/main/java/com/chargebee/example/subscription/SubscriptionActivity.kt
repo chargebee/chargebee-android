@@ -36,16 +36,26 @@ class SubscriptionActivity : BaseActivity() {
         }
         this.mBillingViewModel!!.subscriptionList.observeForever {
             hideProgressDialog()
-            Log.i(javaClass.simpleName, "Subscriptions by using Customer Id:  $it")
-            val subscriptionStatus = it?.get(0)?.cb_subscription?.status+"\nPlan Price : "+it?.get(0)?.cb_subscription?.plan_amount;
-            alertSuccess(subscriptionStatus)
+            Log.i(javaClass.simpleName, "Subscriptions by using queryParams:  $it")
+            if(it?.size!! >0) {
+                val subscriptionStatus =
+                    it?.get(0).cb_subscription.status + "\nPlan Price : " + it?.get(0)?.cb_subscription?.plan_amount;
+                alertSuccess(subscriptionStatus)
+            }else{
+                alertSuccess("Subscriptions not found in Chargebee System")
+            }
         }
 
         mCustomerIdButton.setOnClickListener{
             showProgressDialog()
-            val id = mCustomerIdInput.text.toString()
-            val queryParam = arrayOf(id, Chargebee.channel)
-            mBillingViewModel?.retrieveSubscriptionsByCustomerId(queryParam)
+            val userInput = mCustomerIdInput.text.toString() // Sample QueryParams: "customer_id":"Abc","channel":"play_store","status":"Active"
+
+            val queryParams = userInput.split(",").associate {
+                val (left, right) = it.split(":")
+                left to right
+            }
+
+            mBillingViewModel?.retrieveSubscriptionsByCustomerId(queryParams)
         }
 
         mSubscriptionIdButton.setOnClickListener{

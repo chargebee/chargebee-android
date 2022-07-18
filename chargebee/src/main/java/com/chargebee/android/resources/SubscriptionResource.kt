@@ -16,12 +16,28 @@ internal class SubscriptionResource : BaseResource(Chargebee.baseUrl) {
             subscriptionResponse
         )
     }
-    suspend fun retrieveSubscriptions(queryParam: Array<String>): ChargebeeResult<Any> {
+    suspend fun retrieveSubscriptions(queryParam: Map<String, String>): ChargebeeResult<Any> {
+        var queryParams = HashMap<String,String>()
+        val result: (HashMap<String,String>) -> Unit= {
+                map: HashMap<String,String> -> queryParams = map
+        } //lambda function
+        queryParamSanitizer(queryParam,result)
+
         val subscriptionResponse = apiClient.create(PurchaseRepository::class.java)
-            .retrieveSubscriptions(customerId = queryParam[0], channel = queryParam[1])
+            .retrieveSubscriptions(queryParams=queryParams)
         Log.i(javaClass.simpleName, " Response :$subscriptionResponse")
         return responseFromServer(
             subscriptionResponse
         )
+    }
+
+    private fun queryParamSanitizer(queryParam: Map<String,String>,result:(HashMap<String,String>) -> Unit){
+        val map = HashMap<String,String>()
+        if (queryParam.isNotEmpty()) {
+            for ((key, value) in queryParam) {
+                map[key.replace("\"", "").replace(" ","")] = value.replace("\"", "").replace(" ","")
+            }
+        }
+        result(map)
     }
 }
