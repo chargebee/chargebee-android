@@ -40,6 +40,8 @@ public class PlanInJavaActivity extends BaseActivity {
             hideProgressDialog();
             planName.setText(plan.getName());
             planPricingText.setText(plan.getPricingModel());
+            Log.i(this.getLocalClassName(),"Plan Details : "+plan);
+            Log.i(this.getLocalClassName(),"Meta data : "+plan.getMetaData());
         });
 
         this.viewModel.getPlanError().observe(this, message -> {
