@@ -63,6 +63,11 @@ class MainActivity : BaseActivity(), ListItemsAdapter.ItemClickListener {
             Log.i(javaClass.simpleName, "subscription status:  $it")
             alertSuccess(it)
         }
+        this.mBillingViewModel!!.productIdsList.observeForever {
+            hideProgressDialog()
+            Log.i(javaClass.simpleName, "Google play product identifiers:  $it")
+            alertListProductId(it)
+        }
     }
 
     private fun setListAdapter(){
@@ -108,26 +113,8 @@ class MainActivity : BaseActivity(), ListItemsAdapter.ItemClickListener {
             CBMenu.ProductIDs.value -> {
                 showProgressDialog()
                 val queryParam = arrayOf("100")
-                CBPurchase.retrieveProductIDs(queryParam) {
-                    when (it) {
-                        is CBProductIDResult.ProductIds -> {
-                            hideProgressDialog()
-                            val array = it.IDs.toTypedArray()
-                            CoroutineScope(Dispatchers.Main).launch {
-                                alertListProductId(array)
-                            }
-                        }
-                        is CBProductIDResult.Error -> {
-                            hideProgressDialog()
-                            Log.e(javaClass.simpleName, " ${it.exp.message}")
-                            CoroutineScope(Dispatchers.Main).launch {
-                                val empty =
-                                    arrayOf("Product IDs not found on this site for play store")
-                                alertListProductId(empty)
-                            }
-                        }
-                    }
-                }
+                mBillingViewModel?.retrieveProductIDs(queryParam);
+
             }
             CBMenu.GetProducts.value -> {
                 getProductIdFromCustomer()
