@@ -113,7 +113,7 @@ class MainActivity : BaseActivity(), ListItemsAdapter.ItemClickListener {
             CBMenu.ProductIDs.value -> {
                 showProgressDialog()
                 val queryParam = arrayOf("100")
-                mBillingViewModel?.retrieveProductIDs(queryParam);
+                mBillingViewModel?.retrieveProductIdentifers(queryParam);
 
             }
             CBMenu.GetProducts.value -> {

@@ -43,10 +43,11 @@ class BillingViewModel : ViewModel() {
         })
     }
 
-    fun retrieveProductIDs(params: Array<String>){
-        CBPurchase.retrieveProductIDs(params) {
+    fun retrieveProductIdentifers(queryParam: Array<String>){
+        CBPurchase.retrieveProductIdentifers(queryParam) {
             when (it) {
                 is CBProductIDResult.ProductIds -> {
+                    Log.i(TAG, "List of Product Identifiers:  $it")
                     val array = it.IDs.toTypedArray()
                     productIdsList.postValue(array)
                 }

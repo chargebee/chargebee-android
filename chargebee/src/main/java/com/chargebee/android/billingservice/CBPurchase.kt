@@ -32,7 +32,7 @@ object CBPurchase {
     * Get the product ID's from chargebee system
     */
     @JvmStatic
-    fun retrieveProductIDs(params: Array<String>, completion : (CBProductIDResult<ArrayList<String>>) -> Unit) {
+    fun retrieveProductIdentifers(params: Array<String>, completion : (CBProductIDResult<ArrayList<String>>) -> Unit) {
         val queryParams = append(params,"Standard",Chargebee.channel)
         retrieveProductIDList(queryParams, completion)
     }
