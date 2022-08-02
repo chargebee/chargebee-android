@@ -1,5 +1,7 @@
 package com.chargebee.android.models
 
+import com.google.gson.JsonObject
+
 data class Plan(
     val id: String,
     val name: String,
@@ -24,7 +26,8 @@ data class Plan(
     val taxable: Boolean,
     val currencyCode: String,
     val showDescriptionInInvoices: Boolean,
-    val showDescriptionInQuotes: Boolean
+    val showDescriptionInQuotes: Boolean,
+    val metaData: JsonObject
 )
 
 data class PlansWrapper(val list: ArrayList<PlanWrapper>)

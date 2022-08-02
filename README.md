@@ -21,7 +21,7 @@ The following requirements must be set up before installing Chargebee’s Androi
 The `Chargebee-Android` SDK can be installed by adding below dependency to the `build.gradle` file:
 
 ```kotlin
-implementation 'com.chargebee:chargebee-android:1.0.7'
+implementation 'com.chargebee:chargebee-android:1.0.8'
 ```
 
 ## Example project
@@ -81,6 +81,26 @@ This section describes the SDK integration processes.
 
 ### Integrating In-App Purchases
 The following section describes how to use the SDK to integrate In-App Purchase information. For details on In-App Purchase, read more [here](https://www.chargebee.com/docs/2.0/mobile-in-app-purchases.html).
+
+### Get all IAP Product Identifiers from Chargebee
+Every In-App Purchase subscription product that you configure in your Play Store account, can be configured in Chargebee as a Plan. Start by retrieving the Google IAP Product IDs from your Chargebee account.
+
+```kotlin
+CBPurchase.retrieveProductIdentifers(queryParam) {
+    when (it) {
+        is CBProductIDResult.ProductIds -> {
+          Log.i(TAG, "List of Product Identifiers:  $it")
+        }
+        is CBProductIDResult.Error -> {
+           Log.e(TAG, " ${it.exp.message}")
+            // Handle error here
+        }
+    }
+}
+```
+For eg. query params above can be "limit": "100".
+
+The above function will determine your product catalog version in Chargebee and hit the relevant APIs automatically, to retrieve the Chargebee Plans that correspond to Google IAP products, along with their Google IAP Product IDs.
 
 ### Get IAP Products
 Retrieve the Google IAP Product using the following function.
@@ -327,7 +347,7 @@ Chargebee is available under the [MIT license](https://opensource.org/licenses/M
   To install Chargebee's Android SDK, add the following dependency to the build.gradle file.
   
   ```
-  implementation 'com.chargebee:chargebee-android:1.0.7'
+  implementation 'com.chargebee:chargebee-android:1.0.8'
   ```
   Example project
   ---------------
@@ -356,7 +376,7 @@ Chargebee is available under the [MIT license](https://opensource.org/licenses/M
       **Note:** During the publishable API key creation you must allow **read-only** access to plans/items otherwise this key will not work in the following step. Read [more](https://www.chargebee.com/docs/2.0/api_keys.html#types-of-api-keys_publishable-key).
   4.  Initialize the SDK with your Chargebee site, Publishable API Key, and SDK Key by including the following snippets in your app delegate during app startup.
   
-  ```
+  ```kotlin
   import com.chargebee.android.Chargebee
   
   Chargebee.configure(site= "your-site",
@@ -371,7 +391,7 @@ Chargebee is available under the [MIT license](https://opensource.org/licenses/M
   1.  Initialize the SDK with your Chargebee Site and Publishable/Full Access Key.
   2.  Initialize the SDK during your app startup by including this in the Android application class' [onCreate](https://developer.android.com/reference/android/app/Activity#onCreate(android.os.Bundle)) method.
   
-  ```
+  ```kotlin
   import com.chargebee.android.Chargebee
   
   Chargebee.configure(site = "your-site", publishableApiKey = "api_key")
@@ -388,12 +408,32 @@ Chargebee is available under the [MIT license](https://opensource.org/licenses/M
   ### Integrating In-App Purchases
   
   The following section describes how to use the SDK to integrate In-App Purchase information. For details on In-App Purchase, read more [here](https://www.chargebee.com/docs/2.0/mobile-in-app-purchases.html).
-  
+
+### Get all IAP Product Identifiers from Chargebee
+Every In-App Purchase subscription product that you configure in your Play Store account, can be configured in Chargebee as a Plan. Start by retrieving the Google IAP Product IDs from your Chargebee account.
+
+```kotlin
+CBPurchase.retrieveProductIdentifers(queryParam) {
+    when (it) {
+        is CBProductIDResult.ProductIds -> {
+          Log.i(TAG, "List of Product Identifiers:  $it")
+        }
+        is CBProductIDResult.Error -> {
+           Log.e(TAG, " ${it.exp.message}")
+            // Handle error here
+        }
+    }
+}
+```
+For eg. query params above can be "limit": "100".
+
+The above function will determine your product catalog version in Chargebee and hit the relevant APIs automatically, to retrieve the Chargebee Plans that correspond to Google IAP products, along with their Google IAP Product IDs.
+
   #### Get IAP Products
   
   Retrieve the Google IAP Product using the following function.
   
-  ```
+  ```kotlin
   CBPurchase.retrieveProducts(this, productIdList= "[Product ID's from Google Play Console]",
         object : CBCallback.ListProductsCallback<ArrayList<Products>> {
                  override fun onSuccess(productDetails: ArrayList<Products>) {
@@ -413,7 +453,7 @@ Chargebee is available under the [MIT license](https://opensource.org/licenses/M
   Pass the product and customer identifiers to the following function when the user chooses the product to purchase.
   `customerId` - Optional parameter. We need the unique ID of your customer as customerId. If your unique list of customers is maintained in your database or a third-party system, send us the unique ID from that source.
   
-  ```
+  ```kotlin
   CBPurchase.purchaseProduct(product="CBProduct", customerID="customerID", object : CBCallback.PurchaseCallback<PurchaseModel>{
         override fun onSuccess(subscriptionID: String, status:Boolean) {
           Log.i(TAG, "${status}")
@@ -436,7 +476,7 @@ Chargebee is available under the [MIT license](https://opensource.org/licenses/M
   
   Use query parameters - Subscription ID, Customer ID, or Status for checking the Subscription status on Chargebee and confirm the access - granted or denied.
   
-  ```
+  ```kotlin
   Chargebee.retrieveSubscriptions(queryParam= "[Array of String]") {
          when(it){
                is ChargebeeResult.Success ->{
@@ -457,7 +497,7 @@ Chargebee is available under the [MIT license](https://opensource.org/licenses/M
   
   Use only Subscription ID for checking the Subscription status on Chargebee and confirm the access - granted or denied.
   
-  ```
+  ```kotlin
   Chargebee.retrieveSubscription(subscriptionId) {
          when(it){
                is ChargebeeResult.Success ->{
@@ -483,7 +523,7 @@ Chargebee is available under the [MIT license](https://opensource.org/licenses/M
   
   Retrieve the list of items by using the following function.
   
-  ```
+  ```kotlin
   Chargebee.retrieveAllItems(queryParam) {
          when (it) {
              is ChargebeeResult.Success -> {
@@ -502,7 +542,7 @@ Chargebee is available under the [MIT license](https://opensource.org/licenses/M
   
   Retrieve specific item details by using the following function. Use the Item ID you received from the previous function - Get all items.
   
-  ```
+  ```kotlin
   Chargebee.retrieveItem(queryParam) {
          when (it) {
              is ChargebeeResult.Success -> {
@@ -523,7 +563,7 @@ Chargebee is available under the [MIT license](https://opensource.org/licenses/M
   
   Retrieve the list of plans by using the following function.
   
-  ```
+  ```kotlin
   Chargebee.retrieveAllPlans(queryParam) {
          when (it) {
              is ChargebeeResult.Success -> {
@@ -542,7 +582,7 @@ Chargebee is available under the [MIT license](https://opensource.org/licenses/M
   
   Retrieve specific plan details by passing plan ID in the following function.
   
-  ```
+  ```kotlin
   Chargebee.retrievePlan(queryParam) {
          when (it) {
              is ChargebeeResult.Success -> {
@@ -559,7 +599,7 @@ Chargebee is available under the [MIT license](https://opensource.org/licenses/M
   
   You can retrieve specific addon details by passing addon ID in the following function.
   
-  ```
+  ```kotlin
   Chargebee.retrieve("addonId") { addonResult ->
       try {
           val addon = addonResult.getData()
@@ -576,7 +616,7 @@ Chargebee is available under the [MIT license](https://opensource.org/licenses/M
   
   Once the user selects the product to purchase, and you collect the credit card information, use the following function to tokenize the credit card details against Stripe. You need to have connected your Stripe account to your Chargebee site.
   
-  ```
+  ```kotlin
   val card = Card(
       number = "4321567890123456",
       expiryMonth = "12",

@@ -8,6 +8,7 @@ import com.chargebee.android.ErrorDetail
 import com.chargebee.android.billingservice.CBCallback
 import com.chargebee.android.billingservice.CBPurchase
 import com.chargebee.android.exceptions.CBException
+import com.chargebee.android.exceptions.CBProductIDResult
 import com.chargebee.android.exceptions.ChargebeeResult
 import com.chargebee.android.models.CBProduct
 import com.chargebee.android.models.CBSubscription
@@ -17,6 +18,7 @@ import com.google.gson.Gson
 class BillingViewModel : ViewModel() {
 
     private val TAG = "BillingViewModel"
+    var productIdsList: MutableLiveData<Array<String>> = MutableLiveData()
     var productPurchaseResult: MutableLiveData<Boolean> = MutableLiveData()
     var cbException: MutableLiveData<String?> = MutableLiveData()
     var subscriptionStatus: MutableLiveData<String?> = MutableLiveData()
@@ -41,6 +43,24 @@ class BillingViewModel : ViewModel() {
         })
     }
 
+    fun retrieveProductIdentifers(queryParam: Array<String>){
+        CBPurchase.retrieveProductIdentifers(queryParam) {
+            when (it) {
+                is CBProductIDResult.ProductIds -> {
+                    Log.i(TAG, "List of Product Identifiers:  $it")
+                    val array = it.IDs.toTypedArray()
+                    productIdsList.postValue(array)
+                }
+                is CBProductIDResult.Error -> {
+                    Log.e(javaClass.simpleName, " ${it.exp.message}")
+                    error.postValue(Gson().fromJson<ErrorDetail>(
+                        it.exp.message,
+                        ErrorDetail::class.java
+                    ).message)
+                }
+            }
+        }
+    }
     fun retrieveSubscription(subscriptionId: String) {
         Chargebee.retrieveSubscription(subscriptionId) {
             when(it){
