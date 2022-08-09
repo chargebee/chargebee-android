@@ -31,6 +31,8 @@ class BillingClientManager constructor(
     private val TAG = "BillingClientManager"
     var customerID : String = ""
     lateinit var product: CBProduct
+    var oldPurchaseToken: String? = null
+    lateinit var newSkuDetails: SkuDetails
 
     init {
         mContext = context
@@ -79,7 +81,6 @@ class BillingClientManager constructor(
                     TAG,
                     "onBillingSetupFinished() -> Client is already in the process of connecting to billing service"
                 )
-
             }
             else -> {
                 Log.i(TAG, "onBillingSetupFinished -> with error: ${billingResult.debugMessage}.")
@@ -119,7 +120,7 @@ class BillingClientManager constructor(
                .setType(skuType)
                .build()
 
-           queryAllPurchases()
+           // queryAllPurchases()
 
            billingClient.querySkuDetailsAsync(
                params
@@ -152,7 +153,6 @@ class BillingClientManager constructor(
            Log.e(TAG, "exception :$exp.message")
            callBack.onError(CBException(ErrorDetail("${exp.message}")))
        }
-
     }
 
     /* Purchase the product: Initiates the billing flow for an In-app-purchase  */
@@ -177,7 +177,6 @@ class BillingClientManager constructor(
             }?.let { billingResult ->
                 Log.e(TAG, "Failed to launch billing flow $billingResult")
             }
-
     }
 
     /* Checks if the specified feature is supported by the Play Store */
@@ -264,7 +263,13 @@ class BillingClientManager constructor(
                             Log.i(TAG, "Purchase Token -${purchase.purchaseToken}")
                             billingClient.endConnection()
 
-                            validateReceipt(purchase.purchaseToken, product)
+                            if(TextUtils.isEmpty(oldPurchaseToken) && oldPurchaseToken ==null){
+                                validateReceipt(purchase.purchaseToken, product)
+                            }else{
+                                purchaseCallBack?.onSuccess(purchase.purchaseToken, true)
+                                oldPurchaseToken = null
+                            }
+
                         }
 
                     } catch (ex: CBException) {
@@ -340,6 +345,62 @@ class BillingClientManager constructor(
                     "queryPurchaseHistory  :${billingResult.debugMessage}"
                 )
             }
+        }
+    }
+    /* Update Purchases on existing plan */
+    fun updatePurchaseFlow(context: Context, skuDetails: SkuDetails, oldPurchaseToken: String, updateCallBack : CBCallback.PurchaseCallback<String>) {
+        Log.i(TAG, "oldPurchaseToken : $oldPurchaseToken")
+        this.purchaseCallBack = updateCallBack
+        this.oldPurchaseToken = oldPurchaseToken
+        val updateParams = oldPurchaseToken.let {
+            BillingFlowParams.SubscriptionUpdateParams.newBuilder()
+                .setOldSkuPurchaseToken(it.trim())
+                .setReplaceSkusProrationMode(BillingFlowParams.ProrationMode.IMMEDIATE_WITH_TIME_PRORATION)
+                .build()
+        }
+
+        val billingFlowParams = updateParams.let {
+            BillingFlowParams.newBuilder()
+                .setSkuDetails(skuDetails)
+                .setSubscriptionUpdateParams(it)
+                .build()
+        }
+        billingClient.launchBillingFlow(mContext as Activity, billingFlowParams)
+            .takeIf { billingResult -> billingResult.responseCode != BillingClient.BillingResponseCode.OK
+            }?.let { billingResult ->
+                Log.e(TAG, "Failed to launch billing flow $billingResult")
+            }
+
+    }
+    /* This method will handle the Price Change confirmation with Google play */
+    fun priceChangeConfirmationFlow(cbProduct: CBProduct, priceChangeCallBack: CBCallback.PriceChangeCallback<String>){
+        val priceChangeParams = PriceChangeFlowParams.newBuilder()
+            .setSkuDetails(cbProduct.skuDetails)
+            .build()
+        billingClient.launchPriceChangeConfirmationFlow(mContext as Activity, priceChangeParams) {
+                billingResult ->
+            when(billingResult.responseCode){
+                BillingClient.BillingResponseCode.OK ->{
+                    Log.i(TAG, "User has accepted/Confirmed Price change")
+                    Log.i(TAG, billingResult.debugMessage)
+                    if (billingResult.debugMessage.isEmpty())
+                        priceChangeCallBack.onError(CBException(ErrorDetail("Success")))
+                    else
+                        priceChangeCallBack.onError(CBException(ErrorDetail(billingResult.debugMessage)))
+                }
+                BillingClient.BillingResponseCode.USER_CANCELED,
+                BillingClient.BillingResponseCode.SERVICE_DISCONNECTED,
+                BillingClient.BillingResponseCode.SERVICE_TIMEOUT,
+                BillingClient.BillingResponseCode.SERVICE_UNAVAILABLE,
+                BillingClient.BillingResponseCode.DEVELOPER_ERROR,
+                BillingClient.BillingResponseCode.ERROR ->{
+                    if (billingResult.debugMessage.isEmpty())
+                        priceChangeCallBack.onError(CBException(ErrorDetail("Error from Google Play Library")))
+                    else
+                        priceChangeCallBack.onError(CBException(ErrorDetail(billingResult.debugMessage)))
+                }
+            }
+
         }
     }
 }

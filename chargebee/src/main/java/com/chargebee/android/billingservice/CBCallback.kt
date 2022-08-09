@@ -17,4 +17,8 @@ interface CBCallback {
         fun onError(error: CBException)
     }
 
+    interface PriceChangeCallback<T> {
+        fun onSuccess(response: String)
+        fun onError(error: CBException)
+    }
 }

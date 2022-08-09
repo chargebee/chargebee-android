@@ -45,6 +45,15 @@ object CBPurchase {
             callBack.onError(ex)
         }
     }
+    @JvmStatic
+    fun updateProduct(context: Context, cbProduct: CBProduct,oldPurchaseToken:String, callBack : CBCallback.PurchaseCallback<String> ) {
+        try {
+            billingClientManager?.updatePurchaseFlow(context,cbProduct.skuDetails,oldPurchaseToken, callBack)
+        }catch (ex: CBException){
+            Log.i(javaClass.simpleName, "Exception in updateProduct ")
+            callBack.onError(ex)
+        }
+    }
     /* Buy the product with/without customer Id */
     @JvmStatic
     fun purchaseProduct(
@@ -218,6 +227,15 @@ object CBPurchase {
         list.add(sort)
         list.add(channel)
         return list.toTypedArray()
+    }
+
+    fun priceChangeConfirmation(cbProduct: CBProduct, priceChangeCallBack: CBCallback.PriceChangeCallback<String>){
+        try {
+            billingClientManager?.priceChangeConfirmationFlow(cbProduct, priceChangeCallBack)
+        }catch (ex: CBException){
+            Log.i(javaClass.simpleName, "Exception in priceChangeConfirmation ")
+            priceChangeCallBack.onError(ex)
+        }
     }
 
 }

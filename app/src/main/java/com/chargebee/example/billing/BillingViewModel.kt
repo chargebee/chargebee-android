@@ -1,5 +1,6 @@
 package com.chargebee.example.billing
 
+import android.content.Context
 import android.util.Log
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -25,6 +26,8 @@ class BillingViewModel : ViewModel() {
     var subscriptionList: MutableLiveData<ArrayList<SubscriptionDetailsWrapper>?> = MutableLiveData()
     var error: MutableLiveData<String?> = MutableLiveData()
     private var subscriptionId: String = ""
+    var updateProductPurchaseResult: MutableLiveData<String> = MutableLiveData()
+    var priceChangeLiveData: MutableLiveData<String> = MutableLiveData()
 
     fun purchaseProduct(product: CBProduct, customerID: String) {
 
@@ -101,5 +104,81 @@ class BillingViewModel : ViewModel() {
                 }
             }
         }
+    }
+
+    fun updatePurchase(productIdList: ArrayList<String>, oldPurchaseToken: String, context: Context){
+        CBPurchase.retrieveProducts(context,
+            productIdList,object : CBCallback.ListProductsCallback<ArrayList<CBProduct>>{
+                override fun onSuccess(productIDs: ArrayList<CBProduct>) {
+                    if (productIDs.size > 0) {
+                        CBPurchase.updateProduct(context, productIDs.first(),oldPurchaseToken, object : CBCallback.PurchaseCallback<String>{
+                            override fun onSuccess(purchaseToken: String, status:Boolean) {
+                                Log.i(TAG, "purchaseToken:  $purchaseToken")
+                                updateProductPurchaseResult.postValue(purchaseToken)
+                            }
+                            override fun onError(error: CBException) {
+                                try {
+                                    cbException.postValue(error.message)
+                                }catch (exp: Exception){
+                                    Log.i(TAG, "Exception :${exp.message}")
+                                }
+                            }
+
+                        })
+                    } else {
+                        Log.i(javaClass.simpleName,"Product id not found in Google Play")
+                        cbException.postValue("Product id not found in Google Play")
+                    }
+                }
+
+                override fun onError(error: CBException) {
+                    Log.e(javaClass.simpleName, "Error:  ${error.message}")
+                    try {
+                        cbException.postValue(error.message)
+                    }catch (exp: Exception){
+                        Log.e(TAG, "Exception :${exp.message}")
+                    }
+                }
+
+            })
+
+    }
+
+    fun priceChangeUpdate(productIdList: ArrayList<String>, context: Context){
+        CBPurchase.retrieveProducts(
+            context,
+            productIdList,
+            object : CBCallback.ListProductsCallback<ArrayList<CBProduct>> {
+                override fun onSuccess(productIDs: ArrayList<CBProduct>) {
+                        if (productIDs.size > 0) {
+                            CBPurchase.priceChangeConfirmation(productIDs.first(), object: CBCallback.PriceChangeCallback<String>{
+                                override fun onSuccess(response: String) {
+                                    priceChangeLiveData.postValue(response)
+                                }
+
+                                override fun onError(error: CBException) {
+                                    Log.e(javaClass.simpleName,"Error in Price Change: ${error.message}")
+                                    try {
+                                        cbException.postValue(error.message)
+                                    }catch (exp: Exception){
+                                        Log.i(TAG, "Exception :${exp.message}")
+                                    }
+                                }
+
+                            })
+                        } else {
+                            Log.i(javaClass.simpleName,"Product id not found in Google Play")
+                            cbException.postValue("Product id not found in Google Play")
+                        }
+                }
+                override fun onError(error: CBException) {
+                    Log.e(javaClass.simpleName, "Error:  ${error.message}")
+                    try {
+                        cbException.postValue(error.message)
+                    }catch (exp: Exception){
+                        Log.e(TAG, "Exception :${exp.message}")
+                    }
+                }
+            })
     }
 }
