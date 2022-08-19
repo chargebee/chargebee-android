@@ -28,7 +28,7 @@ class BillingClientManager constructor(
     private var callBack : CBCallback.ListProductsCallback<ArrayList<CBProduct>>
     private var purchaseCallBack: CBCallback.PurchaseCallback<String>? = null
     private val skusWithSkuDetails = arrayListOf<CBProduct>()
-    private val TAG = "BillingClientManager"
+    private val TAG = javaClass.simpleName
     var customerID : String = ""
     lateinit var product: CBProduct
     var oldPurchaseToken: String? = null
@@ -54,7 +54,7 @@ class BillingClientManager constructor(
             BillingClient.BillingResponseCode.OK -> {
                 Log.i(
                     TAG,
-                    "onBillingSetupFinished() -> successfully for ${billingClient.toString()}."
+                    "Google Billing Setup Done!"
                 )
                 loadProductDetails(BillingClient.SkuType.SUBS, skuList, callBack)
             }
@@ -141,7 +141,7 @@ class BillingClientManager constructor(
                        Log.i(TAG, "Product details :$skusWithSkuDetails")
                        callBack.onSuccess(productIDs = skusWithSkuDetails)
                    }catch (ex: CBException){
-                       callBack.onError(CBException(ErrorDetail(GPErrorCode.UnknownError.errorMsg)))
+                       callBack.onError(CBException(ErrorDetail(billingResult.debugMessage)))
                        Log.e(TAG, "exception :" + ex.message)
                    }
                }else{
@@ -176,6 +176,7 @@ class BillingClientManager constructor(
             .takeIf { billingResult -> billingResult.responseCode != BillingClient.BillingResponseCode.OK
             }?.let { billingResult ->
                 Log.e(TAG, "Failed to launch billing flow $billingResult")
+                purchaseCallBack.onError(CBException(ErrorDetail(GPErrorCode.LaunchBillingFlowError.errorMsg)))
             }
     }
 
@@ -240,8 +241,8 @@ class BillingClientManager constructor(
                 purchaseCallBack?.onError(CBException(ErrorDetail(GPErrorCode.ProductNotOwned.errorMsg)))
             }
             else -> {
-                Log.e(TAG, "Failed to PurchasesUpdated"+billingResult.responseCode)
-                purchaseCallBack?.onError(CBException(ErrorDetail(GPErrorCode.UnknownError.errorMsg)))
+                Log.e(TAG, "Failed in Purchases"+billingResult.responseCode)
+                purchaseCallBack?.onError(CBException(ErrorDetail(billingResult.debugMessage)))
             }
         }
     }
@@ -369,6 +370,7 @@ class BillingClientManager constructor(
             .takeIf { billingResult -> billingResult.responseCode != BillingClient.BillingResponseCode.OK
             }?.let { billingResult ->
                 Log.e(TAG, "Failed to launch billing flow $billingResult")
+                purchaseCallBack?.onError(CBException(ErrorDetail(GPErrorCode.LaunchBillingFlowError.errorMsg)))
             }
 
     }

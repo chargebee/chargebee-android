@@ -19,4 +19,5 @@ enum class GPErrorCode(val errorMsg: String) {
     SkuDetailsError("Failure to retrieve SkuDetails for the in-app product ID"),
     InvalidCredentials("SDK key is invalid or not set"),
     InvalidClientUid("Client Uid is invalid or not set"),
+    LaunchBillingFlowError("Failed to launch billing flow ")
 }
