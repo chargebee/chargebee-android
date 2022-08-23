@@ -27,6 +27,8 @@ import com.chargebee.example.items.ItemActivity
 import com.chargebee.example.items.ItemsActivity
 import com.chargebee.example.plan.PlanInJavaActivity
 import com.chargebee.example.plan.PlansActivity
+import com.chargebee.example.plan.UpgradePlanActivity
+import com.chargebee.example.util.Constants.PRICE_KEY
 import com.chargebee.example.subscription.SubscriptionActivity
 import com.chargebee.example.token.TokenizeActivity
 import com.chargebee.example.util.CBMenu
@@ -122,6 +124,15 @@ class MainActivity : BaseActivity(), ListItemsAdapter.ItemClickListener {
             CBMenu.SubsStatus.value,
             CBMenu.SubsList.value -> {
                 val intent = Intent(this, SubscriptionActivity::class.java)
+                startActivity(intent)
+            }
+            CBMenu.UpgradePlan.value -> {
+                val intent = Intent(this, UpgradePlanActivity::class.java)
+                startActivity(intent)
+            }
+            CBMenu.PriceChange.value -> {
+                val intent = Intent(this, UpgradePlanActivity::class.java)
+                intent.putExtra(PRICE_KEY, "priceChange")
                 startActivity(intent)
             }
             else ->{
