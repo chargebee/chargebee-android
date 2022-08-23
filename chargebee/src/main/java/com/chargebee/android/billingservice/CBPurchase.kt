@@ -63,10 +63,14 @@ object CBPurchase {
             CBAuthentication.isSDKKeyValid(Chargebee.sdkKey){
                 when(it){
                     is ChargebeeResult.Success -> {
-                        if (billingClientManager?.isBillingClientReady() == true && billingClientManager?.isFeatureSupported() == true) {
-                            billingClientManager?.purchase(product, customerID, callback)
-                        } else {
-                            callback.onError(CBException(ErrorDetail("Play services not available")))
+                        if (billingClientManager?.isFeatureSupported() == true) {
+                            if (billingClientManager?.isBillingClientReady() == true) {
+                                billingClientManager?.purchase(product, customerID, callback)
+                            } else {
+                                callback.onError(CBException(ErrorDetail(GPErrorCode.BillingClientNotReady.errorMsg)))
+                            }
+                        }else {
+                            callback.onError(CBException(ErrorDetail(GPErrorCode.FeatureNotSupported.errorMsg)))
                         }
                     }
                     is ChargebeeResult.Error ->{

@@ -7,6 +7,7 @@ import android.os.Looper
 import android.text.TextUtils
 import android.util.Log
 import com.android.billingclient.api.*
+import com.android.billingclient.api.BillingClient.BillingResponseCode.*
 import com.chargebee.android.ErrorDetail
 import com.chargebee.android.exceptions.CBException
 import com.chargebee.android.exceptions.ChargebeeResult
@@ -206,7 +207,7 @@ class BillingClientManager constructor(
     /* Google Play calls this method to deliver the result of the Purchase Process/Operation */
     override fun onPurchasesUpdated(billingResult: BillingResult, purchases: MutableList<Purchase>?) {
         when (billingResult.responseCode) {
-            BillingClient.BillingResponseCode.OK -> {
+            OK -> {
                 purchases?.forEach { purchase ->
                     when (purchase.purchaseState) {
                         Purchase.PurchaseState.PURCHASED -> {
@@ -221,28 +222,40 @@ class BillingClientManager constructor(
                     }
                 }
             }
-            BillingClient.BillingResponseCode.ITEM_ALREADY_OWNED -> {
-                Log.e(TAG, "onPurchasesUpdated: ITEM_ALREADY_OWNED")
+            ITEM_ALREADY_OWNED -> {
+                Log.e(TAG, "Billing response code : ITEM_ALREADY_OWNED")
                 purchaseCallBack?.onError(CBException(ErrorDetail(GPErrorCode.ProductAlreadyOwned.errorMsg)))
             }
-            BillingClient.BillingResponseCode.SERVICE_DISCONNECTED -> {
+            SERVICE_DISCONNECTED -> {
                 connectToBillingService()
             }
-            BillingClient.BillingResponseCode.ITEM_UNAVAILABLE -> {
-                Log.e(TAG, "onPurchasesUpdated: ITEM_UNAVAILABLE")
+            ITEM_UNAVAILABLE -> {
+                Log.e(TAG, "Billing response code : ITEM_UNAVAILABLE")
                 purchaseCallBack?.onError(CBException(ErrorDetail(GPErrorCode.ProductUnavailable.errorMsg)))
             }
-            BillingClient.BillingResponseCode.USER_CANCELED ->{
-                Log.e(TAG, "onPurchasesUpdated : USER_CANCELED ")
+            USER_CANCELED ->{
+                Log.e(TAG, "Billing response code  : USER_CANCELED ")
                 purchaseCallBack?.onError(CBException(ErrorDetail(GPErrorCode.CanceledPurchase.errorMsg)))
             }
-            BillingClient.BillingResponseCode.ITEM_NOT_OWNED ->{
-                Log.e(TAG, "onPurchasesUpdated : ITEM_NOT_OWNED ")
+            ITEM_NOT_OWNED ->{
+                Log.e(TAG, "Billing response code  : ITEM_NOT_OWNED ")
                 purchaseCallBack?.onError(CBException(ErrorDetail(GPErrorCode.ProductNotOwned.errorMsg)))
             }
-            else -> {
-                Log.e(TAG, "Failed in Purchases"+billingResult.responseCode)
-                purchaseCallBack?.onError(CBException(ErrorDetail(billingResult.debugMessage)))
+            SERVICE_TIMEOUT  -> {
+                Log.e(TAG, "Billing response code :SERVICE_TIMEOUT ")
+                purchaseCallBack?.onError(CBException(ErrorDetail(GPErrorCode.PlayServiceTimeOut.errorMsg)))
+            }
+            SERVICE_UNAVAILABLE  -> {
+                Log.e(TAG, "Billing response code: SERVICE_UNAVAILABLE")
+                purchaseCallBack?.onError(CBException(ErrorDetail(GPErrorCode.PlayServiceUnavailable.errorMsg)))
+            }
+            ERROR  -> {
+                Log.e(TAG, "Billing response code: ERROR")
+                purchaseCallBack?.onError(CBException(ErrorDetail(GPErrorCode.UnknownError.errorMsg)))
+            }
+            DEVELOPER_ERROR  -> {
+                Log.e(TAG, "Billing response code: DEVELOPER_ERROR")
+                purchaseCallBack?.onError(CBException(ErrorDetail(GPErrorCode.DeveloperError.errorMsg)))
             }
         }
     }
