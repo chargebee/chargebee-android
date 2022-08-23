@@ -7,6 +7,7 @@ import android.os.Looper
 import android.text.TextUtils
 import android.util.Log
 import com.android.billingclient.api.*
+import com.android.billingclient.api.BillingClient.BillingResponseCode.*
 import com.chargebee.android.ErrorDetail
 import com.chargebee.android.exceptions.CBException
 import com.chargebee.android.exceptions.ChargebeeResult
@@ -28,7 +29,7 @@ class BillingClientManager constructor(
     private var callBack : CBCallback.ListProductsCallback<ArrayList<CBProduct>>
     private var purchaseCallBack: CBCallback.PurchaseCallback<String>? = null
     private val skusWithSkuDetails = arrayListOf<CBProduct>()
-    private val TAG = "BillingClientManager"
+    private val TAG = javaClass.simpleName
     var customerID : String = ""
     lateinit var product: CBProduct
 
@@ -52,7 +53,7 @@ class BillingClientManager constructor(
             BillingClient.BillingResponseCode.OK -> {
                 Log.i(
                     TAG,
-                    "onBillingSetupFinished() -> successfully for ${billingClient.toString()}."
+                    "Google Billing Setup Done!"
                 )
                 loadProductDetails(BillingClient.SkuType.SUBS, skuList, callBack)
             }
@@ -119,8 +120,6 @@ class BillingClientManager constructor(
                .setType(skuType)
                .build()
 
-           queryAllPurchases()
-
            billingClient.querySkuDetailsAsync(
                params
            ) { billingResult, skuDetailsList ->
@@ -140,12 +139,12 @@ class BillingClientManager constructor(
                        Log.i(TAG, "Product details :$skusWithSkuDetails")
                        callBack.onSuccess(productIDs = skusWithSkuDetails)
                    }catch (ex: CBException){
-                       callBack.onError(CBException(ErrorDetail(GPErrorCode.UnknownError.errorMsg)))
+                       callBack.onError(CBException(ErrorDetail("Error while parsing data")))
                        Log.e(TAG, "exception :" + ex.message)
                    }
                }else{
                    Log.e(TAG, "Response Code :" + billingResult.responseCode)
-                   callBack.onError(CBException(ErrorDetail("Service Unavailable")))
+                   callBack.onError(CBException(ErrorDetail(GPErrorCode.PlayServiceUnavailable.errorMsg)))
                }
            }
        }catch (exp: CBException){
@@ -176,6 +175,7 @@ class BillingClientManager constructor(
             .takeIf { billingResult -> billingResult.responseCode != BillingClient.BillingResponseCode.OK
             }?.let { billingResult ->
                 Log.e(TAG, "Failed to launch billing flow $billingResult")
+                purchaseCallBack.onError(CBException(ErrorDetail(GPErrorCode.LaunchBillingFlowError.errorMsg)))
             }
 
     }
@@ -206,7 +206,7 @@ class BillingClientManager constructor(
     /* Google Play calls this method to deliver the result of the Purchase Process/Operation */
     override fun onPurchasesUpdated(billingResult: BillingResult, purchases: MutableList<Purchase>?) {
         when (billingResult.responseCode) {
-            BillingClient.BillingResponseCode.OK -> {
+            OK -> {
                 purchases?.forEach { purchase ->
                     when (purchase.purchaseState) {
                         Purchase.PurchaseState.PURCHASED -> {
@@ -221,28 +221,40 @@ class BillingClientManager constructor(
                     }
                 }
             }
-            BillingClient.BillingResponseCode.ITEM_ALREADY_OWNED -> {
-                Log.e(TAG, "onPurchasesUpdated: ITEM_ALREADY_OWNED")
+            ITEM_ALREADY_OWNED -> {
+                Log.e(TAG, "Billing response code : ITEM_ALREADY_OWNED")
                 purchaseCallBack?.onError(CBException(ErrorDetail(GPErrorCode.ProductAlreadyOwned.errorMsg)))
             }
-            BillingClient.BillingResponseCode.SERVICE_DISCONNECTED -> {
+            SERVICE_DISCONNECTED -> {
                 connectToBillingService()
             }
-            BillingClient.BillingResponseCode.ITEM_UNAVAILABLE -> {
-                Log.e(TAG, "onPurchasesUpdated: ITEM_UNAVAILABLE")
+            ITEM_UNAVAILABLE -> {
+                Log.e(TAG, "Billing response code : ITEM_UNAVAILABLE")
                 purchaseCallBack?.onError(CBException(ErrorDetail(GPErrorCode.ProductUnavailable.errorMsg)))
             }
-            BillingClient.BillingResponseCode.USER_CANCELED ->{
-                Log.e(TAG, "onPurchasesUpdated : USER_CANCELED ")
+            USER_CANCELED ->{
+                Log.e(TAG, "Billing response code  : USER_CANCELED ")
                 purchaseCallBack?.onError(CBException(ErrorDetail(GPErrorCode.CanceledPurchase.errorMsg)))
             }
-            BillingClient.BillingResponseCode.ITEM_NOT_OWNED ->{
-                Log.e(TAG, "onPurchasesUpdated : ITEM_NOT_OWNED ")
+            ITEM_NOT_OWNED ->{
+                Log.e(TAG, "Billing response code  : ITEM_NOT_OWNED ")
                 purchaseCallBack?.onError(CBException(ErrorDetail(GPErrorCode.ProductNotOwned.errorMsg)))
             }
-            else -> {
-                Log.e(TAG, "Failed to PurchasesUpdated"+billingResult.responseCode)
+            SERVICE_TIMEOUT -> {
+                Log.e(TAG, "Billing response code :SERVICE_TIMEOUT ")
+                purchaseCallBack?.onError(CBException(ErrorDetail(GPErrorCode.PlayServiceTimeOut.errorMsg)))
+            }
+            SERVICE_UNAVAILABLE -> {
+                Log.e(TAG, "Billing response code: SERVICE_UNAVAILABLE")
+                purchaseCallBack?.onError(CBException(ErrorDetail(GPErrorCode.PlayServiceUnavailable.errorMsg)))
+            }
+            ERROR -> {
+                Log.e(TAG, "Billing response code: ERROR")
                 purchaseCallBack?.onError(CBException(ErrorDetail(GPErrorCode.UnknownError.errorMsg)))
+            }
+            DEVELOPER_ERROR -> {
+                Log.e(TAG, "Billing response code: DEVELOPER_ERROR")
+                purchaseCallBack?.onError(CBException(ErrorDetail(GPErrorCode.DeveloperError.errorMsg)))
             }
         }
     }
