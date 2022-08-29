@@ -145,6 +145,13 @@ object Chargebee {
             ResultHandler.safeExecuter({ ItemsResource().retrieveItem(itemId) }, completion, logger)
     }
 
+    /* Get the entitlement details from chargebee system */
+    @Throws(InvalidRequestException::class, OperationFailedException::class)
+    fun retrieveEntitlements(subscriptionId: String, completion: (ChargebeeResult<Any>) -> Unit) {
+        val logger = CBLogger(name = "Entitlements", action = "retrieve_entitlements")
+        ResultHandler.safeExecuter({ EntitlementsResource().retrieveEntitlements(subscriptionId) }, completion, logger)
+    }
+
     @Throws(InvalidRequestException::class, OperationFailedException::class)
     fun retrieve(addonId: String, handler: (CBResult<Addon>) -> Unit) {
         val logger = CBLogger(name = "addon", action = "retrieve_addon")

@@ -11,6 +11,7 @@ enum class CBMenu(val value: String) {
     ProductIDs("Get Google Play Product Identifiers"),
     GetProducts("Get Products"),
     SubsStatus("Get Subscription Status"),
-    SubsList("Get Subscriptions List")
+    SubsList("Get Subscriptions List"),
+    GetEntitlements("Get Entitlements")
 }
 
