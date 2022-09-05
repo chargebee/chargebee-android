@@ -303,10 +303,11 @@ class BillingClientManager constructor(
                     if (it.data.in_app_subscription != null){
                         val subscriptionId = (it.data).in_app_subscription.subscription_id
                         Log.i(TAG, "Subscription ID:  $subscriptionId")
+                        val subscriptionResult = (it.data).in_app_subscription
                         if (subscriptionId.isEmpty()) {
-                            purchaseCallBack?.onSuccess(subscriptionId, false)
+                            purchaseCallBack?.onSuccess(subscriptionResult, false)
                         } else {
-                            purchaseCallBack?.onSuccess(subscriptionId, true)
+                            purchaseCallBack?.onSuccess(subscriptionResult, true)
                         }
                     }else{
                         billingClient.endConnection()

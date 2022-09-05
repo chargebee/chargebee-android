@@ -1,6 +1,7 @@
 package com.chargebee.android.repository
 
 import com.chargebee.android.Chargebee
+import com.chargebee.android.models.CBEntitlements
 import com.chargebee.android.models.CBSubscription
 import com.chargebee.android.models.KeyValidationWrapper
 import com.chargebee.android.models.SubscriptionDetailsWrapper
@@ -31,4 +32,12 @@ internal interface PurchaseRepository {
         @Header("version") sdkVersion: String = Chargebee.sdkVersion,
         @QueryMap queryParams: Map<String, String>
     ): Response<CBSubscription?>
+
+    @GET("v2/subscriptions/{subscription_id}/subscription_entitlements")
+    suspend fun retrieveEntitlements(
+        @Header("Authorization") token: String = Chargebee.encodedApiKey,
+        @Header("platform") platform: String = Chargebee.platform,
+        @Header("version") sdkVersion: String = Chargebee.sdkVersion,
+        @Path("subscription_id") subscriptionId: String
+    ): Response<CBEntitlements?>
 }

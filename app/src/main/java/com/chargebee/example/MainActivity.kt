@@ -63,6 +63,11 @@ class MainActivity : BaseActivity(), ListItemsAdapter.ItemClickListener {
             Log.i(javaClass.simpleName, "subscription status:  $it")
             alertSuccess(it)
         }
+        this.mBillingViewModel!!.entitlementsResult.observeForever {
+            hideProgressDialog()
+            Log.i(javaClass.simpleName, "$it entitlements found")
+            alertSuccess("$it entitlements found from Chargebee system")
+        }
         this.mBillingViewModel!!.productIdsList.observeForever {
             hideProgressDialog()
             Log.i(javaClass.simpleName, "Google play product identifiers:  $it")
@@ -123,6 +128,9 @@ class MainActivity : BaseActivity(), ListItemsAdapter.ItemClickListener {
             CBMenu.SubsList.value -> {
                 val intent = Intent(this, SubscriptionActivity::class.java)
                 startActivity(intent)
+            }
+            CBMenu.GetEntitlements.value -> {
+                getSubscriptionId()
             }
             else ->{
                 Log.i(javaClass.simpleName, " Not implemented" )
@@ -221,6 +229,22 @@ class MainActivity : BaseActivity(), ListItemsAdapter.ItemClickListener {
             "Ok"
         ) { dialogInterface, i -> }
         val dialog = builder.create()
+        dialog.show()
+    }
+
+    private fun getSubscriptionId() {
+        val dialog = Dialog(this)
+        dialog.setContentView(R.layout.dialog_input_layout)
+        val input = dialog.findViewById<View>(R.id.productIdInput) as EditText
+        input.hint = "Please enter the subscriptionID"
+        val dialogButton = dialog.findViewById<View>(R.id.btn_ok) as Button
+        dialogButton.text = "OK"
+        dialogButton.setOnClickListener {
+            showProgressDialog()
+            val subscriptionId = input.text.toString().trim()
+            mBillingViewModel?.retrieveEntitlements(subscriptionId)
+            dialog.dismiss()
+        }
         dialog.show()
     }
 }
