@@ -178,6 +178,22 @@ Chargebee.retrieveSubscription(subscriptionId) {
        }
 }   
 ```
+
+#### Retrieve Entitlements of a Subscription
+
+Use the Subscription ID for fetching the list of [entitlements](https://www.chargebee.com/docs/2.0/entitlements.html) associated with the subscription. 
+
+```swift
+Chargebee.shared.retrieveEntitlements(forID: "SubscriptionID") { result in
+    switch result {
+    case let .success(result):
+        print("Status \(result.status)")
+    case let .error(error):
+        // Handle error here
+    }
+}
+```
+
 ### Integrating credit card tokenization
 The following section describes how to use the SDK to directly tokenize credit card information if you are NOT REQUIRED to use Google's in-app purchases.
 
