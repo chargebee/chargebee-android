@@ -11,6 +11,7 @@ import com.chargebee.android.exceptions.CBException
 import com.chargebee.android.exceptions.CBProductIDResult
 import com.chargebee.android.exceptions.ChargebeeResult
 import com.chargebee.android.models.*
+import com.chargebee.android.network.ReceiptDetail
 import com.google.gson.Gson
 
 class BillingViewModel : ViewModel() {
@@ -28,8 +29,9 @@ class BillingViewModel : ViewModel() {
     fun purchaseProduct(product: CBProduct, customerID: String) {
 
         CBPurchase.purchaseProduct(product, customerID,  object : CBCallback.PurchaseCallback<String>{
-            override fun onSuccess(subscriptionID: String, status:Boolean) {
-                Log.i(TAG, "Subscription ID:  $subscriptionID")
+            override fun onSuccess(result: ReceiptDetail, status:Boolean) {
+                Log.i(TAG, "Subscription ID:  ${result.subscription_id}")
+                Log.i(TAG, "Plan ID:  ${result.plan_id}")
                 productPurchaseResult.postValue(status)
             }
             override fun onError(error: CBException) {
