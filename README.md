@@ -183,15 +183,18 @@ Chargebee.retrieveSubscription(subscriptionId) {
 
 Use the Subscription ID for fetching the list of [entitlements](https://www.chargebee.com/docs/2.0/entitlements.html) associated with the subscription. 
 
-```swift
-Chargebee.shared.retrieveEntitlements(forID: "SubscriptionID") { result in
-    switch result {
-    case let .success(result):
-        print("Status \(result.status)")
-    case let .error(error):
-        // Handle error here
-    }
-}
+```kotlin
+Chargebee.retrieveEntitlements(subscriptionId) {
+      when(it){
+            is ChargebeeResult.Success -> {
+                Log.i(TAG, "Response:  ${(it.data)}") 
+            }
+            is ChargebeeResult.Error -> {
+                Log.e(TAG, "Error :  ${it.exp.message}")
+                // Handle error here
+           }
+     }
+}  
 ```
 
 **Note**: Entitlements feature is available only if your Chargebee site is on [Product Catalog 2.0](https://www.chargebee.com/docs/2.0/product-catalog.html).
