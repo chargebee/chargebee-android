@@ -21,7 +21,7 @@ The following requirements must be set up before installing Chargebee’s Androi
 The `Chargebee-Android` SDK can be installed by adding below dependency to the `build.gradle` file:
 
 ```kotlin
-implementation 'com.chargebee:chargebee-android:1.0.9'
+implementation 'com.chargebee:chargebee-android:1.0.10'
 ```
 
 ## Example project
@@ -368,7 +368,7 @@ Chargebee is available under the [MIT license](https://opensource.org/licenses/M
   To install Chargebee's Android SDK, add the following dependency to the build.gradle file.
   
   ```
-  implementation 'com.chargebee:chargebee-android:1.0.9'
+  implementation 'com.chargebee:chargebee-android:1.0.10'
   ```
   Example project
   ---------------
@@ -531,7 +531,24 @@ The above function will determine your product catalog version in Chargebee and 
          }
   }
   ```
-  
+  ### Retrieve Entitlements of a Subscription
+
+  Use the Subscription ID for fetching the list of [entitlements](https://www.chargebee.com/docs/2.0/entitlements.html) associated with the subscription.
+
+  ```kotlin
+  Chargebee.retrieveEntitlements(subscriptionId) {
+      when(it){
+            is ChargebeeResult.Success -> {
+                Log.i(TAG, "Response:  ${(it.data)}") 
+            }
+            is ChargebeeResult.Error ->{
+                Log.e(TAG, "Error :  ${it.exp.message}")
+                // Handle error here
+           }
+     }
+  }  
+  ```
+
   ### Integrating credit card tokenization
   
   The following section describes how to use the SDK to directly tokenize credit card information if you are NOT REQUIRED to use Google's in-app purchases.
