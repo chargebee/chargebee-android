@@ -29,6 +29,7 @@ object Chargebee {
     var applicationId: String = ""
     const val channel: String = "play_store"
     var appName: String = "Chargebee"
+    var environment: String = "cb_android_sdk"
     const val platform: String = "Android"
     const val sdkVersion: String = BuildConfig.VERSION_NAME
 

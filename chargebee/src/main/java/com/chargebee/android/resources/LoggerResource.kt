@@ -25,7 +25,7 @@ internal class LoggerResource: BaseResource(Chargebee.baseUrl) {
                         sdkVersion: String? = null): MutableMap<String, String?> {
         var data = mutableMapOf(
             "key" to "cb.logging",
-            "ref_module" to "cb_android_sdk",
+            "ref_module" to Chargebee.environment,
             "site" to Chargebee.site,
             "action" to action,
             "log_data_type" to type.value,
