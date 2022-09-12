@@ -410,7 +410,7 @@ class BillingClientManager constructor(
                 BillingClient.BillingResponseCode.DEVELOPER_ERROR,
                 BillingClient.BillingResponseCode.ERROR ->{
                     if (billingResult.debugMessage.isEmpty())
-                        priceChangeCallBack.onError(CBException(ErrorDetail("Error from Google Play Library")))
+                        priceChangeCallBack.onError(CBException(ErrorDetail(GPErrorCode.UnknownError.errorMsg)))
                     else
                         priceChangeCallBack.onError(CBException(ErrorDetail(billingResult.debugMessage)))
                 }
