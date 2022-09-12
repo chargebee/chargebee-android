@@ -537,7 +537,7 @@ The above function will determine your product catalog version in Chargebee and 
 
   These functions return the plan ID associated with a subscription. You can associate JSON metadata with the Google Play Store plans in Chargebee and retrieve the same by passing plan ID to the SDK method - [retrievePlan](https://github.com/chargebee/chargebee-android#get-plan-details)(PC 1.0) or [retrieveItem](https://github.com/chargebee/chargebee-android#get-item-details)(PC 2.0).
 
-  ### Retrieve Entitlements of a Subscription
+  #### Retrieve Entitlements of a Subscription
 
   Use the Subscription ID for fetching the list of [entitlements](https://www.chargebee.com/docs/2.0/entitlements.html) associated with the subscription.
 
@@ -554,7 +554,7 @@ The above function will determine your product catalog version in Chargebee and 
      }
   }  
   ```
-  
+
   **Note**: Entitlements feature is available only if your Chargebee site is on [Product Catalog 2.0](https://www.chargebee.com/docs/2.0/product-catalog.html).
 
   ### Integrating credit card tokenization
