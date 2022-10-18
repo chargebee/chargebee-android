@@ -274,8 +274,6 @@ class BillingClientManager constructor(
                         }else {
                             Log.i(TAG, "Google Purchase - success")
                             Log.i(TAG, "Purchase Token -${purchase.purchaseToken}")
-                            billingClient.endConnection()
-
                             validateReceipt(purchase.purchaseToken, product)
                         }
 
@@ -295,7 +293,6 @@ class BillingClientManager constructor(
         CBPurchase.validateReceipt(purchaseToken, customerID, product) {
             when(it) {
                 is ChargebeeResult.Success -> {
-                    billingClient.endConnection()
                     Log.i(
                         TAG,
                         "Validate Receipt Response:  ${(it.data as CBReceiptResponse).in_app_subscription}"
@@ -310,19 +307,16 @@ class BillingClientManager constructor(
                             purchaseCallBack?.onSuccess(subscriptionResult, true)
                         }
                     }else{
-                        billingClient.endConnection()
                         purchaseCallBack?.onError(CBException(ErrorDetail(GPErrorCode.PurchaseInvalid.errorMsg)))
                     }
                 }
                 is ChargebeeResult.Error -> {
                     Log.e(TAG, "Exception from Server - validateReceipt() :  ${it.exp.message}")
-                    billingClient.endConnection()
                     purchaseCallBack?.onError(CBException(ErrorDetail(it.exp.message)))
                 }
             }
         }
         }catch (exp: Exception){
-            billingClient.endConnection()
             Log.e(TAG, "Exception from Server- validateReceipt() :  ${exp.message}")
             purchaseCallBack?.onError(CBException(ErrorDetail(exp.message)))
         }
