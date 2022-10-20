@@ -256,6 +256,14 @@ class BillingClientManager constructor(
                 Log.e(TAG, "Billing response code: DEVELOPER_ERROR")
                 purchaseCallBack?.onError(CBException(ErrorDetail(GPErrorCode.DeveloperError.errorMsg)))
             }
+            BILLING_UNAVAILABLE -> {
+                Log.e(TAG, "Billing response code: BILLING_UNAVAILABLE")
+                purchaseCallBack?.onError(CBException(ErrorDetail(GPErrorCode.BillingUnavailable.errorMsg)))
+            }
+            FEATURE_NOT_SUPPORTED -> {
+                Log.e(TAG, "Billing response code: FEATURE_NOT_SUPPORTED")
+                purchaseCallBack?.onError(CBException(ErrorDetail(GPErrorCode.FeatureNotSupported.errorMsg)))
+            }
         }
     }
 
