@@ -3,6 +3,7 @@ package com.chargebee.android.billingservice
 import android.content.Context
 import android.text.TextUtils
 import android.util.Log
+import com.android.billingclient.api.BillingClient
 import com.chargebee.android.Chargebee
 import com.chargebee.android.ErrorDetail
 import com.chargebee.android.exceptions.*
@@ -40,6 +41,10 @@ object CBPurchase {
     @JvmStatic
     fun retrieveProducts(context: Context, params: ArrayList<String>, callBack : CBCallback.ListProductsCallback<ArrayList<CBProduct>>) {
         try {
+            val connectionState = billingClientManager?.billingClient?.connectionState
+            if (connectionState!=null && connectionState == BillingClient.ConnectionState.CONNECTED){
+                billingClientManager?.billingClient?.endConnection()
+            }
             billingClientManager = BillingClientManager(context,SkuType.SUBS, params, callBack)
         }catch (ex: CBException){
             callBack.onError(ex)

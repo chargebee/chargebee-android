@@ -55,32 +55,52 @@ public class BillingActivity extends BaseActivity implements ProductListAdapter.
         mItemsRecyclerView.setAdapter(productListAdapter);
 
         this.billingViewModel.getProductPurchaseResult().observe(this, status -> {
-            hideProgressDialog();
-            updateSubscribeStatus();
-            if(status) {
-                alertSuccess("Success");
-            }else{
-                alertSuccess("Failure");
-            }
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    hideProgressDialog();
+                    updateSubscribeStatus();
+                    if (status) {
+                        alertSuccess("Success");
+                    } else {
+                        alertSuccess("Failure");
+                    }
+                }
+            });
         });
 
         this.billingViewModel.getSubscriptionStatus().observe(this, status -> {
-           hideProgressDialog();
-           Log.i(TAG, "subscription status :"+status);
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    hideProgressDialog();
+                    Log.i(TAG, "subscription status :" + status);
 
-            alertSuccess(status);
+                    alertSuccess(status);
+                }
+            });
 
         });
 
         this.billingViewModel.getCbException().observe(this, error -> {
-            hideProgressDialog();
-            Log.i(TAG, "Error from server :"+error);
-            alertSuccess(error);
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    hideProgressDialog();
+                    Log.i(TAG, "Error from server :" + error);
+                    alertSuccess(error);
+                }
+            });
         });
         this.billingViewModel.getError().observe(this, error -> {
-            hideProgressDialog();
-            Log.i(TAG, "error from server:"+error);
-            alertSuccess(error);
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    hideProgressDialog();
+                    Log.i(TAG, "error from server:" + error);
+                    alertSuccess(error);
+                }
+            });
 
         });
 
