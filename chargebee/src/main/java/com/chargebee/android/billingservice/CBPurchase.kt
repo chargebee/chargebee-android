@@ -34,6 +34,7 @@ object CBPurchase {
     */
     @JvmStatic
     fun retrieveProductIdentifers(params: Array<String>, completion : (CBProductIDResult<ArrayList<String>>) -> Unit) {
+        if (params.isNotEmpty()) params[0] = params[0].ifEmpty { "100" }
         val queryParams = append(params,"Standard",Chargebee.channel)
         retrieveProductIDList(queryParams, completion)
     }
@@ -158,10 +159,9 @@ object CBPurchase {
                             productIdList.clear()
                             for (plan in  productsList){
                                 if (!TextUtils.isEmpty(plan.plan.channel)) {
-                                    if (plan.plan.channel.trim() == Chargebee.channel.trim()) {
-                                        val id = plan.plan.id.split("-")
-                                        productIdList.add(id[0])
-                                    }
+                                    val id = plan.plan.id.split("-")
+                                    productIdList.add(id[0])
+
                                 }
                             }
                             completion(CBProductIDResult.ProductIds(productIdList))
@@ -182,7 +182,6 @@ object CBPurchase {
                             val productsList = (it.data as ItemsWrapper).list
                             productIdList.clear()
                             for (item in  productsList){
-                                if (item.item.channel.trim() == Chargebee.channel.trim())
                                 productIdList.add(item.item.id)
                             }
                             completion(CBProductIDResult.ProductIds(productIdList))

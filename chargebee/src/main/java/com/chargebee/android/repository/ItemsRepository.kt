@@ -18,7 +18,7 @@ interface ItemsRepository {
         @Header("version") sdkVersion: String = Chargebee.sdkVersion,
         @Query("limit") limit: String,
         @Query("sort_by[desc]") name: String,
-        @Query("channel") channel: String
+        @Query("channel[is]") channel: String
     ): Response<ItemsWrapper?>
 
     @GET("v2/items/{itemId}")
