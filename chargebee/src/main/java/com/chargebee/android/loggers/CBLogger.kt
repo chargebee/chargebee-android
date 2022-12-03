@@ -1,5 +1,6 @@
 package com.chargebee.android.loggers
 
+import android.os.Build
 import com.chargebee.android.Chargebee
 import com.chargebee.android.resources.LogType
 import com.chargebee.android.resources.LoggerResource
@@ -19,10 +20,10 @@ class CBLogger(private val name: String,
         type: LogType,
         message: String? = null,
         code: Int? = null,
-        deviceModelName: String? = null,
-        platform: String? = null,
-        osVersion: String? = null,
-        sdkVersion: String? = null
+        deviceModelName: String? = Build.MODEL,
+        platform: String? = Chargebee.platform,
+        osVersion: String? = Build.VERSION.SDK_INT.toString(),
+        sdkVersion: String? = Chargebee.sdkVersion
     ) {
         if (Chargebee.allowErrorLogging) {
             LoggerResource().log(

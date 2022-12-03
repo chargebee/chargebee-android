@@ -3,6 +3,7 @@ package com.chargebee.android
 import android.text.TextUtils
 import android.util.Log
 import com.chargebee.android.BuildConfig
+import com.chargebee.android.billingservice.CBPurchase
 import com.chargebee.android.exceptions.*
 import com.chargebee.android.gateway.GatewayTokenizer
 import com.chargebee.android.loggers.CBLogger
@@ -32,6 +33,7 @@ object Chargebee {
     var environment: String = "cb_android_sdk"
     const val platform: String = "Android"
     const val sdkVersion: String = BuildConfig.VERSION_NAME
+    const val limit: String = "100"
 
     /* Configure the app details with chargebee system */
     fun configure(site: String, publishableApiKey: String, allowErrorLogging: Boolean = true, sdkKey: String="", packageName: String="" ) {
@@ -49,7 +51,6 @@ object Chargebee {
                 is ChargebeeResult.Success ->{
                     Log.i(javaClass.simpleName, "Environment Setup Completed")
                     Log.i(javaClass.simpleName, " Response :${it.data}")
-                    Log.i(javaClass.simpleName, "Note: pre-requisites configuration is mandatory for SDK to work. Learn more - https://www.chargebee.com/docs/2.0/mobile-playstore-connect.html")
                     val response = it.data as CBAuthResponse
                     this.version = response.in_app_detail.product_catalog_version
                     this.applicationId = response.in_app_detail.app_id
@@ -57,8 +58,53 @@ object Chargebee {
                 }
                 is ChargebeeResult.Error ->{
                     Log.i(javaClass.simpleName, "Exception from server :${it.exp.message}")
-                    Log.i(javaClass.simpleName, "Note: pre-requisites configuration is mandatory for SDK to work. Learn more - https://www.chargebee.com/docs/2.0/mobile-playstore-connect.html")
                     this.version = CatalogVersion.Unknown.value
+                }
+            }
+        }
+    }
+
+    /* Configure the app details with chargebee system */
+    fun configure(
+        site: String,
+        publishableApiKey: String,
+        allowErrorLogging: Boolean = true,
+        sdkKey: String = "",
+        packageName: String = "",
+        completion: (ChargebeeResult<Any>) -> Unit
+    ) {
+        this.applicationId = packageName
+        this.publishableApiKey = publishableApiKey
+        this.site = site
+        this.encodedApiKey = Credentials.basic(publishableApiKey, "")
+        this.baseUrl = "https://${site}.chargebee.com/api/"
+        this.allowErrorLogging = allowErrorLogging
+        this.sdkKey = sdkKey
+        val auth = Auth(sdkKey, applicationId, appName, channel)
+
+        CBAuthentication.authenticate(auth) {
+            when (it) {
+                is ChargebeeResult.Success -> {
+                    Log.i(javaClass.simpleName, "Environment Setup Completed")
+                    Log.i(javaClass.simpleName, " Response :${it.data}")
+                    val response = it.data as CBAuthResponse
+                    this.version = response.in_app_detail.product_catalog_version
+                    this.applicationId = response.in_app_detail.app_id
+                    this.appName = response.in_app_detail.app_name
+                    completion(ChargebeeResult.Success(response))
+                }
+                is ChargebeeResult.Error -> {
+                    Log.i(javaClass.simpleName, "Exception from server :${it.exp.message}")
+                    this.version = CatalogVersion.Unknown.value
+                    completion(
+                        ChargebeeResult.Error(
+                            exp = CBException(
+                                error = ErrorDetail(
+                                    message = "${it.exp.message}"
+                                )
+                            )
+                        )
+                    )
                 }
             }
         }
@@ -72,7 +118,7 @@ object Chargebee {
     }
     /* Get the subscriptions list from chargebee system by using Customer Id */
     @Throws(InvalidRequestException::class, OperationFailedException::class)
-    fun retrieveSubscriptions(queryParams: Map<String, String>, completion: (ChargebeeResult<Any>) -> Unit) {
+    fun retrieveSubscriptions(queryParams: Map<String, String> = mapOf(), completion: (ChargebeeResult<Any>) -> Unit) {
         val logger = CBLogger(name = "Subscription", action = "Fetch Subscription by using CustomerId")
         if (queryParams.isNotEmpty()) {
 
@@ -120,16 +166,27 @@ object Chargebee {
 
     /* Get the list of Items's from chargebee system */
     @Throws(InvalidRequestException::class, OperationFailedException::class)
-    fun retrieveAllItems(params: Array<String>, completion : (ChargebeeResult<Any>) -> Unit) {
+    fun retrieveAllItems(
+        params: Array<String> = arrayOf<String>(),
+        completion: (ChargebeeResult<Any>) -> Unit
+    ) {
         val logger = CBLogger(name = "items", action = "getAllItems")
-        if (params.isNullOrEmpty())
-            completion(ChargebeeResult.Error(
-                exp = CBException(
-                    error = ErrorDetail(message = "Query param is empty", apiErrorCode = "400")
+        if (params.isNotEmpty()) {
+            ResultHandler.safeExecuter(
+                { ItemsResource().retrieveAllItems(params) },
+                completion,
+                logger
+            )
+        } else {
+            ResultHandler.safeExecuter({
+                ItemsResource().retrieveAllItems(
+                    arrayOf(
+                        limit,
+                        "Standard"
+                    )
                 )
-            ))
-        else
-            ResultHandler.safeExecuter({ ItemsResource().retrieveAllItems(params) }, completion, logger)
+            }, completion, logger)
+        }
     }
 
     /* Get the Item details from chargebee system */

@@ -16,9 +16,9 @@ interface ItemsRepository {
         @Header("Authorization") token: String = Chargebee.encodedApiKey,
         @Header("platform") platform: String = Chargebee.platform,
         @Header("version") sdkVersion: String = Chargebee.sdkVersion,
-        @Query("limit") limit: String,
-        @Query("sort_by[desc]") name: String,
-        @Query("channel[is]") channel: String
+        @Query("limit") limit: String = "",
+        @Query("sort_by[desc]") sort: String = "",
+        @Query("channel[is]") channel: String = Chargebee.channel
     ): Response<ItemsWrapper?>
 
     @GET("v2/items/{itemId}")

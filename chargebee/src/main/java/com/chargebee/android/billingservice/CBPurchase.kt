@@ -33,10 +33,12 @@ object CBPurchase {
     * Get the product ID's from chargebee system
     */
     @JvmStatic
-    fun retrieveProductIdentifers(params: Array<String>, completion : (CBProductIDResult<ArrayList<String>>) -> Unit) {
-        if (params.isNotEmpty()) params[0] = params[0].ifEmpty { "100" }
-        val queryParams = append(params,"Standard",Chargebee.channel)
-        retrieveProductIDList(queryParams, completion)
+    fun retrieveProductIdentifers(params: Array<String> = arrayOf(), completion : (CBProductIDResult<ArrayList<String>>) -> Unit) {
+        if (params.isNotEmpty()) {
+            params[0] = params[0].ifEmpty { Chargebee.limit }
+            val queryParams = append(params)
+            retrieveProductIDList(queryParams, completion)
+        }else{retrieveProductIDList(arrayOf(Chargebee.limit,"Standard"), completion) }
     }
     /* Get the product/sku details from Play console */
     @JvmStatic
@@ -221,10 +223,9 @@ object CBPurchase {
             }
         }
     }
-    private fun append(arr: Array<String>, sort: String, channel: String ): Array<String> {
+    fun append(arr: Array<String>): Array<String> {
         val list: MutableList<String> = arr.toMutableList()
-        list.add(sort)
-        list.add(channel)
+        if (arr.size==1) list.add("Standard")
         return list.toTypedArray()
     }
 
