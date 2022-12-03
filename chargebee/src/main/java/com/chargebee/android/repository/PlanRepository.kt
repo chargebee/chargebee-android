@@ -26,6 +26,6 @@ internal interface PlanRepository {
         @Header("platform") platform: String = Chargebee.platform,
         @Header("version") sdkVersion: String = Chargebee.sdkVersion,
         @Query("sort_by[desc]") sort: String,
-        @Query("channel") channel: String
+        @Query("channel[is]") channel: String
     ): Response<PlansWrapper?>
 }

@@ -10,6 +10,7 @@ import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import java.net.UnknownHostException
 
 internal class ResultHandler {
     companion object {
@@ -38,13 +39,16 @@ internal class ResultHandler {
             logger: CBLogger? = null
         ) {
             try {
-                CoroutineScope(Dispatchers.IO + coroutineExceptionHandler()).launch {
+                CoroutineScope(Dispatchers.IO).launch {
                     val result: ChargebeeResult<T> = try {
                         logger?.info()
                         codeBlock()
                     } catch (ex: CBException) {
                         logger?.error(ex.message ?: "failed", ex.httpStatusCode)
                         ChargebeeResult.Error(ex)
+                    } catch (ex: UnknownHostException) {
+                        print("failed: ${ex.message}")
+                        ChargebeeResult.Error(exp = CBException(ErrorDetail(ex.message)))
                     } catch (ex: Exception) {
                         logger?.error(ex.message ?: "failed")
                         ChargebeeResult.Error(exp = CBException(ErrorDetail(ex.message)))
@@ -52,16 +56,16 @@ internal class ResultHandler {
                     completion(result)
                 }
             }catch (exp: Exception){
-                println("Exception in safeExecuter() ${exp.message}")
+                print("failed: ${exp.message}")
+                ChargebeeResult.Error(exp = CBException(ErrorDetail(exp.message)))
             }
 
         }
-        private fun coroutineExceptionHandler() : CoroutineExceptionHandler {
-            val coroutineExceptionHandler = CoroutineExceptionHandler{_, throwable ->
-                throwable.printStackTrace()
-                println("CoroutineExceptionHandler: ${throwable.message}")
-            }
-            return coroutineExceptionHandler
-        }
+//        private fun coroutineExceptionHandler() : CoroutineExceptionHandler {
+//            val coroutineExceptionHandler = CoroutineExceptionHandler{_, throwable ->
+//                print("CoroutineExceptionHandler: ${throwable.message}")
+//            }
+//            return coroutineExceptionHandler
+//        }
     }
 }

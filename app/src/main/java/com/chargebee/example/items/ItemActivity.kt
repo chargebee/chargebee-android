@@ -51,10 +51,7 @@ class ItemActivity: BaseActivity() {
             hideProgressDialog()
             if (it != null) {
                 errorText?.setText(
-                    Gson().fromJson<ErrorDetail>(
-                        it,
-                        ErrorDetail::class.java
-                    ).message
+                    it
                 )
             }
         })

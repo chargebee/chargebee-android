@@ -46,7 +46,7 @@ public class PlanInJavaActivity extends BaseActivity {
 
         this.viewModel.getPlanError().observe(this, message -> {
             hideProgressDialog();
-            errorText.setText(new Gson().fromJson(message, ErrorDetail.class).getMessage());
+            errorText.setText(message);
         });
         this.planButton.setOnClickListener(view -> {
             this.clearFields();

@@ -54,10 +54,7 @@ class BillingViewModel : ViewModel() {
                 }
                 is CBProductIDResult.Error -> {
                     Log.e(javaClass.simpleName, " ${it.exp.message}")
-                    error.postValue(Gson().fromJson<ErrorDetail>(
-                        it.exp.message,
-                        ErrorDetail::class.java
-                    ).message)
+                    error.postValue(it.exp.message)
                 }
             }
         }
@@ -79,10 +76,7 @@ class BillingViewModel : ViewModel() {
                 }
                 is ChargebeeResult.Error ->{
                     Log.e(TAG, "Exception from server- retrieveSubscription() :  ${it.exp.message}")
-                    error.postValue(Gson().fromJson<ErrorDetail>(
-                        it.exp.message,
-                        ErrorDetail::class.java
-                    ).message)
+                    error.postValue(it.exp.message)
                 }
             }
         }
@@ -95,10 +89,7 @@ class BillingViewModel : ViewModel() {
                 }
                 is ChargebeeResult.Error ->{
                     Log.e(TAG, "Exception from server- retrieveSubscriptions() :  ${it.exp.message}")
-                    error.postValue(Gson().fromJson<ErrorDetail>(
-                        it.exp.message,
-                        ErrorDetail::class.java
-                    ).message)
+                    error.postValue(it.exp.message)
                 }
             }
         }

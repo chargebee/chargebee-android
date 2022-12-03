@@ -33,9 +33,12 @@ object CBPurchase {
     * Get the product ID's from chargebee system
     */
     @JvmStatic
-    fun retrieveProductIdentifers(params: Array<String>, completion : (CBProductIDResult<ArrayList<String>>) -> Unit) {
-        val queryParams = append(params,"Standard",Chargebee.channel)
-        retrieveProductIDList(queryParams, completion)
+    fun retrieveProductIdentifers(params: Array<String> = arrayOf(), completion : (CBProductIDResult<ArrayList<String>>) -> Unit) {
+        if (params.isNotEmpty()) {
+            params[0] = params[0].ifEmpty { Chargebee.limit }
+            val queryParams = append(params)
+            retrieveProductIDList(queryParams, completion)
+        }else{retrieveProductIDList(arrayOf(Chargebee.limit,"Standard"), completion) }
     }
     /* Get the product/sku details from Play console */
     @JvmStatic
@@ -158,10 +161,9 @@ object CBPurchase {
                             productIdList.clear()
                             for (plan in  productsList){
                                 if (!TextUtils.isEmpty(plan.plan.channel)) {
-                                    if (plan.plan.channel.trim() == Chargebee.channel.trim()) {
-                                        val id = plan.plan.id.split("-")
-                                        productIdList.add(id[0])
-                                    }
+                                    val id = plan.plan.id.split("-")
+                                    productIdList.add(id[0])
+
                                 }
                             }
                             completion(CBProductIDResult.ProductIds(productIdList))
@@ -182,7 +184,6 @@ object CBPurchase {
                             val productsList = (it.data as ItemsWrapper).list
                             productIdList.clear()
                             for (item in  productsList){
-                                if (item.item.channel.trim() == Chargebee.channel.trim())
                                 productIdList.add(item.item.id)
                             }
                             completion(CBProductIDResult.ProductIds(productIdList))
@@ -222,10 +223,9 @@ object CBPurchase {
             }
         }
     }
-    private fun append(arr: Array<String>, sort: String, channel: String ): Array<String> {
+    fun append(arr: Array<String>): Array<String> {
         val list: MutableList<String> = arr.toMutableList()
-        list.add(sort)
-        list.add(channel)
+        if (arr.size==1) list.add("Standard")
         return list.toTypedArray()
     }
 

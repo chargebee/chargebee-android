@@ -47,10 +47,7 @@ class PlansActivity : BaseActivity(), ItemsAdapter.ItemClickListener {
         viewModel?.planError?.observe(this, Observer {
             hideProgressDialog()
             mErrorTextView?.setText(
-                Gson().fromJson<ErrorDetail>(
-                    it,
-                    ErrorDetail::class.java
-                ).message
+               it
             )
         })
     }
