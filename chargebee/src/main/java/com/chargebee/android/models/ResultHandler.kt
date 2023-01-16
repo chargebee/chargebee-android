@@ -39,7 +39,7 @@ internal class ResultHandler {
             logger: CBLogger? = null
         ) {
             try {
-                CoroutineScope(Dispatchers.IO).launch {
+                CoroutineScope(Dispatchers.IO + coroutineExceptionHandler()).launch {
                     val result: ChargebeeResult<T> = try {
                         logger?.info()
                         codeBlock()
@@ -61,11 +61,11 @@ internal class ResultHandler {
             }
 
         }
-//        private fun coroutineExceptionHandler() : CoroutineExceptionHandler {
-//            val coroutineExceptionHandler = CoroutineExceptionHandler{_, throwable ->
-//                print("CoroutineExceptionHandler: ${throwable.message}")
-//            }
-//            return coroutineExceptionHandler
-//        }
+        private fun coroutineExceptionHandler() : CoroutineExceptionHandler {
+            val coroutineExceptionHandler = CoroutineExceptionHandler{_, throwable ->
+                print("CoroutineExceptionHandler : ${throwable.message}")
+            }
+            return coroutineExceptionHandler
+        }
     }
 }
