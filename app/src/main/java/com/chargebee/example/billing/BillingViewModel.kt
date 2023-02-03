@@ -108,10 +108,7 @@ class BillingViewModel : ViewModel() {
                 }
                 is ChargebeeResult.Error ->{
                     Log.e(TAG, "Exception from server- retrieveEntitlements() :  ${it.exp.message}")
-                    error.postValue(Gson().fromJson<ErrorDetail>(
-                        it.exp.message,
-                        ErrorDetail::class.java
-                    ).message)
+                    error.postValue(it.exp.message)
                 }
             }
         }
