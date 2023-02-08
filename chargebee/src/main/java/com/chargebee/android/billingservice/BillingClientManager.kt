@@ -59,7 +59,7 @@ class BillingClientManager constructor(
             }
             BillingClient.BillingResponseCode.FEATURE_NOT_SUPPORTED,
             BillingClient.BillingResponseCode.BILLING_UNAVAILABLE -> {
-                callBack.onError(CBException(ErrorDetail(GPErrorCode.BillingUnavailable.errorMsg)))
+                callBack.onError(CBException(ErrorDetail(message = GPErrorCode.BillingUnavailable.errorMsg, httpStatusCode = billingResult.responseCode)))
                 Log.i(TAG, "onBillingSetupFinished() -> with error: ${billingResult.debugMessage}")
             }
             BillingClient.BillingResponseCode.SERVICE_DISCONNECTED,
@@ -139,17 +139,17 @@ class BillingClientManager constructor(
                        Log.i(TAG, "Product details :$skusWithSkuDetails")
                        callBack.onSuccess(productIDs = skusWithSkuDetails)
                    }catch (ex: CBException){
-                       callBack.onError(CBException(ErrorDetail("Error while parsing data")))
+                       callBack.onError(CBException(ErrorDetail(message = "Error while parsing data", httpStatusCode = billingResult.responseCode)))
                        Log.e(TAG, "exception :" + ex.message)
                    }
                }else{
                    Log.e(TAG, "Response Code :" + billingResult.responseCode)
-                   callBack.onError(CBException(ErrorDetail(GPErrorCode.PlayServiceUnavailable.errorMsg)))
+                   callBack.onError(CBException(ErrorDetail(message = GPErrorCode.PlayServiceUnavailable.errorMsg, httpStatusCode = billingResult.responseCode)))
                }
            }
        }catch (exp: CBException){
            Log.e(TAG, "exception :$exp.message")
-           callBack.onError(CBException(ErrorDetail("${exp.message}")))
+           callBack.onError(CBException(ErrorDetail(message = "${exp.message}")))
        }
 
     }
@@ -175,7 +175,7 @@ class BillingClientManager constructor(
             .takeIf { billingResult -> billingResult.responseCode != BillingClient.BillingResponseCode.OK
             }?.let { billingResult ->
                 Log.e(TAG, "Failed to launch billing flow $billingResult")
-                purchaseCallBack.onError(CBException(ErrorDetail(GPErrorCode.LaunchBillingFlowError.errorMsg)))
+                purchaseCallBack.onError(CBException(ErrorDetail(message = GPErrorCode.LaunchBillingFlowError.errorMsg, httpStatusCode = billingResult.responseCode)))
             }
 
     }
@@ -213,56 +213,56 @@ class BillingClientManager constructor(
                             acknowledgePurchase(purchase)
                         }
                         Purchase.PurchaseState.PENDING -> {
-                            purchaseCallBack?.onError(CBException(ErrorDetail(GPErrorCode.PurchasePending.errorMsg)))
+                            purchaseCallBack?.onError(CBException(ErrorDetail(message = GPErrorCode.PurchasePending.errorMsg, httpStatusCode = billingResult.responseCode)))
                         }
                         Purchase.PurchaseState.UNSPECIFIED_STATE -> {
-                            purchaseCallBack?.onError(CBException(ErrorDetail(GPErrorCode.PurchaseUnspecified.errorMsg)))
+                            purchaseCallBack?.onError(CBException(ErrorDetail(message = GPErrorCode.PurchaseUnspecified.errorMsg, httpStatusCode = billingResult.responseCode)))
                         }
                     }
                 }
             }
             ITEM_ALREADY_OWNED -> {
                 Log.e(TAG, "Billing response code : ITEM_ALREADY_OWNED")
-                purchaseCallBack?.onError(CBException(ErrorDetail(GPErrorCode.ProductAlreadyOwned.errorMsg)))
+                purchaseCallBack?.onError(CBException(ErrorDetail(message = GPErrorCode.ProductAlreadyOwned.errorMsg, httpStatusCode = billingResult.responseCode)))
             }
             SERVICE_DISCONNECTED -> {
                 connectToBillingService()
             }
             ITEM_UNAVAILABLE -> {
                 Log.e(TAG, "Billing response code : ITEM_UNAVAILABLE")
-                purchaseCallBack?.onError(CBException(ErrorDetail(GPErrorCode.ProductUnavailable.errorMsg)))
+                purchaseCallBack?.onError(CBException(ErrorDetail(message = GPErrorCode.ProductUnavailable.errorMsg, httpStatusCode = billingResult.responseCode)))
             }
             USER_CANCELED ->{
                 Log.e(TAG, "Billing response code  : USER_CANCELED ")
-                purchaseCallBack?.onError(CBException(ErrorDetail(GPErrorCode.CanceledPurchase.errorMsg)))
+                purchaseCallBack?.onError(CBException(ErrorDetail(message = GPErrorCode.CanceledPurchase.errorMsg, httpStatusCode = billingResult.responseCode)))
             }
             ITEM_NOT_OWNED ->{
                 Log.e(TAG, "Billing response code  : ITEM_NOT_OWNED ")
-                purchaseCallBack?.onError(CBException(ErrorDetail(GPErrorCode.ProductNotOwned.errorMsg)))
+                purchaseCallBack?.onError(CBException(ErrorDetail(message = GPErrorCode.ProductNotOwned.errorMsg, httpStatusCode = billingResult.responseCode)))
             }
             SERVICE_TIMEOUT -> {
                 Log.e(TAG, "Billing response code :SERVICE_TIMEOUT ")
-                purchaseCallBack?.onError(CBException(ErrorDetail(GPErrorCode.PlayServiceTimeOut.errorMsg)))
+                purchaseCallBack?.onError(CBException(ErrorDetail(message = GPErrorCode.PlayServiceTimeOut.errorMsg, httpStatusCode = billingResult.responseCode)))
             }
             SERVICE_UNAVAILABLE -> {
                 Log.e(TAG, "Billing response code: SERVICE_UNAVAILABLE")
-                purchaseCallBack?.onError(CBException(ErrorDetail(GPErrorCode.PlayServiceUnavailable.errorMsg)))
+                purchaseCallBack?.onError(CBException(ErrorDetail(message = GPErrorCode.PlayServiceUnavailable.errorMsg, httpStatusCode = billingResult.responseCode)))
             }
             ERROR -> {
                 Log.e(TAG, "Billing response code: ERROR")
-                purchaseCallBack?.onError(CBException(ErrorDetail(GPErrorCode.UnknownError.errorMsg)))
+                purchaseCallBack?.onError(CBException(ErrorDetail(message = GPErrorCode.UnknownError.errorMsg, httpStatusCode = billingResult.responseCode)))
             }
             DEVELOPER_ERROR -> {
                 Log.e(TAG, "Billing response code: DEVELOPER_ERROR")
-                purchaseCallBack?.onError(CBException(ErrorDetail(GPErrorCode.DeveloperError.errorMsg)))
+                purchaseCallBack?.onError(CBException(ErrorDetail(message = GPErrorCode.DeveloperError.errorMsg, httpStatusCode = billingResult.responseCode)))
             }
             BILLING_UNAVAILABLE -> {
                 Log.e(TAG, "Billing response code: BILLING_UNAVAILABLE")
-                purchaseCallBack?.onError(CBException(ErrorDetail(GPErrorCode.BillingUnavailable.errorMsg)))
+                purchaseCallBack?.onError(CBException(ErrorDetail(message = GPErrorCode.BillingUnavailable.errorMsg, httpStatusCode = billingResult.responseCode)))
             }
             FEATURE_NOT_SUPPORTED -> {
                 Log.e(TAG, "Billing response code: FEATURE_NOT_SUPPORTED")
-                purchaseCallBack?.onError(CBException(ErrorDetail(GPErrorCode.FeatureNotSupported.errorMsg)))
+                purchaseCallBack?.onError(CBException(ErrorDetail(message = GPErrorCode.FeatureNotSupported.errorMsg, httpStatusCode = billingResult.responseCode)))
             }
         }
     }
@@ -278,7 +278,7 @@ class BillingClientManager constructor(
                     try {
                         if (purchase.purchaseToken.isEmpty()){
                             Log.e(TAG, "Receipt Not Found")
-                            purchaseCallBack?.onError(CBException(ErrorDetail(message = GPErrorCode.PurchaseReceiptNotFound.errorMsg)))
+                            purchaseCallBack?.onError(CBException(ErrorDetail(message = GPErrorCode.PurchaseReceiptNotFound.errorMsg, httpStatusCode = billingResult.responseCode)))
                         }else {
                             Log.i(TAG, "Google Purchase - success")
                             Log.i(TAG, "Purchase Token -${purchase.purchaseToken}")
@@ -298,7 +298,7 @@ class BillingClientManager constructor(
     /* Chargebee method called here to validate receipt */
     private fun validateReceipt(purchaseToken: String, product: CBProduct) {
         try{
-        CBPurchase.validateReceipt(purchaseToken, customerID, product) {
+        CBPurchase.validateReceipt("purchaseToken", customerID, product) {
             when(it) {
                 is ChargebeeResult.Success -> {
                     Log.i(
@@ -315,18 +315,18 @@ class BillingClientManager constructor(
                             purchaseCallBack?.onSuccess(subscriptionResult, true)
                         }
                     }else{
-                        purchaseCallBack?.onError(CBException(ErrorDetail(GPErrorCode.PurchaseInvalid.errorMsg)))
+                        purchaseCallBack?.onError(CBException(ErrorDetail(message = GPErrorCode.PurchaseInvalid.errorMsg)))
                     }
                 }
                 is ChargebeeResult.Error -> {
                     Log.e(TAG, "Exception from Server - validateReceipt() :  ${it.exp.message}")
-                    purchaseCallBack?.onError(CBException(ErrorDetail(it.exp.message)))
+                    purchaseCallBack?.onError(it.exp)
                 }
             }
         }
         }catch (exp: Exception){
             Log.e(TAG, "Exception from Server- validateReceipt() :  ${exp.message}")
-            purchaseCallBack?.onError(CBException(ErrorDetail(exp.message)))
+            purchaseCallBack?.onError(CBException(ErrorDetail(message = exp.message)))
         }
     }
 
