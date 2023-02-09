@@ -32,7 +32,7 @@ class PlansActivity : BaseActivity(), ItemsAdapter.ItemClickListener {
         this.mErrorTextView = findViewById(R.id.errorMessage)
         viewModel = PlanViewModel()
         showProgressDialog()
-        val queryParam = arrayOf("Standard", Chargebee.channel)
+        val queryParam = arrayOf("10")
         viewModel!!.retrieveAllPlans(queryParam)
 
         viewModel?.mPlansResult?.observe(this, Observer {
