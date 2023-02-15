@@ -57,7 +57,7 @@ class BillingClientManagerTest  {
     fun setUp() {
         MockitoAnnotations.initMocks(this)
         Chargebee.configure(
-            site = "cb-imay-test",
+            site = "site-name",
             publishableApiKey = "test_EojsGoGFeHoc3VpGPQDOZGAxYy3d0FF3",
             sdkKey = "cb-wpkheixkuzgxbnt23rzslg724y"
         )
