@@ -25,7 +25,7 @@ internal interface PlanRepository {
         @Header("Authorization") token: String = Chargebee.encodedApiKey,
         @Header("platform") platform: String = Chargebee.platform,
         @Header("version") sdkVersion: String = Chargebee.sdkVersion,
-        @Query("limit") limit: String = "",
+        @Query("limit") limit: String = Chargebee.limit,
         @Query("sort_by[desc]") sort: String = "Standard",
         @Query("channel[is]") channel: String = Chargebee.channel
     ): Response<PlansWrapper?>
