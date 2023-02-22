@@ -18,7 +18,7 @@ internal class PlanResource: BaseResource(Chargebee.baseUrl) {
     }
 
     suspend fun retrieveAllPlans(params: Array<String>): ChargebeeResult<Any> {
-        val itemsResponse = apiClient.create(PlanRepository::class.java).retrieveAllPlans(sort = params.get(0), channel = params.get(1))
+        val itemsResponse = apiClient.create(PlanRepository::class.java).retrieveAllPlans(limit = params[0])
 
         Log.i(javaClass.simpleName, " Response :$itemsResponse")
         return responseFromServer(

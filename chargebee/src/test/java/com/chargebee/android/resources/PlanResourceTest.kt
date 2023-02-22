@@ -23,36 +23,31 @@ import java.util.concurrent.CountDownLatch
 
 @RunWith(MockitoJUnitRunner::class)
 class PlanResourceTest {
-
+    private var queryParam = arrayOf("5")
+    private var lock = CountDownLatch(1)
+    private var exception = CBException(ErrorDetail("Error"))
+    private var planId = "Standard"
     @Before
     fun setUp(){
         MockitoAnnotations.initMocks(this)
         Chargebee.configure(
-            site = "cb-imay-test",
-            publishableApiKey = "test_EojsGoGFeHoc3VpGPQDOZGAxYy3d0FF3",
-            sdkKey = "cb-j53yhbfmtfhfhkmhow3ramecom"
+            site = "site-name",
+            publishableApiKey = "api-key",
+            sdkKey = "sdk-key"
         )
 
     }
     @After
     fun tearDown(){
-
+        lock = CountDownLatch(0)
     }
     @Test
     fun test_retrievePlansList_success(){
-        val plan = Plan(
-            "id", "name", "invoice", 123, 123, "", "",
-            12, 23, "", false, false, "false", false,
-            9, false, "app_store", 7, "", "", false, "", false, false
-        )
-
-        val queryParam = arrayOf("Standard", "app_store")
-        val lock = CountDownLatch(1)
-        Plan.retrieveAllPlans(queryParam) {
+        Chargebee.retrieveAllPlans(queryParam) {
             when (it) {
                 is ChargebeeResult.Success -> {
                     lock.countDown()
-                    System.out.println("List plans :"+it.data)
+                    print("List plans :"+it.data)
                     MatcherAssert.assertThat(
                         (it.data),
                         Matchers.instanceOf(PlansWrapper::class.java)
@@ -60,16 +55,15 @@ class PlanResourceTest {
                 }
                 is ChargebeeResult.Error -> {
                     lock.countDown()
-                    System.out.println("Error :"+it.exp.message)
+                    print("Error :"+it.exp.message)
                 }
             }
         }
         lock.await()
-
         CoroutineScope(Dispatchers.IO).launch {
             Mockito.`when`(PlanResource().retrieveAllPlans(queryParam)).thenReturn(
                 ChargebeeResult.Success(
-                    plan
+                    ""
                 )
             )
             Mockito.verify(PlanResource(), times(1)).retrieveAllPlans(queryParam)
@@ -77,14 +71,11 @@ class PlanResourceTest {
     }
     @Test
     fun test_retrievePlansList_error(){
-        val exception = CBException(ErrorDetail("Error"))
-        val queryParam = arrayOf("Standard", "app_store")
-        val lock = CountDownLatch(1)
-        Plan.retrieveAllPlans(queryParam) {
+        Chargebee.retrieveAllPlans(queryParam) {
             when (it) {
                 is ChargebeeResult.Success -> {
                     lock.countDown()
-                    System.out.println("List plans :"+it.data)
+                    print("List plans :"+it.data)
                     MatcherAssert.assertThat(
                         (it.data),
                         Matchers.instanceOf(PlansWrapper::class.java)
@@ -92,12 +83,11 @@ class PlanResourceTest {
                 }
                 is ChargebeeResult.Error -> {
                     lock.countDown()
-                    System.out.println("Error :"+it.exp.message)
+                    print("Error :"+it.exp.message)
                 }
             }
         }
         lock.await()
-
         CoroutineScope(Dispatchers.IO).launch {
             Mockito.`when`(PlanResource().retrieveAllPlans(queryParam)).thenReturn(
                 ChargebeeResult.Error(
@@ -109,19 +99,11 @@ class PlanResourceTest {
     }
     @Test
     fun test_retrievePlan_success(){
-        val plan = Plan(
-            "id", "name", "invoice", 123, 123, "", "",
-            12, 23, "", false, false, "false", false,
-            9, false, "app_store", 7, "", "", false, "", false, false
-        )
-
-        val queryParam = "Standard"
-        val lock = CountDownLatch(1)
-        Plan.retrievePlan(queryParam) {
+        Chargebee.retrievePlan(planId) {
             when (it) {
                 is ChargebeeResult.Success -> {
                     lock.countDown()
-                    System.out.println("List plans :"+it.data)
+                    print("Plan Detail :"+it.data)
                     MatcherAssert.assertThat(
                         (it.data),
                         Matchers.instanceOf(PlansWrapper::class.java)
@@ -129,31 +111,27 @@ class PlanResourceTest {
                 }
                 is ChargebeeResult.Error -> {
                     lock.countDown()
-                    System.out.println("Error :"+it.exp.message)
+                    print("Error :"+it.exp.message)
                 }
             }
         }
         lock.await()
-
         CoroutineScope(Dispatchers.IO).launch {
-            Mockito.`when`(PlanResource().retrievePlan(queryParam)).thenReturn(
+            Mockito.`when`(PlanResource().retrievePlan(planId)).thenReturn(
                 ChargebeeResult.Success(
-                    plan
+                    ""
                 )
             )
-            Mockito.verify(PlanResource(), times(1)).retrievePlan(queryParam)
+            Mockito.verify(PlanResource(), times(1)).retrievePlan(planId)
         }
     }
     @Test
     fun test_retrievePlan_error(){
-        val exception = CBException(ErrorDetail("Error"))
-        val queryParam = "Standard"
-        val lock = CountDownLatch(1)
-        Plan.retrievePlan(queryParam) {
+        Chargebee.retrievePlan(planId) {
             when (it) {
                 is ChargebeeResult.Success -> {
                     lock.countDown()
-                    System.out.println("List plans :"+it.data)
+                    print("List plans :"+it.data)
                     MatcherAssert.assertThat(
                         (it.data),
                         Matchers.instanceOf(PlansWrapper::class.java)
@@ -161,19 +139,51 @@ class PlanResourceTest {
                 }
                 is ChargebeeResult.Error -> {
                     lock.countDown()
-                    System.out.println("Error :"+it.exp.message)
+                    print("Error :"+it.exp.message)
                 }
             }
         }
         lock.await()
-
         CoroutineScope(Dispatchers.IO).launch {
-            Mockito.`when`(PlanResource().retrievePlan(queryParam)).thenReturn(
+            Mockito.`when`(PlanResource().retrievePlan(planId)).thenReturn(
                 ChargebeeResult.Error(
                     exception
                 )
             )
-            Mockito.verify(PlanResource(), times(1)).retrievePlan(queryParam)
+            Mockito.verify(PlanResource(), times(1)).retrievePlan(planId)
+        }
+    }
+
+    @Test
+    fun test_retrievePlansListWithNoParams(){
+        val exception = CBException(ErrorDetail("Error"))
+        val queryParam = arrayOf("")
+        val lock = CountDownLatch(1)
+        Chargebee.retrieveAllPlans() {
+            when (it) {
+                is ChargebeeResult.Success -> {
+                    lock.countDown()
+                    print("List plans :"+it.data)
+                    MatcherAssert.assertThat(
+                        (it.data),
+                        Matchers.instanceOf(PlansWrapper::class.java)
+                    )
+                }
+                is ChargebeeResult.Error -> {
+                    lock.countDown()
+                    print("Error :"+it.exp.message)
+                }
+            }
+        }
+        lock.await()
+        CoroutineScope(Dispatchers.IO).launch {
+            Mockito.`when`(PlanResource().retrieveAllPlans(queryParam)).thenReturn(
+                ChargebeeResult.Success(
+                    ""
+                )
+            )
+            Mockito.verify(PlanResource(), times(1)).retrieveAllPlans(queryParam)
+            Mockito.verify(Chargebee.retrieveAllPlans(){}, times(1))
         }
     }
 }
