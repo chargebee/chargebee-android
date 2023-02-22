@@ -38,7 +38,7 @@ object CBPurchase {
             params[0] = params[0].ifEmpty { Chargebee.limit }
             val queryParams = append(params)
             retrieveProductIDList(queryParams, completion)
-        }else{retrieveProductIDList(arrayOf(Chargebee.limit,"Standard"), completion) }
+        }else{retrieveProductIDList(arrayOf(), completion) }
     }
     /* Get the product/sku details from Play console */
     @JvmStatic

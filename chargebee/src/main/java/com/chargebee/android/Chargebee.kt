@@ -131,7 +131,7 @@ object Chargebee {
     /* Get the Plan details from chargebee system */
     @Throws(InvalidRequestException::class, OperationFailedException::class)
     fun retrievePlan(planId: String, completion : (ChargebeeResult<Any>) -> Unit) {
-        val logger = CBLogger(name = "plan", action = "getAllPlan")
+        val logger = CBLogger(name = "plan", action = "getPlan")
         if (TextUtils.isEmpty(planId))
             completion(ChargebeeResult.Error(
                 exp = CBException(
@@ -144,16 +144,23 @@ object Chargebee {
 
     /* Get the list of Plan's from chargebee system */
     @Throws(InvalidRequestException::class, OperationFailedException::class)
-    fun retrieveAllPlans(params: Array<String>, completion : (ChargebeeResult<Any>) -> Unit) {
-        val logger = CBLogger(name = "plans", action = "getPlan")
-        if (params.isNullOrEmpty())
-            completion(ChargebeeResult.Error(
-                exp = CBException(
-                    error = ErrorDetail(message = "Query param is empty", httpStatusCode = 400)
+    fun retrieveAllPlans(params: Array<String> = arrayOf(), completion : (ChargebeeResult<Any>) -> Unit) {
+        val logger = CBLogger(name = "plans", action = "getAllPlan")
+        if (params.isNotEmpty()) {
+            ResultHandler.safeExecuter(
+                { PlanResource().retrieveAllPlans(params) },
+                completion,
+                logger
+            )
+        } else {
+            ResultHandler.safeExecuter({
+                PlanResource().retrieveAllPlans(
+                    arrayOf(
+                        limit
+                    )
                 )
-            ))
-        else
-            ResultHandler.safeExecuter({ PlanResource().retrieveAllPlans(params) }, completion, logger)
+            }, completion, logger)
+        }
     }
 
     /* Get the list of Items's from chargebee system */
