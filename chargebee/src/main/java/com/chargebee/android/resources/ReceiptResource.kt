@@ -12,9 +12,9 @@ import com.chargebee.android.responseFromServer
 internal class ReceiptResource : BaseResource(baseUrl = Chargebee.baseUrl){
 
     internal suspend fun validateReceipt(params: Params): ChargebeeResult<Any> {
-        var dataMap = mapOf<String, String>()
+        var dataMap = mapOf<String, String?>()
         val paramDetail = CBReceiptRequestBody.fromCBReceiptReqBody(params)
-        dataMap = if (!(TextUtils.isEmpty(params.customerId))) {
+        dataMap = if (params.customerData != null) {
             paramDetail.toCBReceiptReqBody()
         }else{
             paramDetail.toMap()

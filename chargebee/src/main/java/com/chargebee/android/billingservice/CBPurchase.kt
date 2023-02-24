@@ -10,10 +10,7 @@ import com.chargebee.android.exceptions.*
 import com.chargebee.android.loggers.CBLogger
 import com.chargebee.android.models.*
 import com.chargebee.android.models.ResultHandler
-import com.chargebee.android.network.Auth
-import com.chargebee.android.network.CBAuthResponse
-import com.chargebee.android.network.CBAuthentication
-import com.chargebee.android.network.Params
+import com.chargebee.android.network.*
 import com.chargebee.android.resources.CatalogVersion
 import com.chargebee.android.resources.ReceiptResource
 import java.util.ArrayList
@@ -21,7 +18,7 @@ object CBPurchase {
 
     var billingClientManager: BillingClientManager? = null
     val productIdList = arrayListOf<String>()
-    var price: String = ""
+    private var customerData : CBCustomer? = null
 
     annotation class SkuType {
         companion object {
@@ -56,15 +53,17 @@ object CBPurchase {
     /* Buy the product with/without customer Id */
     @JvmStatic
     fun purchaseProduct(
-        product: CBProduct, customerID: String,
+        product: CBProduct, customerData: CBCustomer? = null,
         callback: CBCallback.PurchaseCallback<String>) {
+        this.customerData = customerData
+
         if (!TextUtils.isEmpty(Chargebee.sdkKey)){
             CBAuthentication.isSDKKeyValid(Chargebee.sdkKey){
                 when(it){
                     is ChargebeeResult.Success -> {
                         if (billingClientManager?.isFeatureSupported() == true) {
                             if (billingClientManager?.isBillingClientReady() == true) {
-                                billingClientManager?.purchase(product, customerID, callback)
+                                billingClientManager?.purchase(product, callback)
                             } else {
                                 callback.onError(CBException(ErrorDetail(GPErrorCode.BillingClientNotReady.errorMsg)))
                             }
@@ -86,13 +85,13 @@ object CBPurchase {
 
     /* Chargebee Method - used to validate the receipt of purchase  */
     @JvmStatic
-    fun validateReceipt(purchaseToken: String, customerID: String, product: CBProduct, completion : (ChargebeeResult<Any>) -> Unit) {
+    fun validateReceipt(purchaseToken: String, product: CBProduct, completion : (ChargebeeResult<Any>) -> Unit) {
         try {
             val logger = CBLogger(name = "buy", action = "process_purchase_command")
             val params = Params(
                 purchaseToken,
                 product.productId,
-                customerID,
+                customerData,
                 Chargebee.channel
             )
 
