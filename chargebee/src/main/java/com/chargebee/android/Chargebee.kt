@@ -122,7 +122,7 @@ object Chargebee {
         }else{
             completion(ChargebeeResult.Error(
                 exp = CBException(
-                    error = ErrorDetail(message = "Array/Query Param is empty", httpStatusCode = 400)
+                    error = ErrorDetail(message = "Array/Query Param is empty", apiErrorCode = "400", httpStatusCode = 400)
                 )
             ))
         }
@@ -135,7 +135,7 @@ object Chargebee {
         if (TextUtils.isEmpty(planId))
             completion(ChargebeeResult.Error(
                 exp = CBException(
-                    error = ErrorDetail(message = "Plan ID is empty", httpStatusCode = 400)
+                    error = ErrorDetail(message = "Plan ID is empty",  apiErrorCode = "400", httpStatusCode = 400)
                 )
             ))
         else
@@ -195,7 +195,7 @@ object Chargebee {
         if (TextUtils.isEmpty(itemId))
             completion(ChargebeeResult.Error(
                 exp = CBException(
-                    error = ErrorDetail(message = "Item ID is empty", httpStatusCode = 400)
+                    error = ErrorDetail(message = "Item ID is empty", apiErrorCode = "400", httpStatusCode = 400)
                 )
             ))
         else
