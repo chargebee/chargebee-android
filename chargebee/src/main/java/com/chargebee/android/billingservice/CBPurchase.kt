@@ -18,7 +18,8 @@ object CBPurchase {
 
     var billingClientManager: BillingClientManager? = null
     val productIdList = arrayListOf<String>()
-    private var customerData : CBCustomer? = null
+    private var customer : CBCustomer? = null
+    private var customerID: String = ""
 
     annotation class SkuType {
         companion object {
@@ -50,12 +51,46 @@ object CBPurchase {
             callBack.onError(ex)
         }
     }
+
+    /* Buy the product with/without customer Id */
+    @Deprecated(message = "This will be removed in upcoming release, Please use API fun - purchaseProduct(product: CBProduct, customer : CBCustomer? = null, callback)", level = DeprecationLevel.WARNING)
+    @JvmStatic
+    fun purchaseProduct(
+        product: CBProduct, customerID: String,
+        callback: CBCallback.PurchaseCallback<String>) {
+        this.customerID = customerID
+        if (!TextUtils.isEmpty(Chargebee.sdkKey)){
+            CBAuthentication.isSDKKeyValid(Chargebee.sdkKey){
+                when(it){
+                    is ChargebeeResult.Success -> {
+                        if (billingClientManager?.isFeatureSupported() == true) {
+                            if (billingClientManager?.isBillingClientReady() == true) {
+                                billingClientManager?.purchase(product, callback)
+                            } else {
+                                callback.onError(CBException(ErrorDetail(GPErrorCode.BillingClientNotReady.errorMsg)))
+                            }
+                        }else {
+                            callback.onError(CBException(ErrorDetail(GPErrorCode.FeatureNotSupported.errorMsg)))
+                        }
+                    }
+                    is ChargebeeResult.Error ->{
+                        Log.i(javaClass.simpleName, "Exception from server :${it.exp.message}")
+                        callback.onError(CBException(ErrorDetail(it.exp.message)))
+                    }
+                }
+            }
+        }else{
+            Log.i(javaClass.simpleName, "SDK key not available to proceed purchase")
+            callback.onError(CBException(ErrorDetail("SDK key not available to proceed purchase")))
+        }
+    }
+
     /* Buy the product with/without customer Id */
     @JvmStatic
     fun purchaseProduct(
-        product: CBProduct, customerData: CBCustomer? = null,
+        product: CBProduct, customer: CBCustomer? = null,
         callback: CBCallback.PurchaseCallback<String>) {
-        this.customerData = customerData
+        this.customer = customer
 
         if (!TextUtils.isEmpty(Chargebee.sdkKey)){
             CBAuthentication.isSDKKeyValid(Chargebee.sdkKey){
@@ -91,7 +126,8 @@ object CBPurchase {
             val params = Params(
                 purchaseToken,
                 product.productId,
-                customerData,
+                customerID,
+                customer,
                 Chargebee.channel
             )
 

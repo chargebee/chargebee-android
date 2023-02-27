@@ -2,27 +2,38 @@ package com.chargebee.android.network
 
 internal class CBReceiptRequestBody(   val receipt: String,
                                        val productId: String,
-                                       val customerData: CBCustomer?,
+                                       val customerId: String,
+                                       val customer: CBCustomer?,
                                        val channel: String) {
     companion object {
         fun fromCBReceiptReqBody(params: Params): CBReceiptRequestBody {
             return CBReceiptRequestBody(
                params.receipt,
                 params.productId,
-                params.customerData,
+                params.customerId,
+                params.customer,
                 params.channel
             )
         }
     }
 
-    fun toCBReceiptReqBody(): Map<String, String?> {
+    fun toCBReceiptReqBody(): Map<String, String> {
         return mapOf(
             "receipt" to this.receipt,
             "product[id]" to this.productId,
-            "customer[id]" to this.customerData?.id,
-            "customer[first_name]" to this.customerData?.firstName,
-            "customer[last_name]" to this.customerData?.lastName,
-            "customer[email]" to this.customerData?.email,
+            "customer[id]" to this.customerId,
+            "channel" to this.channel
+        )
+    }
+
+    fun toCBReceiptReqCustomerBody(): Map<String, String?> {
+        return mapOf(
+            "receipt" to this.receipt,
+            "product[id]" to this.productId,
+            "customer[id]" to this.customer?.id,
+            "customer[first_name]" to this.customer?.firstName,
+            "customer[last_name]" to this.customer?.lastName,
+            "customer[email]" to this.customer?.email,
             "channel" to this.channel
         )
     }
@@ -38,7 +49,8 @@ internal class CBReceiptRequestBody(   val receipt: String,
 data class Params(
     val receipt: String,
     val productId: String,
-    val customerData: CBCustomer?,
+    val customerId: String,
+    val customer: CBCustomer?,
     val channel: String
 )
 data class CBCustomer(

@@ -27,9 +27,26 @@ class BillingViewModel : ViewModel() {
     var entitlementsResult: MutableLiveData<String?> = MutableLiveData()
     private var subscriptionId: String = ""
 
-    fun purchaseProduct(product: CBProduct, customerData: CBCustomer) {
+    fun purchaseProduct(product: CBProduct, customer: CBCustomer) {
 
-        CBPurchase.purchaseProduct(product, customerData,  object : CBCallback.PurchaseCallback<String>{
+        CBPurchase.purchaseProduct(product, customer,  object : CBCallback.PurchaseCallback<String>{
+            override fun onSuccess(result: ReceiptDetail, status:Boolean) {
+                Log.i(TAG, "Subscription ID:  ${result.subscription_id}")
+                Log.i(TAG, "Plan ID:  ${result.plan_id}")
+                productPurchaseResult.postValue(status)
+            }
+            override fun onError(error: CBException) {
+                try {
+                    cbException.postValue(error.message)
+                }catch (exp: Exception){
+                    Log.i(TAG, "Exception :${exp.message}")
+                }
+            }
+        })
+    }
+    fun purchaseProduct(product: CBProduct, customerId: String) {
+
+        CBPurchase.purchaseProduct(product, customerId,  object : CBCallback.PurchaseCallback<String>{
             override fun onSuccess(result: ReceiptDetail, status:Boolean) {
                 Log.i(TAG, "Subscription ID:  ${result.subscription_id}")
                 Log.i(TAG, "Plan ID:  ${result.plan_id}")

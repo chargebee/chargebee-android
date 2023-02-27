@@ -137,13 +137,17 @@ public class BillingActivity extends BaseActivity implements ProductListAdapter.
                 String lastName = inputLastName.getText().toString();
                 String email = inputEmail.getText().toString();
                 cbCustomer = new CBCustomer(customerId,firstName,lastName,email);
-                purchaseProduct();
+                purchaseProduct(customerId);
+                //purchaseProduct();
                 dialog.dismiss();
             }
         });
         dialog.show();
     }
 
+    private void purchaseProduct(String customerId){
+        this.billingViewModel.purchaseProduct(productList.get(position), customerId);
+    }
     private void purchaseProduct(){
         this.billingViewModel.purchaseProduct(productList.get(position), cbCustomer);
     }
