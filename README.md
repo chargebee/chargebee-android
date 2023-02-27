@@ -121,12 +121,13 @@ CBPurchase.retrieveProducts(this, productIdList= "[Product ID's from Google Play
 You can present any of the above products to your users for them to purchase.
 
 ### Buy or Subscribe Product
-Pass the product and customer identifiers to the following function when the user chooses the product to purchase.
+Pass the `CBProduct` and  `CBCustomer` objects to the following function when the user chooses the product to purchase.
 
-customerId - Optional parameter. We need the unique ID of your customer as customerId. If your unique list of customers is maintained in your database or a third-party system, send us the unique ID from that source.
+`CBCustomer` - **Optional object**. Although this is an optional object, we recommend passing the necessary customer details, such as `customerId`, `firstName`, `lastName`, and `email` if it is available before the user subscribes to your App. This ensures that the customer details in your database match the customer details in Chargebee. If the `customerId` is not passed in the customer's details, then the value of `customerId` will be the same as the `SubscriptionId` created in Chargebee.
+**Note**: The `customer` parameter in the below code snippet is an instance of `CBCustomer` class that contains the details of the customer who wants to subscribe or buy the product.
 
 ```kotlin
-CBPurchase.purchaseProduct(product="CBProduct", customerID="customerID", object : CBCallback.PurchaseCallback<PurchaseModel>{
+CBPurchase.purchaseProduct(product=CBProduct, customer=CBCustomer, object : CBCallback.PurchaseCallback<PurchaseModel>{
       override fun onSuccess(subscriptionID: String, status:Boolean) {
         Log.i(TAG, "${status}") 
         Log.i(TAG, "${subscriptionID}")    
