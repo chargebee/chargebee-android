@@ -32,17 +32,17 @@ data class CBAuthentication(val resource_id: String, val app_id: String,
             if (TextUtils.isEmpty(Chargebee.appName))
                 completion(ChargebeeResult.Error(
                     exp = CBException(
-                        error = ErrorDetail(message = "App Name is empty", httpStatusCode = 400)
+                        error = ErrorDetail(message = "App Name is empty", apiErrorCode = "400", httpStatusCode = 400)
                     )))
             else if (TextUtils.isEmpty(Chargebee.sdkKey))
                 completion(ChargebeeResult.Error(
                     exp = CBException(
-                        error = ErrorDetail(message = "SDK Key is empty", httpStatusCode = 400)
+                        error = ErrorDetail(message = "SDK Key is empty", apiErrorCode = "400", httpStatusCode = 400)
                     )))
             else if (TextUtils.isEmpty(Chargebee.applicationId))
                 completion(ChargebeeResult.Error(
                     exp = CBException(
-                        error = ErrorDetail(message = "Application ID is empty", httpStatusCode = 400)
+                        error = ErrorDetail(message = "Application ID is empty", apiErrorCode = "400", httpStatusCode = 400)
                     )))
             else
                 ResultHandler.safeExecuter({  AuthResource().authenticate(auth) }, completion, logger)
