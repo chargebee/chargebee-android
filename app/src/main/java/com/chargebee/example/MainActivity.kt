@@ -53,10 +53,10 @@ class MainActivity : BaseActivity(), ListItemsAdapter.ItemClickListener {
         this.mItemsRecyclerView = findViewById(R.id.rv_list_feature)
         setListAdapter()
 
-        this.mBillingViewModel!!.error.observeForever {
+        this.mBillingViewModel!!.cbException.observeForever {
             hideProgressDialog()
             Log.e(javaClass.simpleName, "Error from server:  $it")
-            alertSuccess(it)
+            alertSuccess(getCBError(it))
         }
         this.mBillingViewModel!!.subscriptionStatus.observeForever {
             hideProgressDialog()
@@ -198,7 +198,7 @@ class MainActivity : BaseActivity(), ListItemsAdapter.ItemClickListener {
                 }
                 override fun onError(error: CBException) {
                     Log.e(javaClass.simpleName, "Error:  ${error.message}")
-                    showDialog(error.message)
+                    showDialog(getCBError(error))
                 }
             })
     }

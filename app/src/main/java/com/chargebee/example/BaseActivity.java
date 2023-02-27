@@ -9,8 +9,8 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
-
 import androidx.appcompat.app.AppCompatActivity;
+import com.chargebee.android.exceptions.CBException;
 
 public class BaseActivity extends AppCompatActivity {
     private ProgressDialog progressDialog;
@@ -73,6 +73,9 @@ public class BaseActivity extends AppCompatActivity {
                 }).show();
     }
 
+    protected String getCBError(CBException exp){
+        return "Error Message: "+exp.getMessage()+" Error Code :"+exp.getHttpStatusCode();
+    }
     protected void showDialog(String msg){
         final Dialog dialog = new Dialog(this);
         dialog.setContentView(R.layout.dialog_layout);
