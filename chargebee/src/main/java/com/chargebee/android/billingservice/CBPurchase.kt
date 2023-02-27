@@ -59,39 +59,19 @@ object CBPurchase {
         product: CBProduct, customerID: String,
         callback: CBCallback.PurchaseCallback<String>) {
         this.customerID = customerID
-        if (!TextUtils.isEmpty(Chargebee.sdkKey)){
-            CBAuthentication.isSDKKeyValid(Chargebee.sdkKey){
-                when(it){
-                    is ChargebeeResult.Success -> {
-                        if (billingClientManager?.isFeatureSupported() == true) {
-                            if (billingClientManager?.isBillingClientReady() == true) {
-                                billingClientManager?.purchase(product, callback)
-                            } else {
-                                callback.onError(CBException(ErrorDetail(GPErrorCode.BillingClientNotReady.errorMsg)))
-                            }
-                        }else {
-                            callback.onError(CBException(ErrorDetail(GPErrorCode.FeatureNotSupported.errorMsg)))
-                        }
-                    }
-                    is ChargebeeResult.Error ->{
-                        Log.i(javaClass.simpleName, "Exception from server :${it.exp.message}")
-                        callback.onError(CBException(ErrorDetail(it.exp.message)))
-                    }
-                }
-            }
-        }else{
-            Log.i(javaClass.simpleName, "SDK key not available to proceed purchase")
-            callback.onError(CBException(ErrorDetail("SDK key not available to proceed purchase")))
-        }
+        purchaseProduct(product, callback)
     }
 
-    /* Buy the product with/without customer Id */
+    /* Buy the product with/without customer info */
     @JvmStatic
     fun purchaseProduct(
         product: CBProduct, customer: CBCustomer? = null,
         callback: CBCallback.PurchaseCallback<String>) {
         this.customer = customer
+        purchaseProduct(product, callback)
+    }
 
+    private fun purchaseProduct(product: CBProduct,callback: CBCallback.PurchaseCallback<String>){
         if (!TextUtils.isEmpty(Chargebee.sdkKey)){
             CBAuthentication.isSDKKeyValid(Chargebee.sdkKey){
                 when(it){
@@ -113,8 +93,7 @@ object CBPurchase {
                 }
             }
         }else{
-            Log.i(javaClass.simpleName, "SDK key not available to proceed purchase")
-            callback.onError(CBException(ErrorDetail("SDK key not available to proceed purchase")))
+            callback.onError(CBException(ErrorDetail(GPErrorCode.SDKKeyNotAvailable.errorMsg)))
         }
     }
 

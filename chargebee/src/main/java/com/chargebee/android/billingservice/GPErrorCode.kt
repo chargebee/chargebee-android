@@ -17,4 +17,5 @@ enum class GPErrorCode(val errorMsg: String) {
     UnknownError("Fatal error during the API action"),
     DeveloperError("Invalid arguments provided to the API"),
     BillingClientNotReady("Play services not available"),
+    SDKKeyNotAvailable("SDK key not available to proceed purchase"),
 }
