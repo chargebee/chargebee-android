@@ -298,7 +298,7 @@ class BillingClientManager constructor(
     /* Chargebee method called here to validate receipt */
     private fun validateReceipt(purchaseToken: String, product: CBProduct) {
         try{
-        CBPurchase.validateReceipt("purchaseToken", customerID, product) {
+        CBPurchase.validateReceipt(purchaseToken, customerID, product) {
             when(it) {
                 is ChargebeeResult.Success -> {
                     Log.i(
