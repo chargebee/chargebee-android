@@ -88,12 +88,12 @@ object CBPurchase {
                     }
                     is ChargebeeResult.Error ->{
                         Log.i(javaClass.simpleName, "Exception from server :${it.exp.message}")
-                        callback.onError(CBException(ErrorDetail(it.exp.message)))
+                        callback.onError(it.exp)
                     }
                 }
             }
         }else{
-            callback.onError(CBException(ErrorDetail(GPErrorCode.SDKKeyNotAvailable.errorMsg)))
+            callback.onError(CBException(ErrorDetail(message = GPErrorCode.SDKKeyNotAvailable.errorMsg, httpStatusCode = 400)))
         }
     }
 

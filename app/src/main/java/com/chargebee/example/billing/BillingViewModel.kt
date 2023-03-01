@@ -20,7 +20,7 @@ class BillingViewModel : ViewModel() {
     private val TAG = "BillingViewModel"
     var productIdsList: MutableLiveData<Array<String>> = MutableLiveData()
     var productPurchaseResult: MutableLiveData<Boolean> = MutableLiveData()
-    var cbException: MutableLiveData<String?> = MutableLiveData()
+    var cbException: MutableLiveData<CBException?> = MutableLiveData()
     var subscriptionStatus: MutableLiveData<String?> = MutableLiveData()
     var subscriptionList: MutableLiveData<ArrayList<SubscriptionDetailsWrapper>?> = MutableLiveData()
     var error: MutableLiveData<String?> = MutableLiveData()
@@ -54,7 +54,7 @@ class BillingViewModel : ViewModel() {
             }
             override fun onError(error: CBException) {
                 try {
-                    cbException.postValue(error.message)
+                    cbException.postValue(error)
                 }catch (exp: Exception){
                     Log.i(TAG, "Exception :${exp.message}")
                 }
@@ -72,7 +72,7 @@ class BillingViewModel : ViewModel() {
                 }
                 is CBProductIDResult.Error -> {
                     Log.e(javaClass.simpleName, " ${it.exp.message}")
-                    error.postValue(it.exp.message)
+                    cbException.postValue(it.exp)
                 }
             }
         }
@@ -94,7 +94,7 @@ class BillingViewModel : ViewModel() {
                 }
                 is ChargebeeResult.Error ->{
                     Log.e(TAG, "Exception from server- retrieveSubscription() :  ${it.exp.message}")
-                    error.postValue(it.exp.message)
+                    cbException.postValue(it.exp)
                 }
             }
         }
@@ -107,7 +107,7 @@ class BillingViewModel : ViewModel() {
                 }
                 is ChargebeeResult.Error ->{
                     Log.e(TAG, "Exception from server- retrieveSubscriptions() :  ${it.exp.message}")
-                    error.postValue(it.exp.message)
+                    cbException.postValue(it.exp)
                 }
             }
         }
@@ -126,10 +126,7 @@ class BillingViewModel : ViewModel() {
                 }
                 is ChargebeeResult.Error ->{
                     Log.e(TAG, "Exception from server- retrieveEntitlements() :  ${it.exp.message}")
-                    error.postValue(Gson().fromJson<ErrorDetail>(
-                        it.exp.message,
-                        ErrorDetail::class.java
-                    ).message)
+                    cbException.postValue(it.exp)
                 }
             }
         }

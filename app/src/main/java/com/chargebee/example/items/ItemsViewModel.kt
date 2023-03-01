@@ -4,6 +4,7 @@ import android.util.Log
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.chargebee.android.Chargebee
+import com.chargebee.android.exceptions.CBException
 import com.chargebee.android.exceptions.ChargebeeResult
 import com.chargebee.android.models.ItemWrapper
 import com.chargebee.android.models.Items
@@ -13,7 +14,7 @@ class ItemsViewModel : ViewModel() {
 
     var mItemsResult: MutableLiveData<ArrayList<String>?> = MutableLiveData()
     var mItemResult: MutableLiveData<Items?> = MutableLiveData()
-    var mItemsError: MutableLiveData<String?> = MutableLiveData()
+    var mItemsError: MutableLiveData<CBException?> = MutableLiveData()
     var mItemsList = ArrayList<String>()
 
     fun retrieveAllItems(queryParam: Array<String>) {
@@ -26,7 +27,7 @@ class ItemsViewModel : ViewModel() {
                 }
                 is ChargebeeResult.Error -> {
                     Log.d(javaClass.simpleName, "exception :  ${it.exp.message}")
-                    mItemsError.postValue(it.exp.message)
+                    mItemsError.postValue(it.exp)
                 }
             }
         }
@@ -41,7 +42,7 @@ class ItemsViewModel : ViewModel() {
                 }
                 is ChargebeeResult.Error -> {
                     Log.d(javaClass.simpleName, "exception :  ${it.exp.message}")
-                    mItemsError.postValue(it.exp.message)
+                    mItemsError.postValue(it.exp)
                 }
             }
         }

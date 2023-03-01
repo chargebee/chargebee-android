@@ -89,7 +89,7 @@ public class BillingActivity extends BaseActivity implements ProductListAdapter.
                 public void run() {
                     hideProgressDialog();
                     Log.i(TAG, "Error from server :" + error);
-                    alertSuccess(error);
+                    alertSuccess(getCBError(error));
                 }
             });
         });

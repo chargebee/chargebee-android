@@ -4,6 +4,7 @@ import android.util.Log
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.chargebee.android.Chargebee
+import com.chargebee.android.exceptions.CBException
 import com.chargebee.android.exceptions.ChargebeeResult
 import com.chargebee.android.models.*
 
@@ -11,7 +12,7 @@ import com.chargebee.android.models.*
 class PlanViewModel : ViewModel() {
     var mPlansResult: MutableLiveData<ArrayList<String>?> = MutableLiveData()
     var planResult: MutableLiveData<Plan?> = MutableLiveData()
-    var planError: MutableLiveData<String?> = MutableLiveData()
+    var planError: MutableLiveData<CBException?> = MutableLiveData()
     var mPlansList = ArrayList<String>()
 
     fun retrievePlan(planId: String) {
@@ -21,7 +22,7 @@ class PlanViewModel : ViewModel() {
                     planResult.postValue((it.data as PlanWrapper?)?.plan)
                 }
                 is ChargebeeResult.Error -> {
-                    planError.postValue(it.exp.message)
+                    planError.postValue(it.exp)
                 }
             }
         }
@@ -42,7 +43,7 @@ class PlanViewModel : ViewModel() {
                 }
                 is ChargebeeResult.Error -> {
                     Log.d(javaClass.simpleName, "exception :  ${it.exp.message}")
-                    planError.postValue(it.exp.message)
+                    planError.postValue(it.exp)
                 }
             }
         }

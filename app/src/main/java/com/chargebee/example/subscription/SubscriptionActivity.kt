@@ -24,10 +24,10 @@ class SubscriptionActivity : BaseActivity() {
         mCustomerIdButton = findViewById(R.id.customerIdBtn)
         mSubscriptionIdButton = findViewById(R.id.subscriptionIdBtn)
 
-        this.mBillingViewModel!!.error.observeForever {
+        this.mBillingViewModel!!.cbException.observeForever {
             hideProgressDialog()
             Log.e(javaClass.simpleName, "Error from server:  $it")
-            alertSuccess(it)
+            alertSuccess(getCBError(it))
         }
         this.mBillingViewModel!!.subscriptionStatus.observeForever {
             hideProgressDialog()

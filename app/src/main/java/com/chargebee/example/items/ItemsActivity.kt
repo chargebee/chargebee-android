@@ -46,7 +46,7 @@ class ItemsActivity : BaseActivity(), ItemsAdapter.ItemClickListener {
         viewModel?.mItemsError?.observe(this, Observer {
             hideProgressDialog()
             mErrorTextView?.setText(
-                it
+                getCBError(it)
             )
         })
     }
