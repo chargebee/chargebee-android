@@ -69,7 +69,7 @@ internal fun <T> responseFromServer(response: Response<T?>): ChargebeeResult<T> 
                     return ChargebeeResult.Error(
                         exp = CBException(
                             error = ErrorDetail(
-                                response.errorBody()?.string()
+                                response.errorBody()?.string(), httpStatusCode = response.code()
                             )
                         )
                     )
@@ -77,21 +77,21 @@ internal fun <T> responseFromServer(response: Response<T?>): ChargebeeResult<T> 
                 401 -> {
                     return ChargebeeResult.Error(
                         exp = CBException(
-                            error = ErrorDetail(response.errorBody()?.string())
+                            error = ErrorDetail(response.errorBody()?.string(), httpStatusCode = response.code())
                         )
                     )
                 }
                 400, 500 -> {
                     return ChargebeeResult.Error(
                         exp = CBException(
-                            error = ErrorDetail(response.errorBody()?.string())
+                            error = ErrorDetail(response.errorBody()?.string(), httpStatusCode = response.code())
                         )
                     )
                 }
                 else -> {
                     return ChargebeeResult.Error(
                         exp = CBException(
-                            error = ErrorDetail(response.errorBody()?.string())
+                            error = ErrorDetail(message = response.errorBody()?.string(), httpStatusCode = response.code())
                         )
                     )
                 }

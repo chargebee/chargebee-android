@@ -74,13 +74,13 @@ object CBPurchase {
                     }
                     is ChargebeeResult.Error ->{
                         Log.i(javaClass.simpleName, "Exception from server :${it.exp.message}")
-                        callback.onError(CBException(ErrorDetail(it.exp.message)))
+                        callback.onError(it.exp)
                     }
                 }
             }
         }else{
             Log.i(javaClass.simpleName, "SDK key not available to proceed purchase")
-            callback.onError(CBException(ErrorDetail("SDK key not available to proceed purchase")))
+            callback.onError(CBException(ErrorDetail(message = "SDK key not available to proceed purchase", httpStatusCode = 400)))
         }
     }
 

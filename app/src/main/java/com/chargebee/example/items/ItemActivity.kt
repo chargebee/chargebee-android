@@ -51,7 +51,7 @@ class ItemActivity: BaseActivity() {
             hideProgressDialog()
             if (it != null) {
                 errorText?.setText(
-                    it
+                    getCBError(it)
                 )
             }
         })

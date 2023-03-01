@@ -10,7 +10,6 @@ import com.chargebee.android.billingservice.BillingClientManager
 import com.chargebee.android.billingservice.CBCallback
 import com.chargebee.android.billingservice.CBCallback.ListProductsCallback
 import com.chargebee.android.billingservice.CBPurchase
-import com.chargebee.android.billingservice.PurchaseModel
 import com.chargebee.android.exceptions.CBException
 import com.chargebee.android.exceptions.CBProductIDResult
 import com.chargebee.android.exceptions.ChargebeeResult
@@ -42,24 +41,28 @@ import kotlin.collections.ArrayList
 @Config(sdk = [Build.VERSION_CODES.LOLLIPOP])
 class BillingClientManagerTest  {
 
-    var billingClient: BillingClientManager? = null
+    private var billingClientManager: BillingClientManager? = null
     @Mock
-    lateinit var billingClient1: BillingClient
+    lateinit var billingClient: BillingClient
 
     @Mock
     lateinit var skuDetails: SkuDetails
 
-    var mContext: Context? = null
+    private var mContext: Context? = null
     private var callBack : ListProductsCallback<ArrayList<CBProduct>>? = null
     private var callBackPurchase : CBCallback.PurchaseCallback<String>? = null
-    val productIdList = arrayListOf("merchant.pro.android", "merchant.premium.android")
+    private val productIdList = arrayListOf("merchant.pro.android", "merchant.premium.android")
 
     @Before
     fun setUp() {
         MockitoAnnotations.initMocks(this)
-        Chargebee.configure(site = "cb-imay-test", publishableApiKey = "test_AVrzSIux7PHMmiMdi7ixAiqoVYE9jHbz", sdkKey = "cb-x2wiixyjr5bl5ihugstyp2exbi") // For play store
+        Chargebee.configure(
+            site = "site-name",
+            publishableApiKey = "test_EojsGoGFeHoc3VpGPQDOZGAxYy3d0FF3",
+            sdkKey = "cb-wpkheixkuzgxbnt23rzslg724y"
+        )
 
-        billingClient = callBack?.let {
+        billingClientManager = callBack?.let {
             BillingClientManager(
                 ApplicationProvider.getApplicationContext(),
                 BillingClient.SkuType.SUBS,
@@ -70,20 +73,10 @@ class BillingClientManagerTest  {
     @After
     fun tearDown(){
         mContext = null
-        billingClient = null
-    }
-
-    @Test
-    fun test_loadProducts_success(){
-
-        CoroutineScope(Dispatchers.IO).launch {
-            billingClient?.startBillingServiceConnection()
-            billingClient?.queryAllPurchases()
-
-            Mockito.`when`(billingClient1.queryPurchasesAsync(BillingClient.SkuType.SUBS))
-            verify(billingClient1, times(1))
-                ?.queryPurchasesAsync(BillingClient.SkuType.SUBS)
-        }
+        billingClientManager = null
+        callBack = null
+        callBackPurchase = null
+        billingClient.endConnection()
     }
 
     @Test
@@ -110,6 +103,10 @@ class BillingClientManagerTest  {
                         }
                     })
             }).thenReturn(Unit)
+
+            Mockito.`when`(billingClient.queryPurchasesAsync(BillingClient.SkuType.SUBS))
+            verify(billingClient, times(1))
+                ?.queryPurchasesAsync(BillingClient.SkuType.SUBS)
         }
     }
 
@@ -146,7 +143,7 @@ class BillingClientManagerTest  {
         val IDs =  java.util.ArrayList<String>()
         IDs.add("")
         CoroutineScope(Dispatchers.IO).launch {
-            Mockito.`when`(CBPurchase.retrieveProductIDs(queryParam) {
+            Mockito.`when`(CBPurchase.retrieveProductIdentifers(queryParam) {
                 when (it) {
                     is CBProductIDResult.ProductIds -> {
                         assertThat(it,instanceOf(CBProductIDResult::class.java))
@@ -230,13 +227,13 @@ class BillingClientManagerTest  {
         val productsIds =  java.util.ArrayList<String>()
         productsIds.add("")
         CoroutineScope(Dispatchers.IO).launch {
-            Mockito.`when`(CBPurchase.retrieveProductIDs(queryParam) {
+            Mockito.`when`(CBPurchase.retrieveProductIdentifers(queryParam) {
                 when (it) {
                     is CBProductIDResult.ProductIds -> {
                         assertThat(it,instanceOf(CBProductIDResult::class.java))
                     }
                     is CBProductIDResult.Error -> {
-                        println(" Error ${it.exp.message}")
+                        println(" Error ${it.exp.message} response code: ${it.exp.httpStatusCode}")
                     }
                 }
             }).thenReturn(Unit)
@@ -253,28 +250,25 @@ class BillingClientManagerTest  {
             CBPurchase.purchaseProduct(
                 products,"",
                 object : CBCallback.PurchaseCallback<String> {
-                    override fun onSuccess(status: String) {
-                        lock.countDown()
-                        assertThat(status, true)
-                    }
-
                     override fun onError(error: CBException) {
                         lock.countDown()
-                        println(" Error :  ${error.message}")
+                        println(" Error :  ${error.message} response code: ${error.httpStatusCode}")
+                    }
+
+                    override fun onSuccess(result: ReceiptDetail, status: Boolean) {
+                        lock.countDown()
+                        assertThat(result,instanceOf(ReceiptDetail::class.java))
                     }
                 })
 
-        }
-        lock.await()
-
-        CoroutineScope(Dispatchers.IO).launch {
             Mockito.`when`(callBackPurchase?.let {
-                billingClient?.purchase(products,"", it)
+                billingClientManager?.purchase(products,"", it)
             }).thenReturn(Unit)
             callBackPurchase?.let {
-                verify(billingClient, times(1))?.purchase(products,purchaseCallBack = it)
+                verify(billingClientManager, times(1))?.purchase(products,purchaseCallBack = it)
             }
         }
+        lock.await()
 
     }
     @Test
@@ -286,12 +280,13 @@ class BillingClientManagerTest  {
             CBPurchase.purchaseProduct(
                 products,"",
                 object : CBCallback.PurchaseCallback<String> {
-                    override fun onSuccess(status: String) {
-                        assertThat(status, true)
+
+                    override fun onSuccess(result: ReceiptDetail, status: Boolean) {
+                         assertThat(result, instanceOf(ReceiptDetail::class.java))
                     }
 
                     override fun onError(error: CBException) {
-                        println(" Error :  ${error.message}")
+                        println(" Error :  ${error.message} response code: ${error.httpStatusCode}")
                     }
                 })
         }
@@ -304,7 +299,7 @@ class BillingClientManagerTest  {
         val products = CBProduct("merchant.premium.android","Premium Plan (Chargebee Example)","₹2,650.00", skuDetails,true)
         val lock = CountDownLatch(1)
         CoroutineScope(Dispatchers.IO).launch {
-            CBPurchase.validateReceipt(purchaseToken, products) {
+            CBPurchase.validateReceipt(purchaseToken,"", products) {
                 when (it) {
                     is ChargebeeResult.Success -> {
                         lock.countDown()
@@ -346,13 +341,13 @@ class BillingClientManagerTest  {
         // val skuDetails: SkuDetails? = null
         val products = CBProduct("merchant.premium.test.android","Premium Plan (Chargebee Example)","₹2,650.00", skuDetails,true)
         CoroutineScope(Dispatchers.IO).launch {
-            CBPurchase.validateReceipt(purchaseToken, products) {
+            CBPurchase.validateReceipt(purchaseToken,"", products) {
                 when (it) {
                     is ChargebeeResult.Success -> {
                         assertThat(it, instanceOf(CBReceiptResponse::class.java))
                     }
                     is ChargebeeResult.Error -> {
-                        println(" Error :  ${it.exp.message}")
+                        println(" Error :  ${it.exp.message} response code: ${it.exp.httpStatusCode}")
                     }
                 }
             }
