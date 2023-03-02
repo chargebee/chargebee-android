@@ -2,7 +2,6 @@ package com.chargebee.android.network
 
 internal class CBReceiptRequestBody(   val receipt: String,
                                        val productId: String,
-                                       val customerId: String,
                                        val customer: CBCustomer?,
                                        val channel: String) {
     companion object {
@@ -10,18 +9,17 @@ internal class CBReceiptRequestBody(   val receipt: String,
             return CBReceiptRequestBody(
                params.receipt,
                 params.productId,
-                params.customerId,
                 params.customer,
                 params.channel
             )
         }
     }
 
-    fun toCBReceiptReqBody(): Map<String, String> {
+    fun toCBReceiptReqBody(): Map<String, String?> {
         return mapOf(
             "receipt" to this.receipt,
             "product[id]" to this.productId,
-            "customer[id]" to this.customerId,
+            "customer[id]" to this.customer?.id,
             "channel" to this.channel
         )
     }
@@ -49,7 +47,6 @@ internal class CBReceiptRequestBody(   val receipt: String,
 data class Params(
     val receipt: String,
     val productId: String,
-    val customerId: String,
     val customer: CBCustomer?,
     val channel: String
 )

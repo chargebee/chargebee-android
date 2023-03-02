@@ -37,7 +37,7 @@ class BillingViewModel : ViewModel() {
             }
             override fun onError(error: CBException) {
                 try {
-                    cbException.postValue(error.message)
+                    cbException.postValue(error)
                 }catch (exp: Exception){
                     Log.i(TAG, "Exception :${exp.message}")
                 }

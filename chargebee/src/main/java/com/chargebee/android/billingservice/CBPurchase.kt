@@ -19,7 +19,6 @@ object CBPurchase {
     var billingClientManager: BillingClientManager? = null
     val productIdList = arrayListOf<String>()
     private var customer : CBCustomer? = null
-    private var customerID: String = ""
 
     annotation class SkuType {
         companion object {
@@ -58,7 +57,7 @@ object CBPurchase {
     fun purchaseProduct(
         product: CBProduct, customerID: String,
         callback: CBCallback.PurchaseCallback<String>) {
-        this.customerID = customerID
+        customer = CBCustomer(customerID,"","","")
         purchaseProduct(product, callback)
     }
 
@@ -105,7 +104,6 @@ object CBPurchase {
             val params = Params(
                 purchaseToken,
                 product.productId,
-                customerID,
                 customer,
                 Chargebee.channel
             )
