@@ -128,9 +128,10 @@ Pass the `CBProduct` and  `CBCustomer` objects to the following function when th
 
 ```kotlin
 CBPurchase.purchaseProduct(product=CBProduct, customer=CBCustomer, object : CBCallback.PurchaseCallback<PurchaseModel>{
-      override fun onSuccess(subscriptionID: String, status:Boolean) {
-        Log.i(TAG, "${status}") 
-        Log.i(TAG, "${subscriptionID}")    
+      override fun onSuccess(result: ReceiptDetail, status:Boolean) {
+        Log.i(TAG, "$status")
+        Log.i(TAG, "${result.subscription_id}")
+        Log.i(TAG, "${result.plan_id}")   
       }
       override fun onError(error: CBException) {
         Log.e(TAG, "Error:  ${error.message}")
@@ -366,7 +367,7 @@ Chargebee is available under the [MIT license](https://opensource.org/licenses/M
   To install Chargebee's Android SDK, add the following dependency to the build.gradle file.
   
   ```
-  implementation 'com.chargebee:chargebee-android:1.0.15'
+  implementation 'com.chargebee:chargebee-android:1.0.16'
   ```
   Example project
   ---------------
@@ -468,21 +469,24 @@ The above function will determine your product catalog version in Chargebee and 
   You can present any of the above products to your users for purchase.
   
   #### Buy or Subscribe Product
+
+  Pass the `CBProduct` and  `CBCustomer` objects to the following function when the user chooses the product to purchase.
   
-  Pass the product and customer identifiers to the following function when the user chooses the product to purchase.
-  `customerId` - Optional parameter. We need the unique ID of your customer as customerId. If your unique list of customers is maintained in your database or a third-party system, send us the unique ID from that source.
-  
+  `CBCustomer` - **Optional object**. Although this is an optional object, we recommend passing the necessary customer details, such as `customerId`, `firstName`, `lastName`, and `email` if it is available before the user subscribes to your App. This ensures that the customer details in your database match the customer details in Chargebee. If the `customerId` is not passed in the customer's details, then the value of `customerId` will be the same as the `SubscriptionId` created in Chargebee.
+  **Note**: The `customer` parameter in the below code snippet is an instance of `CBCustomer` class that contains the details of the customer who wants to subscribe or buy the product.
+
   ```kotlin
-  CBPurchase.purchaseProduct(product="CBProduct", customerID="customerID", object : CBCallback.PurchaseCallback<PurchaseModel>{
-        override fun onSuccess(subscriptionID: String, status:Boolean) {
-          Log.i(TAG, "${status}")
-          Log.i(TAG, "${subscriptionID}")
+    CBPurchase.purchaseProduct(product=CBProduct, customer=CBCustomer, object : CBCallback.PurchaseCallback<PurchaseModel>{
+        override fun onSuccess(result: ReceiptDetail, status:Boolean) {
+            Log.i(TAG, "$status") 
+            Log.i(TAG, "${result.subscription_id}")
+            Log.i(TAG, "${result.plan_id}")
         }
         override fun onError(error: CBException) {
-          Log.e(TAG, "Error:  ${error.message}")
-          // Handle error here
+            Log.e(TAG, "Error:  ${error.message}")
+            // Handle error here    
         }
-  })
+        })
   ```
   
   The above function will handle the purchase against Google Play Store and send the IAP token for server-side token verification to your Chargebee account. Use the Subscription ID returned by the above function, to check for Subscription status on Chargebee and confirm the access - granted or denied.
