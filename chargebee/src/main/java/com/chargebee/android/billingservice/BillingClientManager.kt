@@ -30,7 +30,6 @@ class BillingClientManager constructor(
     private var purchaseCallBack: CBCallback.PurchaseCallback<String>? = null
     private val skusWithSkuDetails = arrayListOf<CBProduct>()
     private val TAG = javaClass.simpleName
-    var customerID : String = ""
     lateinit var product: CBProduct
 
     init {
@@ -157,16 +156,12 @@ class BillingClientManager constructor(
     /* Purchase the product: Initiates the billing flow for an In-app-purchase  */
     fun purchase(
         product: CBProduct,
-        customerID: String = "",
         purchaseCallBack: CBCallback.PurchaseCallback<String>
     ) {
         this.purchaseCallBack = purchaseCallBack
         this.product = product
         val skuDetails = product.skuDetails
 
-        if (!(TextUtils.isEmpty(customerID))) {
-            this.customerID = customerID
-        }
         val params = BillingFlowParams.newBuilder()
             .setSkuDetails(skuDetails)
             .build()
@@ -298,7 +293,7 @@ class BillingClientManager constructor(
     /* Chargebee method called here to validate receipt */
     private fun validateReceipt(purchaseToken: String, product: CBProduct) {
         try{
-        CBPurchase.validateReceipt(purchaseToken, customerID, product) {
+        CBPurchase.validateReceipt(purchaseToken, product) {
             when(it) {
                 is ChargebeeResult.Success -> {
                     Log.i(

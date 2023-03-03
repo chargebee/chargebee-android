@@ -10,10 +10,7 @@ import com.chargebee.android.exceptions.*
 import com.chargebee.android.loggers.CBLogger
 import com.chargebee.android.models.*
 import com.chargebee.android.models.ResultHandler
-import com.chargebee.android.network.Auth
-import com.chargebee.android.network.CBAuthResponse
-import com.chargebee.android.network.CBAuthentication
-import com.chargebee.android.network.Params
+import com.chargebee.android.network.*
 import com.chargebee.android.resources.CatalogVersion
 import com.chargebee.android.resources.ReceiptResource
 import java.util.ArrayList
@@ -21,7 +18,7 @@ object CBPurchase {
 
     var billingClientManager: BillingClientManager? = null
     val productIdList = arrayListOf<String>()
-    var price: String = ""
+    private var customer : CBCustomer? = null
 
     annotation class SkuType {
         companion object {
@@ -53,18 +50,34 @@ object CBPurchase {
             callBack.onError(ex)
         }
     }
+
     /* Buy the product with/without customer Id */
+    @Deprecated(message = "This will be removed in upcoming release, Please use API fun - purchaseProduct(product: CBProduct, customer : CBCustomer? = null, callback)", level = DeprecationLevel.WARNING)
     @JvmStatic
     fun purchaseProduct(
         product: CBProduct, customerID: String,
         callback: CBCallback.PurchaseCallback<String>) {
+        customer = CBCustomer(customerID,"","","")
+        purchaseProduct(product, callback)
+    }
+
+    /* Buy the product with/without customer info */
+    @JvmStatic
+    fun purchaseProduct(
+        product: CBProduct, customer: CBCustomer? = null,
+        callback: CBCallback.PurchaseCallback<String>) {
+        this.customer = customer
+        purchaseProduct(product, callback)
+    }
+
+    private fun purchaseProduct(product: CBProduct,callback: CBCallback.PurchaseCallback<String>){
         if (!TextUtils.isEmpty(Chargebee.sdkKey)){
             CBAuthentication.isSDKKeyValid(Chargebee.sdkKey){
                 when(it){
                     is ChargebeeResult.Success -> {
                         if (billingClientManager?.isFeatureSupported() == true) {
                             if (billingClientManager?.isBillingClientReady() == true) {
-                                billingClientManager?.purchase(product, customerID, callback)
+                                billingClientManager?.purchase(product, callback)
                             } else {
                                 callback.onError(CBException(ErrorDetail(GPErrorCode.BillingClientNotReady.errorMsg)))
                             }
@@ -79,20 +92,19 @@ object CBPurchase {
                 }
             }
         }else{
-            Log.i(javaClass.simpleName, "SDK key not available to proceed purchase")
-            callback.onError(CBException(ErrorDetail(message = "SDK key not available to proceed purchase", httpStatusCode = 400)))
+            callback.onError(CBException(ErrorDetail(message = GPErrorCode.SDKKeyNotAvailable.errorMsg, httpStatusCode = 400)))
         }
     }
 
     /* Chargebee Method - used to validate the receipt of purchase  */
     @JvmStatic
-    fun validateReceipt(purchaseToken: String, customerID: String, product: CBProduct, completion : (ChargebeeResult<Any>) -> Unit) {
+    fun validateReceipt(purchaseToken: String, product: CBProduct, completion : (ChargebeeResult<Any>) -> Unit) {
         try {
             val logger = CBLogger(name = "buy", action = "process_purchase_command")
             val params = Params(
                 purchaseToken,
                 product.productId,
-                customerID,
+                customer,
                 Chargebee.channel
             )
 

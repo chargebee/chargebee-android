@@ -14,5 +14,5 @@ interface ReceiptRepository {
         @Header("platform") platform: String = Chargebee.platform,
         @Header("version") sdkVersion: String = Chargebee.sdkVersion,
         @Path("sdkKey") sdkKey: String = Chargebee.sdkKey,
-        @FieldMap data: Map<String, String>): Response<CBReceiptResponse?>
+        @FieldMap data: Map<String, String?>): Response<CBReceiptResponse?>
 }

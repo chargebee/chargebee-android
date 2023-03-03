@@ -11,8 +11,8 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.chargebee.android.ProgressBarListener;
-import com.chargebee.android.billingservice.BillingClientManager;
 import com.chargebee.android.models.CBProduct;
+import com.chargebee.android.network.CBCustomer;
 import com.chargebee.example.BaseActivity;
 import com.chargebee.example.R;
 import com.chargebee.example.adapter.ProductListAdapter;
@@ -31,6 +31,7 @@ public class BillingActivity extends BaseActivity implements ProductListAdapter.
     private BillingViewModel billingViewModel;
     private static final String TAG = "BillingActivity";
     private int position = 0;
+    CBCustomer cbCustomer;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -118,10 +119,13 @@ public class BillingActivity extends BaseActivity implements ProductListAdapter.
 
     private void getCustomerID() {
         Dialog dialog = new Dialog(this);
-        dialog.setContentView(R.layout.dialog_input_layout);
+        dialog.setContentView(R.layout.dialog_customer_layout);
 
         EditText input = dialog.findViewById(R.id.productIdInput);
-        input.setHint("Please enter CustomerID");
+        EditText inputFirstName = dialog.findViewById(R.id.firstNameText);
+        EditText inputLastName = dialog.findViewById(R.id.lastNameText);
+        EditText inputEmail = dialog.findViewById(R.id.emailText);
+
         Button dialogButton = dialog.findViewById(R.id.btn_ok);
         dialogButton.setText("Ok");
         dialogButton.setOnClickListener(new View.OnClickListener() {
@@ -129,7 +133,12 @@ public class BillingActivity extends BaseActivity implements ProductListAdapter.
             public void onClick(View v) {
                 showProgressDialog();
                 String customerId = input.getText().toString();
+                String firstName = inputFirstName.getText().toString();
+                String lastName = inputLastName.getText().toString();
+                String email = inputEmail.getText().toString();
+                cbCustomer = new CBCustomer(customerId,firstName,lastName,email);
                 purchaseProduct(customerId);
+                //purchaseProduct();
                 dialog.dismiss();
             }
         });
@@ -138,6 +147,9 @@ public class BillingActivity extends BaseActivity implements ProductListAdapter.
 
     private void purchaseProduct(String customerId){
         this.billingViewModel.purchaseProduct(productList.get(position), customerId);
+    }
+    private void purchaseProduct(){
+        this.billingViewModel.purchaseProduct(productList.get(position), cbCustomer);
     }
 
     private void updateSubscribeStatus(){

@@ -11,6 +11,7 @@ import com.chargebee.android.exceptions.CBException
 import com.chargebee.android.exceptions.CBProductIDResult
 import com.chargebee.android.exceptions.ChargebeeResult
 import com.chargebee.android.models.*
+import com.chargebee.android.network.CBCustomer
 import com.chargebee.android.network.ReceiptDetail
 import com.google.gson.Gson
 
@@ -26,9 +27,26 @@ class BillingViewModel : ViewModel() {
     var entitlementsResult: MutableLiveData<String?> = MutableLiveData()
     private var subscriptionId: String = ""
 
-    fun purchaseProduct(product: CBProduct, customerID: String) {
+    fun purchaseProduct(product: CBProduct, customer: CBCustomer) {
 
-        CBPurchase.purchaseProduct(product, customerID,  object : CBCallback.PurchaseCallback<String>{
+        CBPurchase.purchaseProduct(product, customer,  object : CBCallback.PurchaseCallback<String>{
+            override fun onSuccess(result: ReceiptDetail, status:Boolean) {
+                Log.i(TAG, "Subscription ID:  ${result.subscription_id}")
+                Log.i(TAG, "Plan ID:  ${result.plan_id}")
+                productPurchaseResult.postValue(status)
+            }
+            override fun onError(error: CBException) {
+                try {
+                    cbException.postValue(error)
+                }catch (exp: Exception){
+                    Log.i(TAG, "Exception :${exp.message}")
+                }
+            }
+        })
+    }
+    fun purchaseProduct(product: CBProduct, customerId: String) {
+
+        CBPurchase.purchaseProduct(product, customerId,  object : CBCallback.PurchaseCallback<String>{
             override fun onSuccess(result: ReceiptDetail, status:Boolean) {
                 Log.i(TAG, "Subscription ID:  ${result.subscription_id}")
                 Log.i(TAG, "Plan ID:  ${result.plan_id}")
