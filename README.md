@@ -136,7 +136,6 @@ CBPurchase.purchaseProduct(product=CBProduct, customer=CBCustomer, object : CBCa
       }
       override fun onError(error: CBException) {
         Log.e(TAG, "Error:  ${error.message}")
-        // Handle error here    
       }
 })
  ```
