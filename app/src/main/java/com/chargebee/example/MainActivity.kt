@@ -16,8 +16,9 @@ import androidx.recyclerview.widget.RecyclerView
 import com.chargebee.android.Chargebee
 import com.chargebee.android.billingservice.CBCallback
 import com.chargebee.android.billingservice.CBPurchase
+import com.chargebee.android.billingservice.RestorePurchaseCallback
+import com.chargebee.android.models.CBRestoreSubscription
 import com.chargebee.android.exceptions.CBException
-import com.chargebee.android.exceptions.CBProductIDResult
 import com.chargebee.android.models.CBProduct
 import com.chargebee.example.adapter.ListItemsAdapter
 import com.chargebee.example.addon.AddonActivity
@@ -43,7 +44,7 @@ class MainActivity : BaseActivity(), ListItemsAdapter.ItemClickListener {
     var featureList = mutableListOf<CBMenu>()
     var mContext: Context? = null
     private val gson = Gson()
-    private var mBillingViewModel : BillingViewModel? = null
+    private var mBillingViewModel: BillingViewModel? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -75,7 +76,7 @@ class MainActivity : BaseActivity(), ListItemsAdapter.ItemClickListener {
         }
     }
 
-    private fun setListAdapter(){
+    private fun setListAdapter() {
         featureList = CBMenu.values().toMutableList()
         listItemsAdapter = ListItemsAdapter(featureList, this)
         val layoutManager: RecyclerView.LayoutManager = LinearLayoutManager(applicationContext)
@@ -85,7 +86,7 @@ class MainActivity : BaseActivity(), ListItemsAdapter.ItemClickListener {
     }
 
     override fun onItemClick(view: View?, position: Int) {
-        when(CBMenu.valueOf(featureList.get(position).toString()).value){
+        when (CBMenu.valueOf(featureList.get(position).toString()).value) {
             CBMenu.Configure.value -> {
                 if (view != null) {
                     onClickConfigure(view)
@@ -132,8 +133,11 @@ class MainActivity : BaseActivity(), ListItemsAdapter.ItemClickListener {
             CBMenu.GetEntitlements.value -> {
                 getSubscriptionId()
             }
-            else ->{
-                Log.i(javaClass.simpleName, " Not implemented" )
+            CBMenu.RestorePurchase.value -> {
+                restorePurchases()
+            }
+            else -> {
+                Log.i(javaClass.simpleName, " Not implemented")
             }
         }
     }
@@ -148,9 +152,9 @@ class MainActivity : BaseActivity(), ListItemsAdapter.ItemClickListener {
         val builder = AlertDialog.Builder(this)
         val inflater = layoutInflater
         val dialogLayout = inflater.inflate(R.layout.activity_configure, null)
-        val siteNameEditText  = dialogLayout.findViewById<EditText>(R.id.etv_siteName)
-        val apiKeyEditText  = dialogLayout.findViewById<EditText>(R.id.etv_apikey)
-        val sdkKeyEditText  = dialogLayout.findViewById<EditText>(R.id.etv_sdkkey)
+        val siteNameEditText = dialogLayout.findViewById<EditText>(R.id.etv_siteName)
+        val apiKeyEditText = dialogLayout.findViewById<EditText>(R.id.etv_apikey)
+        val sdkKeyEditText = dialogLayout.findViewById<EditText>(R.id.etv_sdkkey)
         builder.setView(dialogLayout)
         builder.setPositiveButton("Initialize") { _, i ->
 
@@ -182,7 +186,8 @@ class MainActivity : BaseActivity(), ListItemsAdapter.ItemClickListener {
         }
         dialog.show()
     }
-    private fun getProductIdList(productIdList: ArrayList<String>){
+
+    private fun getProductIdList(productIdList: ArrayList<String>) {
         CBPurchase.retrieveProducts(
             this,
             productIdList,
@@ -190,12 +195,13 @@ class MainActivity : BaseActivity(), ListItemsAdapter.ItemClickListener {
                 override fun onSuccess(productIDs: ArrayList<CBProduct>) {
                     CoroutineScope(Dispatchers.Main).launch {
                         if (productIDs.size > 0) {
-                                launchProductDetailsScreen(gson.toJson(productIDs))
+                            launchProductDetailsScreen(gson.toJson(productIDs))
                         } else {
                             alertSuccess("Items not available to buy")
                         }
                     }
                 }
+
                 override fun onError(error: CBException) {
                     Log.e(javaClass.simpleName, "Error:  ${error.message}")
                     showDialog(getCBError(error))
@@ -203,6 +209,22 @@ class MainActivity : BaseActivity(), ListItemsAdapter.ItemClickListener {
             })
     }
 
+    private fun restorePurchases() {
+        CBPurchase.restorePurchases(
+            context = this, inActivePurchases = false,
+            completionCallback = object : RestorePurchaseCallback {
+                override fun onSuccess(result: List<CBRestoreSubscription>) {
+                    Log.i(javaClass.simpleName, "result : $result")
+                    result.forEach {
+                        Log.i(javaClass.simpleName, "status : ${it.store_status}")
+                    }
+                }
+
+                override fun onError(error: CBException) {
+                    Log.i(javaClass.simpleName, "error : $error")
+                }
+            })
+    }
 
     private fun alertListProductId(list: Array<String>) {
         val builder = AlertDialog.Builder(this)
@@ -215,7 +237,7 @@ class MainActivity : BaseActivity(), ListItemsAdapter.ItemClickListener {
                     javaClass.simpleName,
                     " Item clicked :" + list[which] + " position :" + which
                 )
-                val productIdList =  ArrayList<String>()
+                val productIdList = ArrayList<String>()
                 productIdList.add(list[which].trim())
                 getProductIdList(productIdList)
             }

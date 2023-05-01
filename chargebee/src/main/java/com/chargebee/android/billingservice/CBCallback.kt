@@ -1,7 +1,7 @@
 package com.chargebee.android.billingservice
 
 import com.chargebee.android.exceptions.CBException
-import com.chargebee.android.models.CBProduct
+import com.chargebee.android.models.*
 import com.chargebee.android.network.ReceiptDetail
 
 interface CBCallback {
@@ -17,5 +17,9 @@ interface CBCallback {
         fun onSuccess(result: ReceiptDetail, status: Boolean)
         fun onError(error: CBException)
     }
+}
 
+interface RestorePurchaseCallback {
+    fun onSuccess(result: List<CBRestoreSubscription>)
+    fun onError(error: CBException)
 }

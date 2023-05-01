@@ -13,12 +13,18 @@ import com.chargebee.android.models.ResultHandler
 import com.chargebee.android.network.*
 import com.chargebee.android.resources.CatalogVersion
 import com.chargebee.android.resources.ReceiptResource
-import java.util.ArrayList
+
 object CBPurchase {
 
     var billingClientManager: BillingClientManager? = null
     val productIdList = arrayListOf<String>()
     private var customer : CBCustomer? = null
+    var inActivePurchases = false
+
+    enum class ProductType(val value: String) {
+        SUBS("subs"),
+        INAPP("inapp")
+    }
 
     annotation class SkuType {
         companion object {
@@ -96,23 +102,16 @@ object CBPurchase {
         }
     }
 
+    @JvmStatic
+    fun restorePurchases(context: Context, inActivePurchases: Boolean = false, completionCallback: RestorePurchaseCallback){
+        this.inActivePurchases = inActivePurchases
+        shareInstance(context).restorePurchases(completionCallback)
+    }
     /* Chargebee Method - used to validate the receipt of purchase  */
     @JvmStatic
     fun validateReceipt(purchaseToken: String, product: CBProduct, completion : (ChargebeeResult<Any>) -> Unit) {
         try {
-            val logger = CBLogger(name = "buy", action = "process_purchase_command")
-            val params = Params(
-                purchaseToken,
-                product.productId,
-                customer,
-                Chargebee.channel
-            )
-
-            ResultHandler.safeExecuter(
-                { ReceiptResource().validateReceipt(params) },
-                completion,
-                logger
-            )
+            validateReceipt(purchaseToken, product.productId, completion)
         }catch (exp: Exception){
             Log.e(javaClass.simpleName, "Exception in validateReceipt() :"+exp.message)
             ChargebeeResult.Error(
@@ -124,37 +123,21 @@ object CBPurchase {
             )
         }
     }
-    @JvmStatic
-    @Throws(InvalidRequestException::class, OperationFailedException::class)
-    fun queryPurchaseHistory() {
-        try {
-            billingClientManager?.queryPurchaseHistory()
-        }catch (exp: Exception){
-            Log.i(javaClass.simpleName, "Exception in validateReceipt() :"+exp.message)
-            ChargebeeResult.Error(
-                exp = CBException(
-                    error = ErrorDetail(
-                        exp.message
-                    )
-                )
-            )
-        }
-    }
-    @JvmStatic
-    @Throws(InvalidRequestException::class, OperationFailedException::class)
-    fun queryAllPurchases() {
-        try {
-            billingClientManager?.queryAllPurchases()
-        }catch (exp: Exception){
-            Log.i(javaClass.simpleName, "Exception in validateReceipt() :"+exp.message)
-            ChargebeeResult.Error(
-                exp = CBException(
-                    error = ErrorDetail(
-                        exp.message
-                    )
-                )
-            )
-        }
+
+    fun validateReceipt(purchaseToken: String, productId: String, completion : (ChargebeeResult<Any>) -> Unit){
+        val logger = CBLogger(name = "buy", action = "process_purchase_command")
+        val params = Params(
+            purchaseToken,
+            productId,
+            customer,
+            Chargebee.channel
+        )
+
+        ResultHandler.safeExecuter(
+            { ReceiptResource().validateReceipt(params) },
+            completion,
+            logger
+        )
     }
 
     /*
@@ -240,5 +223,10 @@ object CBPurchase {
         if (arr.size==1) list.add("Standard")
         return list.toTypedArray()
     }
-
+    private fun shareInstance(context: Context): BillingClientManager {
+        if (billingClientManager == null) {
+            billingClientManager = BillingClientManager(context)
+        }
+        return billingClientManager as BillingClientManager
+    }
 }
