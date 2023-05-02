@@ -19,6 +19,7 @@ class CBRestorePurchaseManager {
         private var allTransactions = ArrayList<PurchaseTransaction>()
         private var restorePurchases = ArrayList<CBRestoreSubscription>()
         private var activeTransactions = ArrayList<PurchaseTransaction>()
+        lateinit var completionCallback: RestorePurchaseCallback
 
         private fun retrieveStoreSubscription(
             purchaseToken: String,
@@ -42,7 +43,7 @@ class CBRestorePurchaseManager {
             }
         }
 
-        private fun retrieveRestoreSubscription(
+        internal fun retrieveRestoreSubscription(
             purchaseToken: String,
             result: (CBRestoreSubscription) -> Unit,
             error: (CBException) -> Unit
@@ -63,10 +64,11 @@ class CBRestorePurchaseManager {
             }
         }
 
-        fun fetchStoreSubscriptionStatus(
+        internal fun fetchStoreSubscriptionStatus(
             storeTransactions: ArrayList<PurchaseTransaction>,
             completionCallback: RestorePurchaseCallback
         ) {
+            this.completionCallback = completionCallback
             val storeTransaction =
                 storeTransactions.firstOrNull()?.also { storeTransactions.remove(it) }
             storeTransaction?.purchaseToken?.let { purchaseToken ->
@@ -76,15 +78,16 @@ class CBRestorePurchaseManager {
                         StoreStatus.active ->  activeTransactions.add(storeTransaction)
                         else ->  allTransactions.add(storeTransaction)
                     }
-                    getRestorePurchases(storeTransactions, completionCallback)
+                    getRestorePurchases(storeTransactions)
                 }, { error ->
-                    getRestorePurchases(storeTransactions, completionCallback)
+                    getRestorePurchases(storeTransactions)
+
                     completionCallback.onError(error)
                 })
             }
         }
 
-        private fun getRestorePurchases( storeTransactions: ArrayList<PurchaseTransaction>, completionCallback: RestorePurchaseCallback){
+        internal fun getRestorePurchases( storeTransactions: ArrayList<PurchaseTransaction>){
             if (storeTransactions.isEmpty()) {
                 val activePurchases = restorePurchases.filter { subscription ->
                     subscription.store_status == StoreStatus.active
@@ -105,17 +108,13 @@ class CBRestorePurchaseManager {
             }
         }
 
-        private fun syncPurchaseWithChargebee(storeTransactions: ArrayList<PurchaseTransaction>) {
+        internal fun syncPurchaseWithChargebee(storeTransactions: ArrayList<PurchaseTransaction>) {
             storeTransactions.forEach { productIdList ->
-                if (productIdList.productType == CBPurchase.ProductType.SUBS.value) {
-                    validateReceipt(productIdList.purchaseToken, productIdList.productId.first())
-                } else {
-                    TODO ("Handle one time purchases here")
-                }
+                validateReceipt(productIdList.purchaseToken, productIdList.productId.first())
             }
         }
 
-        private fun validateReceipt(purchaseToken: String, productId: String) {
+        internal fun validateReceipt(purchaseToken: String, productId: String) {
             CBPurchase.validateReceipt(purchaseToken, productId) {
                 when (it) {
                     is ChargebeeResult.Success -> {

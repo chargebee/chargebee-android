@@ -42,10 +42,14 @@ class ItemResourceTest {
     @Test
     fun test_retrieveItemsList_success(){
 
-        val item = Items("123","item","active","play_store")
+        val item = Items(
+            "id", "name", "invoice", "play_store", "123", "", 0,
+            "12", "23", false, "false", false, false, "false",
+            false, "false"
+        )
         val queryParam = arrayOf("Standard", "app_store")
         val lock = CountDownLatch(1)
-        Items.retrieveAllItems(queryParam) {
+        Chargebee.retrieveAllItems(queryParam) {
             when (it) {
                 is ChargebeeResult.Success -> {
                     lock.countDown()
@@ -77,7 +81,7 @@ class ItemResourceTest {
         val exception = CBException(ErrorDetail("Error"))
         val queryParam = arrayOf("Standard", "app_store")
         val lock = CountDownLatch(1)
-        Items.retrieveAllItems(queryParam) {
+        Chargebee.retrieveAllItems(queryParam) {
             when (it) {
                 is ChargebeeResult.Success -> {
                     lock.countDown()
@@ -106,15 +110,15 @@ class ItemResourceTest {
     }
     @Test
     fun test_retrieveItem_success(){
-        val plan = Plan(
-            "id", "name", "invoice", 123, 123, "", "",
-            12, 23, "", false, false, "false", false,
-            9, false, "app_store", 7, "", "", false, "", false, false
+        val item = Items(
+            "id", "name", "invoice", "play_store", "123", "", 0,
+            "12", "23", false, "false", false, false, "false",
+            false, "false"
         )
 
         val queryParam = "Standard"
         val lock = CountDownLatch(1)
-        Items.retrieveItem(queryParam) {
+        Chargebee.retrieveItem(queryParam) {
             when (it) {
                 is ChargebeeResult.Success -> {
                     lock.countDown()
@@ -135,7 +139,7 @@ class ItemResourceTest {
         CoroutineScope(Dispatchers.IO).launch {
             Mockito.`when`(ItemsResource().retrieveItem(queryParam)).thenReturn(
                 ChargebeeResult.Success(
-                    plan
+                    item
                 )
             )
             Mockito.verify(ItemsResource(), Mockito.times(1)).retrieveItem(queryParam)
@@ -146,7 +150,7 @@ class ItemResourceTest {
         val exception = CBException(ErrorDetail("Error"))
         val queryParam = "Standard"
         val lock = CountDownLatch(1)
-        Items.retrieveItem(queryParam) {
+        Chargebee.retrieveItem(queryParam) {
             when (it) {
                 is ChargebeeResult.Success -> {
                     lock.countDown()
