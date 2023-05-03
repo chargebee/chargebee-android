@@ -39,7 +39,7 @@ import kotlinx.coroutines.launch
 
 class MainActivity : BaseActivity(), ListItemsAdapter.ItemClickListener {
     private var mItemsRecyclerView: RecyclerView? = null
-    private var list  = arrayListOf<String>()
+    private var list = arrayListOf<String>()
     var listItemsAdapter: ListItemsAdapter? = null
     var featureList = mutableListOf<CBMenu>()
     var mContext: Context? = null
@@ -210,18 +210,27 @@ class MainActivity : BaseActivity(), ListItemsAdapter.ItemClickListener {
     }
 
     private fun restorePurchases() {
+        showProgressDialog()
         CBPurchase.restorePurchases(
-            context = this, inActivePurchases = false,
+            context = this, inActivePurchases = true,
             completionCallback = object : RestorePurchaseCallback {
                 override fun onSuccess(result: List<CBRestoreSubscription>) {
-                    Log.i(javaClass.simpleName, "result : $result")
+                    hideProgressDialog()
                     result.forEach {
                         Log.i(javaClass.simpleName, "status : ${it.store_status}")
+                    }
+                    CoroutineScope(Dispatchers.Main).launch {
+                        if (result.isNotEmpty())
+                            alertSuccess("${result.size} purchases restored successfully")
                     }
                 }
 
                 override fun onError(error: CBException) {
-                    Log.i(javaClass.simpleName, "error : $error")
+                    hideProgressDialog()
+                    Log.e(javaClass.simpleName, "error message: ${error.message}")
+                    CoroutineScope(Dispatchers.Main).launch {
+                        showDialog("${error.message}, ${error.httpStatusCode}")
+                    }
                 }
             })
     }

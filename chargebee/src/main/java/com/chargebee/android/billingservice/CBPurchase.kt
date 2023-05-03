@@ -102,6 +102,14 @@ object CBPurchase {
         }
     }
 
+    /**
+     * This method will provide all the purchases associated with the current account based on the [inActivePurchases] flag set.
+     * And the associated purchases can be synced with Chargebee.
+     *
+     * @param [context] Current activity context
+     * @param [inActivePurchases] False by default. if true, only active purchases restores and synced with Chargebee.
+     * @param [completionCallback] The listener will be called when restore purchase completes.
+     */
     @JvmStatic
     fun restorePurchases(context: Context, inActivePurchases: Boolean = false, completionCallback: RestorePurchaseCallback){
         this.inActivePurchases = inActivePurchases

@@ -204,7 +204,13 @@ class BillingClientManager : BillingClientStateListener, PurchasesUpdatedListene
             }
     }
 
-    fun restorePurchases(completionCallback: RestorePurchaseCallback) {
+    /**
+     * This method will provide all the purchases associated with the current account based on the [inActivePurchases] flag set.
+     * And the associated purchases can be synced with Chargebee.
+     *
+     * @param [completionCallback] The listener will be called when restore purchase completes.
+     */
+    internal fun restorePurchases(completionCallback: RestorePurchaseCallback) {
         queryPurchaseHistoryFromStore(completionCallback)
     }
 

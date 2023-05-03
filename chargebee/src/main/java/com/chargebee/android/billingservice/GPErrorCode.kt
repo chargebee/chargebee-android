@@ -23,6 +23,7 @@ enum class GPErrorCode(val errorMsg: String) {
     DeveloperError("Invalid arguments provided to the API"),
     BillingClientNotReady("Play services not available"),
     SDKKeyNotAvailable("SDK key not available to proceed purchase"),
+    InvalidPurchaseToken("The Token data sent is not correct or Google service is temporarily down")
 }
 
 internal enum class RestoreErrorCode(val code: Int) {

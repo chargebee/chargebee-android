@@ -4,6 +4,7 @@ import android.util.Log
 import com.chargebee.android.Chargebee
 import com.chargebee.android.ErrorDetail
 import com.chargebee.android.billingservice.CBPurchase
+import com.chargebee.android.billingservice.GPErrorCode
 import com.chargebee.android.billingservice.RestorePurchaseCallback
 import com.chargebee.android.exceptions.CBException
 import com.chargebee.android.exceptions.ChargebeeResult
@@ -74,36 +75,46 @@ class CBRestorePurchaseManager {
             storeTransaction?.purchaseToken?.let { purchaseToken ->
                 retrieveRestoreSubscription(purchaseToken, {
                     restorePurchases.add(it)
-                    when(it.store_status){
-                        StoreStatus.active ->  activeTransactions.add(storeTransaction)
-                        else ->  allTransactions.add(storeTransaction)
+                    when (it.store_status) {
+                        StoreStatus.active -> activeTransactions.add(storeTransaction)
+                        else -> allTransactions.add(storeTransaction)
                     }
                     getRestorePurchases(storeTransactions)
-                }, { error ->
+                }, { _ ->
                     getRestorePurchases(storeTransactions)
-
-                    completionCallback.onError(error)
                 })
             }
         }
 
-        internal fun getRestorePurchases( storeTransactions: ArrayList<PurchaseTransaction>){
+        internal fun getRestorePurchases(storeTransactions: ArrayList<PurchaseTransaction>) {
             if (storeTransactions.isEmpty()) {
-                val activePurchases = restorePurchases.filter { subscription ->
-                    subscription.store_status == StoreStatus.active
+                if(restorePurchases.isEmpty()) {
+                    completionCallback.onError(
+                        CBException(
+                            ErrorDetail(
+                                message = GPErrorCode.InvalidPurchaseToken.errorMsg,
+                                httpStatusCode = 400
+                            )
+                        )
+                    )
+                } else {
+                    val activePurchases = restorePurchases.filter { subscription ->
+                        subscription.store_status == StoreStatus.active
+                    }
+                    val allPurchases = restorePurchases.filter { subscription ->
+                        subscription.store_status == StoreStatus.active || subscription.store_status == StoreStatus.in_trial
+                                || subscription.store_status == StoreStatus.cancelled || subscription.store_status == StoreStatus.paused
+                    }
+                    if (CBPurchase.inActivePurchases) {
+                        completionCallback.onSuccess(activePurchases)
+                        syncPurchaseWithChargebee(activeTransactions)
+                    } else {
+                        completionCallback.onSuccess(allPurchases)
+                        syncPurchaseWithChargebee(allTransactions)
+                    }
                 }
-                val allPurchases = restorePurchases.filter { subscription ->
-                    subscription.store_status == StoreStatus.active || subscription.store_status == StoreStatus.in_trial
-                            || subscription.store_status == StoreStatus.cancelled
-                }
-                if (CBPurchase.inActivePurchases) {
-                    completionCallback.onSuccess(activePurchases)
-                    syncPurchaseWithChargebee(activeTransactions)
-                }else {
-                    completionCallback.onSuccess(allPurchases)
-                    syncPurchaseWithChargebee(allTransactions)
-                }
-            }else {
+                restorePurchases.clear()
+            } else {
                 fetchStoreSubscriptionStatus(storeTransactions, completionCallback)
             }
         }

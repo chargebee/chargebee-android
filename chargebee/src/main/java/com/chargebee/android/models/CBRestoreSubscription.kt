@@ -6,5 +6,6 @@ data class CBRestorePurchases(val in_app_subscriptions: ArrayList<CBRestoreSubsc
 enum class StoreStatus{
     active,
     in_trial,
-    cancelled
+    cancelled,
+    paused
 }
