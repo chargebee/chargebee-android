@@ -41,7 +41,7 @@ internal interface PurchaseRepository {
 
     @FormUrlEncoded
     @POST("v2/in_app_subscriptions/{sdkKey}/retrieve")
-    suspend fun retrieveRestoreSubscription(
+    suspend fun restoreSubscription(
         @Header("Authorization") token: String = Chargebee.encodedApiKey,
         @Header("platform") platform: String = Chargebee.platform,
         @Header("version") sdkVersion: String = Chargebee.sdkVersion,

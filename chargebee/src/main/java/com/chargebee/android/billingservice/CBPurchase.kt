@@ -16,12 +16,12 @@ import com.chargebee.android.resources.ReceiptResource
 
 object CBPurchase {
 
-    var billingClientManager: BillingClientManager? = null
+    private var billingClientManager: BillingClientManager? = null
     val productIdList = arrayListOf<String>()
     private var customer : CBCustomer? = null
-    var inActivePurchases = false
+    internal var includeInActivePurchases = false
 
-    enum class ProductType(val value: String) {
+    internal enum class ProductType(val value: String) {
         SUBS("subs"),
         INAPP("inapp")
     }
@@ -104,16 +104,16 @@ object CBPurchase {
 
     /**
      * This method will provide all the purchases associated with the current account based on the [inActivePurchases] flag set.
-     * And the associated purchases can be synced with Chargebee.
+     * And the associated purchases will be synced with Chargebee.
      *
      * @param [context] Current activity context
      * @param [inActivePurchases] False by default. if true, only active purchases restores and synced with Chargebee.
      * @param [completionCallback] The listener will be called when restore purchase completes.
      */
     @JvmStatic
-    fun restorePurchases(context: Context, inActivePurchases: Boolean = false, completionCallback: RestorePurchaseCallback){
-        this.inActivePurchases = inActivePurchases
-        shareInstance(context).restorePurchases(completionCallback)
+    fun restorePurchases(context: Context, includeInActivePurchases: Boolean = false, completionCallback: CBCallback.RestorePurchaseCallback){
+        this.includeInActivePurchases = includeInActivePurchases
+        sharedInstance(context).restorePurchases(completionCallback)
     }
     /* Chargebee Method - used to validate the receipt of purchase  */
     @JvmStatic
@@ -132,7 +132,7 @@ object CBPurchase {
         }
     }
 
-    fun validateReceipt(purchaseToken: String, productId: String, completion : (ChargebeeResult<Any>) -> Unit){
+    internal fun validateReceipt(purchaseToken: String, productId: String, completion : (ChargebeeResult<Any>) -> Unit){
         val logger = CBLogger(name = "buy", action = "process_purchase_command")
         val params = Params(
             purchaseToken,
@@ -231,7 +231,7 @@ object CBPurchase {
         if (arr.size==1) list.add("Standard")
         return list.toTypedArray()
     }
-    private fun shareInstance(context: Context): BillingClientManager {
+    private fun sharedInstance(context: Context): BillingClientManager {
         if (billingClientManager == null) {
             billingClientManager = BillingClientManager(context)
         }

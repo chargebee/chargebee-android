@@ -1,9 +1,22 @@
 package com.chargebee.android.models
 
-data class CBRestoreSubscription(val subscription_id: String, val plan_id: String, val store_status: StoreStatus)
-data class CBRestorePurchases(val in_app_subscriptions: ArrayList<CBRestoreSubscription>)
+import com.google.gson.annotations.SerializedName
 
-enum class StoreStatus{
+data class CBRestoreSubscription(
+    @SerializedName("subscription_id")
+    val subscriptionId: String,
+    @SerializedName("plan_id")
+    val planId: String,
+    @SerializedName("store_status")
+    val storeStatus: StoreStatus
+)
+
+data class CBRestorePurchases(
+    @SerializedName("in_app_subscriptions")
+    val inAppSubscriptions: ArrayList<CBRestoreSubscription>
+)
+
+enum class StoreStatus {
     active,
     in_trial,
     cancelled,

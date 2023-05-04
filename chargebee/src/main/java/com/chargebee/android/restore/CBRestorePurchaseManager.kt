@@ -1,11 +1,10 @@
 package com.chargebee.android.restore
 
 import android.util.Log
-import com.chargebee.android.Chargebee
 import com.chargebee.android.ErrorDetail
+import com.chargebee.android.billingservice.CBCallback
 import com.chargebee.android.billingservice.CBPurchase
 import com.chargebee.android.billingservice.GPErrorCode
-import com.chargebee.android.billingservice.RestorePurchaseCallback
 import com.chargebee.android.exceptions.CBException
 import com.chargebee.android.exceptions.ChargebeeResult
 import com.chargebee.android.loggers.CBLogger
@@ -20,28 +19,18 @@ class CBRestorePurchaseManager {
         private var allTransactions = ArrayList<PurchaseTransaction>()
         private var restorePurchases = ArrayList<CBRestoreSubscription>()
         private var activeTransactions = ArrayList<PurchaseTransaction>()
-        lateinit var completionCallback: RestorePurchaseCallback
+        private lateinit var completionCallback: CBCallback.RestorePurchaseCallback
 
         private fun retrieveStoreSubscription(
             purchaseToken: String,
             completion: (ChargebeeResult<Any>) -> Unit
         ) {
-            try {
-                val logger = CBLogger(name = "restore", action = "retrieve_restore_subscriptions")
-                ResultHandler.safeExecuter(
-                    { RestorePurchaseResource().retrieveStoreSubscription(purchaseToken) },
-                    completion,
-                    logger
-                )
-            } catch (exp: Exception) {
-                ChargebeeResult.Error(
-                    exp = CBException(
-                        error = ErrorDetail(
-                            exp.message
-                        )
-                    )
-                )
-            }
+            val logger = CBLogger(name = "restore", action = "retrieve_restore_subscriptions")
+            ResultHandler.safeExecuter(
+                { RestorePurchaseResource().retrieveStoreSubscription(purchaseToken) },
+                completion,
+                logger
+            )
         }
 
         internal fun retrieveRestoreSubscription(
@@ -53,7 +42,7 @@ class CBRestorePurchaseManager {
                 when (it) {
                     is ChargebeeResult.Success -> {
                         val restoreSubscription =
-                            ((it.data) as CBRestorePurchases).in_app_subscriptions.firstOrNull()
+                            ((it.data) as CBRestorePurchases).inAppSubscriptions.firstOrNull()
                         restoreSubscription?.let {
                             result(restoreSubscription)
                         }
@@ -67,7 +56,7 @@ class CBRestorePurchaseManager {
 
         internal fun fetchStoreSubscriptionStatus(
             storeTransactions: ArrayList<PurchaseTransaction>,
-            completionCallback: RestorePurchaseCallback
+            completionCallback: CBCallback.RestorePurchaseCallback
         ) {
             this.completionCallback = completionCallback
             val storeTransaction =
@@ -75,7 +64,7 @@ class CBRestorePurchaseManager {
             storeTransaction?.purchaseToken?.let { purchaseToken ->
                 retrieveRestoreSubscription(purchaseToken, {
                     restorePurchases.add(it)
-                    when (it.store_status) {
+                    when (it.storeStatus) {
                         StoreStatus.active -> activeTransactions.add(storeTransaction)
                         else -> allTransactions.add(storeTransaction)
                     }
@@ -99,13 +88,13 @@ class CBRestorePurchaseManager {
                     )
                 } else {
                     val activePurchases = restorePurchases.filter { subscription ->
-                        subscription.store_status == StoreStatus.active
+                        subscription.storeStatus == StoreStatus.active
                     }
                     val allPurchases = restorePurchases.filter { subscription ->
-                        subscription.store_status == StoreStatus.active || subscription.store_status == StoreStatus.in_trial
-                                || subscription.store_status == StoreStatus.cancelled || subscription.store_status == StoreStatus.paused
+                        subscription.storeStatus == StoreStatus.active || subscription.storeStatus == StoreStatus.in_trial
+                                || subscription.storeStatus == StoreStatus.cancelled || subscription.storeStatus == StoreStatus.paused
                     }
-                    if (CBPurchase.inActivePurchases) {
+                    if (CBPurchase.includeInActivePurchases) {
                         completionCallback.onSuccess(activePurchases)
                         syncPurchaseWithChargebee(activeTransactions)
                     } else {

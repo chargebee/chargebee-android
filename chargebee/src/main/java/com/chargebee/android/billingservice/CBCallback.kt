@@ -9,17 +9,19 @@ interface CBCallback {
         fun onSuccess(productIDs: ArrayList<String>)
         fun onError(error: CBException)
     }
+
     interface ListProductsCallback<T> {
         fun onSuccess(productIDs: ArrayList<CBProduct>)
         fun onError(error: CBException)
     }
+
     interface PurchaseCallback<T> {
         fun onSuccess(result: ReceiptDetail, status: Boolean)
         fun onError(error: CBException)
     }
-}
 
-interface RestorePurchaseCallback {
-    fun onSuccess(result: List<CBRestoreSubscription>)
-    fun onError(error: CBException)
+    interface RestorePurchaseCallback {
+        fun onSuccess(result: List<CBRestoreSubscription>)
+        fun onError(error: CBException)
+    }
 }

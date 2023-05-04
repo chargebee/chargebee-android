@@ -210,7 +210,7 @@ class BillingClientManager : BillingClientStateListener, PurchasesUpdatedListene
      *
      * @param [completionCallback] The listener will be called when restore purchase completes.
      */
-    internal fun restorePurchases(completionCallback: RestorePurchaseCallback) {
+    internal fun restorePurchases(completionCallback: CBCallback.RestorePurchaseCallback) {
         queryPurchaseHistoryFromStore(completionCallback)
     }
 
@@ -458,7 +458,7 @@ class BillingClientManager : BillingClientStateListener, PurchasesUpdatedListene
         }
     }
 
-    private fun queryPurchaseHistoryFromStore(completionCallback: RestorePurchaseCallback) {
+    private fun queryPurchaseHistoryFromStore(completionCallback: CBCallback.RestorePurchaseCallback) {
         onConnected({ status ->
             if (status) queryPurchaseHistory({ purchaseHistoryList ->
                 val storeTransactions = arrayListOf<PurchaseTransaction>()

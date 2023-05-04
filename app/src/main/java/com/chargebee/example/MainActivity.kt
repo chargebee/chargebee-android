@@ -16,7 +16,6 @@ import androidx.recyclerview.widget.RecyclerView
 import com.chargebee.android.Chargebee
 import com.chargebee.android.billingservice.CBCallback
 import com.chargebee.android.billingservice.CBPurchase
-import com.chargebee.android.billingservice.RestorePurchaseCallback
 import com.chargebee.android.models.CBRestoreSubscription
 import com.chargebee.android.exceptions.CBException
 import com.chargebee.android.models.CBProduct
@@ -212,12 +211,12 @@ class MainActivity : BaseActivity(), ListItemsAdapter.ItemClickListener {
     private fun restorePurchases() {
         showProgressDialog()
         CBPurchase.restorePurchases(
-            context = this, inActivePurchases = true,
-            completionCallback = object : RestorePurchaseCallback {
+            context = this, includeInActivePurchases = false,
+            completionCallback = object : CBCallback.RestorePurchaseCallback {
                 override fun onSuccess(result: List<CBRestoreSubscription>) {
                     hideProgressDialog()
                     result.forEach {
-                        Log.i(javaClass.simpleName, "status : ${it.store_status}")
+                        Log.i(javaClass.simpleName, "status : ${it.storeStatus}")
                     }
                     CoroutineScope(Dispatchers.Main).launch {
                         if (result.isNotEmpty())

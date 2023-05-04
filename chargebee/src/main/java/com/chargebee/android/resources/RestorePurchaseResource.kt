@@ -10,7 +10,7 @@ internal class RestorePurchaseResource : BaseResource(Chargebee.baseUrl) {
     internal suspend fun retrieveStoreSubscription(purchaseToken: String): ChargebeeResult<Any> {
         val dataMap = convertToMap(purchaseToken)
         val response = apiClient.create(PurchaseRepository::class.java)
-            .retrieveRestoreSubscription(data = dataMap)
+            .restoreSubscription(data = dataMap)
         return responseFromServer(
             response
         )
