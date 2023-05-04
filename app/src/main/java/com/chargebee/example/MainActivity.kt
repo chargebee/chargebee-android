@@ -222,6 +222,9 @@ class MainActivity : BaseActivity(), ListItemsAdapter.ItemClickListener {
                     CoroutineScope(Dispatchers.Main).launch {
                         if (result.isNotEmpty())
                             alertSuccess("${result.size} purchases restored successfully")
+                         else
+                            alertSuccess("Purchases not found to restore")
+
                     }
                 }
 
