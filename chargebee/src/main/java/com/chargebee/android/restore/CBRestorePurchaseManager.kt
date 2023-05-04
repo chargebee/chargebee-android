@@ -12,7 +12,6 @@ import com.chargebee.android.models.*
 import com.chargebee.android.models.ResultHandler
 import com.chargebee.android.resources.RestorePurchaseResource
 
-
 class CBRestorePurchaseManager {
 
     companion object {
@@ -59,25 +58,29 @@ class CBRestorePurchaseManager {
             completionCallback: CBCallback.RestorePurchaseCallback
         ) {
             this.completionCallback = completionCallback
-            val storeTransaction =
-                storeTransactions.firstOrNull()?.also { storeTransactions.remove(it) }
-            storeTransaction?.purchaseToken?.let { purchaseToken ->
-                retrieveRestoreSubscription(purchaseToken, {
-                    restorePurchases.add(it)
-                    when (it.storeStatus) {
-                        StoreStatus.active -> activeTransactions.add(storeTransaction)
-                        else -> allTransactions.add(storeTransaction)
-                    }
-                    getRestorePurchases(storeTransactions)
-                }, { _ ->
-                    getRestorePurchases(storeTransactions)
-                })
+            if (storeTransactions.isNotEmpty()) {
+                val storeTransaction =
+                    storeTransactions.firstOrNull()?.also { storeTransactions.remove(it) }
+                storeTransaction?.purchaseToken?.let { purchaseToken ->
+                    retrieveRestoreSubscription(purchaseToken, {
+                        restorePurchases.add(it)
+                        when (it.storeStatus) {
+                            StoreStatus.active -> activeTransactions.add(storeTransaction)
+                            else -> allTransactions.add(storeTransaction)
+                        }
+                        getRestorePurchases(storeTransactions)
+                    }, { _ ->
+                        getRestorePurchases(storeTransactions)
+                    })
+                }
+            } else {
+                completionCallback.onSuccess(emptyList())
             }
         }
 
         internal fun getRestorePurchases(storeTransactions: ArrayList<PurchaseTransaction>) {
             if (storeTransactions.isEmpty()) {
-                if(restorePurchases.isEmpty()) {
+                if (restorePurchases.isEmpty()) {
                     completionCallback.onError(
                         CBException(
                             ErrorDetail(

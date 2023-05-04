@@ -30,6 +30,7 @@ class BillingClientManager : BillingClientStateListener, PurchasesUpdatedListene
     private val skusWithSkuDetails = arrayListOf<CBProduct>()
     private val TAG = javaClass.simpleName
     lateinit var product: CBProduct
+    private lateinit var completionCallback: CBCallback.RestorePurchaseCallback
 
     constructor(
         context: Context, skuType: String,
@@ -42,6 +43,7 @@ class BillingClientManager : BillingClientStateListener, PurchasesUpdatedListene
         startBillingServiceConnection()
 
     }
+
     constructor(context: Context) {
         this.mContext = context
     }
@@ -205,13 +207,18 @@ class BillingClientManager : BillingClientStateListener, PurchasesUpdatedListene
     }
 
     /**
-     * This method will provide all the purchases associated with the current account based on the [inActivePurchases] flag set.
-     * And the associated purchases can be synced with Chargebee.
+     * This method will provide all the purchases associated with the current account based on the [includeInActivePurchases] flag set.
+     * And the associated purchases will be synced with Chargebee.
      *
      * @param [completionCallback] The listener will be called when restore purchase completes.
      */
     internal fun restorePurchases(completionCallback: CBCallback.RestorePurchaseCallback) {
-        queryPurchaseHistoryFromStore(completionCallback)
+        this.completionCallback = completionCallback
+        onConnected({ status ->
+            queryPurchaseHistoryFromStore(status)
+        }, { error ->
+            completionCallback.onError(error)
+        })
     }
 
     /* Checks if the specified feature is supported by the Play Store */
@@ -458,38 +465,63 @@ class BillingClientManager : BillingClientStateListener, PurchasesUpdatedListene
         }
     }
 
-    private fun queryPurchaseHistoryFromStore(completionCallback: CBCallback.RestorePurchaseCallback) {
-        onConnected({ status ->
-            if (status) queryPurchaseHistory({ purchaseHistoryList ->
+    private val connectionError = CBException(
+        ErrorDetail(
+            message = RestoreErrorCode.SERVICE_UNAVAILABLE.name,
+            httpStatusCode = RestoreErrorCode.SERVICE_UNAVAILABLE.code
+        )
+    )
+
+    private fun queryPurchaseHistoryFromStore(
+        connectionStatus: Boolean
+    ) {
+        if (connectionStatus) {
+            queryPurchaseHistory { purchaseHistoryList ->
                 val storeTransactions = arrayListOf<PurchaseTransaction>()
                 storeTransactions.addAll(purchaseHistoryList)
-                CBRestorePurchaseManager.fetchStoreSubscriptionStatus(storeTransactions, completionCallback)
-            }, { error -> completionCallback.onError(error) })
-        }, { error ->
-            completionCallback.onError(error)
-        })
+                CBRestorePurchaseManager.fetchStoreSubscriptionStatus(
+                    storeTransactions,
+                    completionCallback
+                )
+            }
+        } else {
+            completionCallback.onError(
+                connectionError
+            )
+        }
     }
 
     private fun queryPurchaseHistory(
-        completionCallback: (List<PurchaseTransaction>) -> Unit,
-        connectionError: (CBException) -> Unit
+        storeTransactions: (List<PurchaseTransaction>) -> Unit
     ) {
-        queryAllPurchaseHistory(CBPurchase.ProductType.SUBS.value, { subscriptionTransactionList ->
-            queryAllPurchaseHistory(
-                CBPurchase.ProductType.INAPP.value,
-                { inAppPurchaseHistoryList ->
-                    val purchaseTransactionHistory = inAppPurchaseHistoryList?.let {
-                        subscriptionTransactionList?.plus(it)
-                    }
-                    completionCallback(purchaseTransactionHistory ?: emptyList())
-                },
-                { purchaseError -> connectionError(purchaseError) })
-        }, { purchaseError -> connectionError(purchaseError) })
+        queryAllSubsPurchaseHistory(CBPurchase.ProductType.SUBS.value) { subscriptionHistory ->
+            queryAllInAppPurchaseHistory(CBPurchase.ProductType.INAPP.value) { inAppHistory ->
+                val purchaseTransactionHistory = inAppHistory?.let {
+                    subscriptionHistory?.plus(it)
+                }
+                storeTransactions(purchaseTransactionHistory ?: emptyList())
+            }
+        }
     }
 
-    private fun queryAllPurchaseHistory(
-        productType: String, purchaseTransactionList: (List<PurchaseTransaction>?) -> Unit,
-        purchaseError: (CBException) -> Unit
+    private fun queryAllSubsPurchaseHistory(
+        productType: String, purchaseTransactionList: (List<PurchaseTransaction>?) -> Unit
+    ) {
+        queryPurchaseHistoryAsync(productType) {
+            purchaseTransactionList(it)
+        }
+    }
+
+    private fun queryAllInAppPurchaseHistory(
+        productType: String, purchaseTransactionList: (List<PurchaseTransaction>?) -> Unit
+    ) {
+        queryPurchaseHistoryAsync(productType) {
+            purchaseTransactionList(it)
+        }
+    }
+
+    private fun queryPurchaseHistoryAsync(
+        productType: String, purchaseTransactionList: (List<PurchaseTransaction>?) -> Unit
     ) {
         billingClient?.queryPurchaseHistoryAsync(productType) { billingResult, subsHistoryList ->
             if (billingResult.responseCode == OK) {
@@ -498,7 +530,7 @@ class BillingClientManager : BillingClientStateListener, PurchasesUpdatedListene
                 }
                 purchaseTransactionList(purchaseHistoryList)
             } else {
-                purchaseError(throwCBException(billingResult))
+                completionCallback.onError(throwCBException(billingResult))
             }
         }
     }
@@ -526,30 +558,33 @@ class BillingClientManager : BillingClientStateListener, PurchasesUpdatedListene
         val billingClient = buildBillingClient(this)
         if (billingClient?.isReady == false) {
             handler.postDelayed({
-                billingClient.startConnection(object :
-                    BillingClientStateListener {
-                    override fun onBillingServiceDisconnected() {
-                        Log.i(javaClass.simpleName, "onBillingServiceDisconnected")
-                        status(false)
-                    }
-
-                    override fun onBillingSetupFinished(billingResult: BillingResult) {
-                        when (billingResult.responseCode) {
-                            OK -> {
-                                Log.i(
-                                    TAG,
-                                    "Google Billing Setup Done!"
-                                )
-                                status(true)
-                            }
-                            else -> {
-                                connectionError(throwCBException(billingResult))
-                            }
-                        }
-
-                    }
-                })
+                billingClient.startConnection(
+                    createBillingClientStateListener(status, connectionError)
+                )
             }, CONNECT_TIMER_START_MILLISECONDS)
         } else status(true)
+    }
+
+    private fun createBillingClientStateListener(
+        status: (Boolean) -> Unit,
+        connectionError: (CBException) -> Unit
+    ) = object :
+        BillingClientStateListener {
+        override fun onBillingServiceDisconnected() {
+            Log.i(javaClass.simpleName, "onBillingServiceDisconnected")
+            status(false)
+        }
+
+        override fun onBillingSetupFinished(billingResult: BillingResult) {
+            when (billingResult.responseCode) {
+                OK -> {
+                    Log.i(TAG, "Google Billing Setup Done!")
+                    status(true)
+                }
+                else -> {
+                    connectionError(throwCBException(billingResult))
+                }
+            }
+        }
     }
 }
