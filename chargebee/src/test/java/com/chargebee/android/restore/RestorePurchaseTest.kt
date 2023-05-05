@@ -3,7 +3,7 @@ package com.chargebee.android.restore
 import com.android.billingclient.api.*
 import com.chargebee.android.Chargebee
 import com.chargebee.android.ErrorDetail
-import com.chargebee.android.billingservice.RestorePurchaseCallback
+import com.chargebee.android.billingservice.CBCallback.RestorePurchaseCallback
 import com.chargebee.android.exceptions.CBException
 import com.chargebee.android.exceptions.ChargebeeResult
 import com.chargebee.android.models.*
@@ -118,7 +118,7 @@ class RestorePurchaseTest {
         val purchaseTransaction = getTransaction(true)
         val cbRestorePurchasesList = arrayListOf<CBRestoreSubscription>()
         val purchaseToken = purchaseTransaction.first().purchaseToken
-        val cbRestoreSubscription = CBRestoreSubscription("", "", StoreStatus.active)
+        val cbRestoreSubscription = CBRestoreSubscription("", "", StoreStatus.Active.value)
         cbRestorePurchasesList.add(cbRestoreSubscription)
         CoroutineScope(Dispatchers.IO).launch {
             Mockito.`when`(RestorePurchaseResource().retrieveStoreSubscription(purchaseToken))
