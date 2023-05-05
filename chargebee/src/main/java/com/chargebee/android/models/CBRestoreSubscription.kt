@@ -8,7 +8,7 @@ data class CBRestoreSubscription(
     @SerializedName("plan_id")
     val planId: String,
     @SerializedName("store_status")
-    val storeStatus: StoreStatus
+    val storeStatus: String
 )
 
 data class CBRestorePurchases(
@@ -16,9 +16,9 @@ data class CBRestorePurchases(
     val inAppSubscriptions: ArrayList<CBRestoreSubscription>
 )
 
-enum class StoreStatus {
-    active,
-    in_trial,
-    cancelled,
-    paused
+enum class StoreStatus(val value: String) {
+    Active("active"),
+    InTrial("in_trial"),
+    Cancelled("cancelled"),
+    Paused("paused")
 }

@@ -65,7 +65,7 @@ class CBRestorePurchaseManager {
                     retrieveRestoreSubscription(purchaseToken, {
                         restorePurchases.add(it)
                         when (it.storeStatus) {
-                            StoreStatus.active -> activeTransactions.add(storeTransaction)
+                            StoreStatus.Active.value -> activeTransactions.add(storeTransaction)
                             else -> allTransactions.add(storeTransaction)
                         }
                         getRestorePurchases(storeTransactions)
@@ -91,11 +91,11 @@ class CBRestorePurchaseManager {
                     )
                 } else {
                     val activePurchases = restorePurchases.filter { subscription ->
-                        subscription.storeStatus == StoreStatus.active
+                        subscription.storeStatus == StoreStatus.Active.value
                     }
                     val allPurchases = restorePurchases.filter { subscription ->
-                        subscription.storeStatus == StoreStatus.active || subscription.storeStatus == StoreStatus.in_trial
-                                || subscription.storeStatus == StoreStatus.cancelled || subscription.storeStatus == StoreStatus.paused
+                        subscription.storeStatus == StoreStatus.Active.value || subscription.storeStatus == StoreStatus.InTrial.value
+                                || subscription.storeStatus == StoreStatus.Cancelled.value || subscription.storeStatus == StoreStatus.Paused.value
                     }
                     if (CBPurchase.includeInActivePurchases) {
                         completionCallback.onSuccess(activePurchases)

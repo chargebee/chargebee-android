@@ -23,10 +23,11 @@ enum class GPErrorCode(val errorMsg: String) {
     DeveloperError("Invalid arguments provided to the API"),
     BillingClientNotReady("Play services not available"),
     SDKKeyNotAvailable("SDK key not available to proceed purchase"),
-    InvalidPurchaseToken("The Token data sent is not correct or Google service is temporarily down")
+    InvalidPurchaseToken("The Token data sent is not correct or Google service is temporarily down"),
+    BillingServiceDisconnected("The app is not connected to Google play via Billing library")
 }
 
-internal enum class RestoreErrorCode(val code: Int) {
+internal enum class BillingErrorCode(val code: Int) {
     UNKNOWN(-4),
     SERVICE_TIMEOUT(-3),
     FEATURE_NOT_SUPPORTED(-2),
@@ -36,10 +37,12 @@ internal enum class RestoreErrorCode(val code: Int) {
     ITEM_UNAVAILABLE(4),
     DEVELOPER_ERROR(5),
     ERROR(6),
-    ITEM_NOT_OWNED(8);
+    ITEM_NOT_OWNED(8),
+    SERVICE_DISCONNECTED(-1),
+    ITEM_ALREADY_OWNED(7);
 
     companion object {
-        private fun billingResponseCode(responseCode: Int): RestoreErrorCode =
+        private fun billingResponseCode(responseCode: Int): BillingErrorCode =
             when (responseCode) {
                 BillingClient.BillingResponseCode.SERVICE_TIMEOUT -> SERVICE_TIMEOUT
                 BillingClient.BillingResponseCode.FEATURE_NOT_SUPPORTED -> FEATURE_NOT_SUPPORTED
@@ -50,32 +53,36 @@ internal enum class RestoreErrorCode(val code: Int) {
                 BillingClient.BillingResponseCode.DEVELOPER_ERROR -> DEVELOPER_ERROR
                 BillingClient.BillingResponseCode.ERROR -> ERROR
                 BillingClient.BillingResponseCode.ITEM_NOT_OWNED -> ITEM_NOT_OWNED
+                BillingClient.BillingResponseCode.SERVICE_DISCONNECTED -> SERVICE_DISCONNECTED
+                BillingClient.BillingResponseCode.ITEM_ALREADY_OWNED -> ITEM_ALREADY_OWNED
                 else -> {
                     UNKNOWN
                 }
             }
 
-        private fun billingDebugMessage(responseCode: Int): GPErrorCode =
+        internal fun billingDebugMessage(responseCode: Int): String =
             when (responseCode) {
-                BillingClient.BillingResponseCode.SERVICE_TIMEOUT -> GPErrorCode.PlayServiceTimeOut
-                BillingClient.BillingResponseCode.FEATURE_NOT_SUPPORTED -> GPErrorCode.FeatureNotSupported
-                BillingClient.BillingResponseCode.USER_CANCELED -> GPErrorCode.CanceledPurchase
-                BillingClient.BillingResponseCode.SERVICE_UNAVAILABLE -> GPErrorCode.PlayServiceUnavailable
-                BillingClient.BillingResponseCode.BILLING_UNAVAILABLE -> GPErrorCode.BillingUnavailable
-                BillingClient.BillingResponseCode.ITEM_UNAVAILABLE -> GPErrorCode.ProductUnavailable
-                BillingClient.BillingResponseCode.DEVELOPER_ERROR -> GPErrorCode.DeveloperError
-                BillingClient.BillingResponseCode.ERROR -> GPErrorCode.UnknownError
-                BillingClient.BillingResponseCode.ITEM_NOT_OWNED -> GPErrorCode.ProductNotOwned
+                BillingClient.BillingResponseCode.SERVICE_TIMEOUT -> GPErrorCode.PlayServiceTimeOut.errorMsg
+                BillingClient.BillingResponseCode.FEATURE_NOT_SUPPORTED -> GPErrorCode.FeatureNotSupported.errorMsg
+                BillingClient.BillingResponseCode.USER_CANCELED -> GPErrorCode.CanceledPurchase.errorMsg
+                BillingClient.BillingResponseCode.SERVICE_UNAVAILABLE -> GPErrorCode.PlayServiceUnavailable.errorMsg
+                BillingClient.BillingResponseCode.BILLING_UNAVAILABLE -> GPErrorCode.BillingUnavailable.errorMsg
+                BillingClient.BillingResponseCode.ITEM_UNAVAILABLE -> GPErrorCode.ProductUnavailable.errorMsg
+                BillingClient.BillingResponseCode.DEVELOPER_ERROR -> GPErrorCode.DeveloperError.errorMsg
+                BillingClient.BillingResponseCode.ERROR -> GPErrorCode.UnknownError.errorMsg
+                BillingClient.BillingResponseCode.ITEM_NOT_OWNED -> GPErrorCode.ProductNotOwned.errorMsg
+                BillingClient.BillingResponseCode.SERVICE_DISCONNECTED -> GPErrorCode.BillingServiceDisconnected.errorMsg
+                BillingClient.BillingResponseCode.ITEM_ALREADY_OWNED -> GPErrorCode.ProductAlreadyOwned.errorMsg
                 else -> {
-                    GPErrorCode.UnknownError
+                    GPErrorCode.UnknownError.errorMsg
                 }
             }
 
-        fun throwCBException(billingResult: BillingResult): CBException =
+        internal fun throwCBException(billingResult: BillingResult): CBException =
             CBException(
                 ErrorDetail(
                     httpStatusCode = billingResponseCode(billingResult.responseCode).code,
-                    message = billingDebugMessage(billingResult.responseCode).errorMsg
+                    message = billingDebugMessage(billingResult.responseCode)
                 )
             )
     }
