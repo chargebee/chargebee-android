@@ -98,11 +98,11 @@ class CBRestorePurchaseManager {
                                 || subscription.storeStatus == StoreStatus.Cancelled.value || subscription.storeStatus == StoreStatus.Paused.value
                     }
                     if (CBPurchase.includeInActivePurchases) {
-                        completionCallback.onSuccess(activePurchases)
-                        syncPurchaseWithChargebee(activeTransactions)
-                    } else {
                         completionCallback.onSuccess(allPurchases)
                         syncPurchaseWithChargebee(allTransactions)
+                    } else {
+                        completionCallback.onSuccess(activePurchases)
+                        syncPurchaseWithChargebee(activeTransactions)
                     }
                 }
                 restorePurchases.clear()

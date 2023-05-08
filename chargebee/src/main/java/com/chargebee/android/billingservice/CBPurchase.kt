@@ -184,7 +184,7 @@ object CBPurchase {
     /*
   * Get the product ID's from chargebee system.
   */
-    private fun retrieveProductIDList(
+    internal fun retrieveProductIDList(
         params: Array<String>,
         completion: (CBProductIDResult<ArrayList<String>>) -> Unit
     ) {
