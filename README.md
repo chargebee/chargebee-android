@@ -141,6 +141,42 @@ CBPurchase.purchaseProduct(product=CBProduct, customer=CBCustomer, object : CBCa
  ```
 The above function will handle the purchase against Google Play Store and send the IAP token for server-side token verification to your Chargebee account. Use the Subscription ID returned by the above function, to check for Subscription status on Chargebee and confirm the access - granted or denied.
 
+### Restore Purchase
+
+The `restorePurchases()` function helps to recover your app user's previous purchases without making them pay again. Sometimes, your app user may want to restore their previous purchases after switching to a new device or reinstalling your app. You can use the `restorePurchases()` function to allow your app user to easily restore their previous purchases.
+
+To retrieve **inactive** purchases along with the **active** purchases for your app user, you can call the `restorePurchases()` function with the `includeInActiveProducts` parameter set to `true`. If you only want to restore active subscriptions, set the parameter to `false`. Here is an example of how to use the `restorePurchases()` function in your code with the `includeInActiveProducts` parameter set to `true`.
+
+```kotlin
+CBPurchase.restorePurchases(context = this, includeInActivePurchases = false, object : CBCallback.RestorePurchaseCallback{
+      override fun onSuccess(result: List<CBRestoreSubscription>) {
+        result.forEach {
+          Log.i(javaClass.simpleName, "Successfully restored purchases")
+        }  
+      }
+      override fun onError(error: CBException) {
+        Log.e(TAG, "Error:  ${error.message}")
+      }
+})
+ ```
+
+##### Return Subscriptions Object 
+The `restorePurchases()` function returns an array of subscription objects and each object holds three attributes `subscription_id`, `plan_id`, and `store_status`. The value of `store_status` can be used to verify the subscription status such as `Active`, `InTrial`, `Cancelled` and `Paused`.
+
+##### Error Handling 
+In the event of any failures while finding associated subscriptions for the restored items, The SDK will return an error, as mentioned in the following table.
+
+These are the possible error codes and their descriptions:
+| Error Code                        | Description                                                                                                                 |
+|-----------------------------------|-----------------------------------------------------------------------------------------------------------------------------|
+| `BillingErrorCode.SERVICE_TIMEOUT`            | The request has reached the maximum timeout before Google Play responds.       |
+| `BillingErrorCode.FEATURE_NOT_SUPPORTED` | The requested feature is not supported by the Play Store on the current device.                                             |
+| `BillingErrorCode.SERVICE_UNAVAILABLE`        | The service is currently unavailable.         |
+| `BillingErrorCode.DEVELOPER_ERROR`  | Error resulting from incorrect usage of the API.                                                          |
+| `BillingErrorCode.ERROR`         | Fatal error during the API action.                             |
+| `BillingErrorCode.SERVICE_DISCONNECTED`         | The app is not connected to the Play Store service via the Google Play Billing Library.                             |
+| `BillingErrorCode.UNKNOWN`         | Unknown error occurred.                             |
+
 ### Get Subscription Status for Existing Subscribers
 The following are methods for checking the subscription status of a subscriber who already purchased the product.
 

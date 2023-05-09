@@ -211,7 +211,7 @@ class MainActivity : BaseActivity(), ListItemsAdapter.ItemClickListener {
     private fun restorePurchases() {
         showProgressDialog()
         CBPurchase.restorePurchases(
-            context = this, includeInActivePurchases = false,
+            context = this, includeInActivePurchases = true,
             completionCallback = object : CBCallback.RestorePurchaseCallback {
                 override fun onSuccess(result: List<CBRestoreSubscription>) {
                     hideProgressDialog()
@@ -223,7 +223,6 @@ class MainActivity : BaseActivity(), ListItemsAdapter.ItemClickListener {
                             alertSuccess("${result.size} purchases restored successfully")
                          else
                             alertSuccess("Purchases not found to restore")
-
                     }
                 }
 

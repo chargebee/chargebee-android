@@ -95,12 +95,7 @@ class BillingClientManager(context: Context) : PurchasesUpdatedListener {
                 } else {
                     Log.e(TAG, "Response Code :" + billingResult.responseCode)
                     callBack.onError(
-                        CBException(
-                            ErrorDetail(
-                                message = GPErrorCode.PlayServiceUnavailable.errorMsg,
-                                httpStatusCode = billingResult.responseCode
-                            )
-                        )
+                        throwCBException(billingResult)
                     )
                 }
             }
@@ -305,7 +300,7 @@ class BillingClientManager(context: Context) : PurchasesUpdatedListener {
 
     private val connectionError = CBException(
         ErrorDetail(
-            message = BillingErrorCode.billingDebugMessage(BillingErrorCode.SERVICE_UNAVAILABLE.code),
+            message = BillingErrorCode.SERVICE_UNAVAILABLE.message,
             httpStatusCode = BillingErrorCode.SERVICE_UNAVAILABLE.code
         )
     )
