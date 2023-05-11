@@ -148,7 +148,7 @@ The `restorePurchases()` function helps to recover your app user's previous purc
 To retrieve **inactive** purchases along with the **active** purchases for your app user, you can call the `restorePurchases()` function with the `includeInActiveProducts` parameter set to `true`. If you only want to restore active subscriptions, set the parameter to `false`. Here is an example of how to use the `restorePurchases()` function in your code with the `includeInActiveProducts` parameter set to `true`.
 
 ```kotlin
-CBPurchase.restorePurchases(context = this, includeInActivePurchases = false, object : CBCallback.RestorePurchaseCallback{
+CBPurchase.restorePurchases(context = current activity context, includeInActivePurchases = false, object : CBCallback.RestorePurchaseCallback{
       override fun onSuccess(result: List<CBRestoreSubscription>) {
         result.forEach {
           Log.i(javaClass.simpleName, "Successfully restored purchases")

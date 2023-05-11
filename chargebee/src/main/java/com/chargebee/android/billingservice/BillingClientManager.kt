@@ -23,14 +23,11 @@ class BillingClientManager(context: Context) : PurchasesUpdatedListener {
     private var billingClient: BillingClient? = null
     var mContext: Context? = context
     private val handler = Handler(Looper.getMainLooper())
-    private var skuType: String? = null
-    private var skuList = arrayListOf<String>()
-    private lateinit var callBack: CBCallback.ListProductsCallback<ArrayList<CBProduct>>
     private var purchaseCallBack: CBCallback.PurchaseCallback<String>? = null
     private val skusWithSkuDetails = arrayListOf<CBProduct>()
     private val TAG = javaClass.simpleName
     lateinit var product: CBProduct
-    private lateinit var completionCallback: CBCallback.RestorePurchaseCallback
+    private lateinit var restorePurchaseCallBack: CBCallback.RestorePurchaseCallback
 
     init {
         this.mContext = context
@@ -154,7 +151,7 @@ class BillingClientManager(context: Context) : PurchasesUpdatedListener {
      * @param [completionCallback] The listener will be called when restore purchase completes.
      */
     internal fun restorePurchases(completionCallback: CBCallback.RestorePurchaseCallback) {
-        this.completionCallback = completionCallback
+        this.restorePurchaseCallBack = completionCallback
         onConnected({ status ->
             queryPurchaseHistoryFromStore(status)
         }, { error ->
@@ -314,11 +311,11 @@ class BillingClientManager(context: Context) : PurchasesUpdatedListener {
                 storeTransactions.addAll(purchaseHistoryList)
                 CBRestorePurchaseManager.fetchStoreSubscriptionStatus(
                     storeTransactions,
-                    completionCallback
+                    restorePurchaseCallBack
                 )
             }
         } else {
-            completionCallback.onError(
+            restorePurchaseCallBack.onError(
                 connectionError
             )
         }
@@ -363,7 +360,7 @@ class BillingClientManager(context: Context) : PurchasesUpdatedListener {
                 }
                 purchaseTransactionList(purchaseHistoryList)
             } else {
-                completionCallback.onError(throwCBException(billingResult))
+                restorePurchaseCallBack.onError(throwCBException(billingResult))
             }
         }
     }
