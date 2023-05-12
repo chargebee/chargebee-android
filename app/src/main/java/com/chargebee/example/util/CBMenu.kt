@@ -12,6 +12,7 @@ enum class CBMenu(val value: String) {
     GetProducts("Get Products"),
     SubsStatus("Get Subscription Status"),
     SubsList("Get Subscriptions List"),
-    GetEntitlements("Get Entitlements")
+    GetEntitlements("Get Entitlements"),
+    RestorePurchase("Restore Purchase")
 }
 

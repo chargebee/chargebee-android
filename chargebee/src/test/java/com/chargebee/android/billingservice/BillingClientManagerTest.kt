@@ -64,9 +64,7 @@ class BillingClientManagerTest  {
 
         billingClientManager = callBack?.let {
             BillingClientManager(
-                ApplicationProvider.getApplicationContext(),
-                BillingClient.SkuType.SUBS,
-                productIdList, it
+                ApplicationProvider.getApplicationContext()
             )
         }
     }
@@ -84,7 +82,7 @@ class BillingClientManagerTest  {
         val productIdList = arrayListOf("merchant.pro.android", "merchant.premium.android")
 
         CoroutineScope(Dispatchers.IO).launch {
-            val skuType = CBPurchase.SkuType.SUBS
+            val skuType = CBPurchase.ProductType.SUBS
             Mockito.`when`(mContext?.let {
                 CBPurchase.retrieveProducts(
                     it,
