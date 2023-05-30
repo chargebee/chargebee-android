@@ -1,4 +1,4 @@
-package com.chargebee.android.resources
+package com.chargebee.android.billingservice
 
 import android.content.Context
 import android.os.Build
@@ -6,15 +6,14 @@ import androidx.test.core.app.ApplicationProvider
 import com.android.billingclient.api.*
 import com.chargebee.android.Chargebee
 import com.chargebee.android.ErrorDetail
-import com.chargebee.android.billingservice.BillingClientManager
-import com.chargebee.android.billingservice.CBCallback
 import com.chargebee.android.billingservice.CBCallback.ListProductsCallback
-import com.chargebee.android.billingservice.CBPurchase
 import com.chargebee.android.exceptions.CBException
 import com.chargebee.android.exceptions.CBProductIDResult
 import com.chargebee.android.exceptions.ChargebeeResult
 import com.chargebee.android.models.CBProduct
 import com.chargebee.android.network.*
+import com.chargebee.android.resources.CatalogVersion
+import com.chargebee.android.resources.ReceiptResource
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -36,9 +35,10 @@ import kotlin.collections.ArrayList
 
 @RunWith(MockitoJUnitRunner::class)
 @Config(sdk = [Build.VERSION_CODES.LOLLIPOP])
-class BillingClientManagerTest  {
+class BillingClientManagerTest {
 
     private var billingClientManager: BillingClientManager? = null
+
     @Mock
     lateinit var billingClient: BillingClient
 
@@ -46,12 +46,20 @@ class BillingClientManagerTest  {
     lateinit var skuDetails: SkuDetails
 
     private var mContext: Context? = null
-    private var callBack : ListProductsCallback<ArrayList<CBProduct>>? = null
-    private var callBackPurchase : CBCallback.PurchaseCallback<String>? = null
+    private var callBack: ListProductsCallback<ArrayList<CBProduct>>? = null
+    private var callBackPurchase: CBCallback.PurchaseCallback<String>? = null
     private val productIdList = arrayListOf("merchant.pro.android", "merchant.premium.android")
-    private var customer = CBCustomer("test","android","test","test@gmail.com")
+    private var customer = CBCustomer("test", "android", "test", "test@gmail.com")
     private var customerId: String = "test"
-
+    private val purchaseToken = "56sadmnagdjsd"
+    private val product = CBProduct(
+        "merchant.premium.test.android",
+        "Premium Plan (Chargebee Example)",
+        "₹2,650.00",
+        skuDetails,
+        true
+    )
+    private val receiptDetail = ReceiptDetail("subscriptionId", "customerId", "planId")
 
     @Before
     fun setUp() {
@@ -318,7 +326,6 @@ class BillingClientManagerTest  {
             customer,
             Chargebee.channel
         )
-        val receiptDetail = ReceiptDetail("subscriptionId","customerId","planId")
         val response = CBReceiptResponse(receiptDetail)
 
         CoroutineScope(Dispatchers.IO).launch {
@@ -443,6 +450,80 @@ class BillingClientManagerTest  {
                         println(" Error :  ${error.message} response code: ${error.httpStatusCode}")
                     }
                 })
+        }
+    }
+
+    @Test
+    fun test_validateReceiptWithChargebee_success() {
+        val params = Params(
+            purchaseToken,
+            product.productId,
+            customer,
+            Chargebee.channel
+        )
+        val response = CBReceiptResponse(receiptDetail)
+        CoroutineScope(Dispatchers.IO).launch {
+            mContext?.let {
+                CBPurchase.validateReceipt(
+                    it,
+                    product,
+                    customer,
+                    completionCallback = object : CBCallback.PurchaseCallback<String> {
+                        override fun onSuccess(result: ReceiptDetail, status: Boolean) {
+                            assertThat(result, instanceOf(ReceiptDetail::class.java))
+                        }
+
+                        override fun onError(error: CBException) {
+                            println(" Error :  ${error.message}")
+                        }
+                    })
+            }
+        }
+        CoroutineScope(Dispatchers.IO).launch {
+            Mockito.`when`(params.let { ReceiptResource().validateReceipt(it) }).thenReturn(
+                ChargebeeResult.Success(
+                    response
+                )
+            )
+            verify(ReceiptResource(), times(1)).validateReceipt(params)
+            verify(CBReceiptRequestBody("receipt", "", null, ""), times(1)).toCBReceiptReqBody()
+        }
+    }
+
+    @Test
+    fun test_validateReceiptWithChargebee_error() {
+        val params = Params(
+            purchaseToken,
+            product.productId,
+            customer,
+            Chargebee.channel
+        )
+        val exception = CBException(ErrorDetail("Error"))
+        CoroutineScope(Dispatchers.IO).launch {
+            mContext?.let {
+                CBPurchase.validateReceipt(
+                    it,
+                    product,
+                    customer,
+                    completionCallback = object : CBCallback.PurchaseCallback<String> {
+                        override fun onSuccess(result: ReceiptDetail, status: Boolean) {
+                            assertThat(result, instanceOf(ReceiptDetail::class.java))
+                        }
+
+                        override fun onError(error: CBException) {
+                            println(" Error :  ${error.message}")
+                        }
+                    })
+            }
+        }
+        CoroutineScope(Dispatchers.IO).launch {
+            Mockito.`when`(params.let { ReceiptResource().validateReceipt(it) }).thenReturn(
+                ChargebeeResult.Error(
+                    exception
+                )
+            )
+            verify(ReceiptResource(), times(1)).validateReceipt(params)
+            verify(CBReceiptRequestBody("receipt", "", null, ""), times(1)).toCBReceiptReqBody()
         }
     }
 }

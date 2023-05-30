@@ -40,10 +40,10 @@ class BillingViewModel : ViewModel() {
                 try {
                     if (error.httpStatusCode!! in 500..599) {
                         validateReceipt(context = context, product = product)
-                    }else {
+                    } else {
                         cbException.postValue(error)
                     }
-                }catch (exp: Exception){
+                } catch (exp: Exception) {
                     Log.i(TAG, "Exception :${exp.message}")
                 }
             }
@@ -67,21 +67,32 @@ class BillingViewModel : ViewModel() {
         })
     }
 
-    fun validateReceipt(context: Context, product: CBProduct) {
-        CBPurchase.validateReceipt(context = context, product = product, completionCallback = object : CBCallback.PurchaseCallback<String>{
-            override fun onSuccess(result: ReceiptDetail, status:Boolean) {
-                Log.i(TAG, "Subscription ID:  ${result.subscription_id}")
-                Log.i(TAG, "Plan ID:  ${result.plan_id}")
-                productPurchaseResult.postValue(status)
-            }
-            override fun onError(error: CBException) {
-                try {
-                    cbException.postValue(error)
-                }catch (exp: Exception){
-                    Log.i(TAG, "Exception :${exp.message}")
+    private fun validateReceipt(context: Context, product: CBProduct) {
+        val customer = CBCustomer(
+            id = "sync_receipt_android",
+            firstName = "Test",
+            lastName = "Purchase",
+            email = "testreceipt@gmail.com"
+        )
+        CBPurchase.validateReceipt(
+            context = context,
+            product = product,
+            customer = customer,
+            completionCallback = object : CBCallback.PurchaseCallback<String> {
+                override fun onSuccess(result: ReceiptDetail, status: Boolean) {
+                    Log.i(TAG, "Subscription ID:  ${result.subscription_id}")
+                    Log.i(TAG, "Plan ID:  ${result.plan_id}")
+                    productPurchaseResult.postValue(status)
                 }
-            }
-        })
+
+                override fun onError(error: CBException) {
+                    try {
+                        cbException.postValue(error)
+                    } catch (exp: Exception) {
+                        Log.i(TAG, "Exception :${exp.message}")
+                    }
+                }
+            })
     }
 
     fun retrieveProductIdentifers(queryParam: Array<String>){
