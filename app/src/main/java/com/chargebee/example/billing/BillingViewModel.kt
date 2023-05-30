@@ -1,5 +1,6 @@
 package com.chargebee.example.billing
 
+import android.content.Context
 import android.util.Log
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -27,9 +28,30 @@ class BillingViewModel : ViewModel() {
     var entitlementsResult: MutableLiveData<String?> = MutableLiveData()
     private var subscriptionId: String = ""
 
-    fun purchaseProduct(product: CBProduct, customer: CBCustomer) {
+    fun purchaseProduct(context: Context,product: CBProduct, customer: CBCustomer) {
 
         CBPurchase.purchaseProduct(product, customer,  object : CBCallback.PurchaseCallback<String>{
+            override fun onSuccess(result: ReceiptDetail, status:Boolean) {
+                Log.i(TAG, "Subscription ID:  ${result.subscription_id}")
+                Log.i(TAG, "Plan ID:  ${result.plan_id}")
+                productPurchaseResult.postValue(status)
+            }
+            override fun onError(error: CBException) {
+                try {
+                    if (error.httpStatusCode!! in 500..599) {
+                        validateReceipt(context = context, product = product)
+                    }else {
+                        cbException.postValue(error)
+                    }
+                }catch (exp: Exception){
+                    Log.i(TAG, "Exception :${exp.message}")
+                }
+            }
+        })
+    }
+    fun purchaseProduct(product: CBProduct, customerId: String) {
+
+        CBPurchase.purchaseProduct(product, customerId,  object : CBCallback.PurchaseCallback<String>{
             override fun onSuccess(result: ReceiptDetail, status:Boolean) {
                 Log.i(TAG, "Subscription ID:  ${result.subscription_id}")
                 Log.i(TAG, "Plan ID:  ${result.plan_id}")
@@ -44,9 +66,9 @@ class BillingViewModel : ViewModel() {
             }
         })
     }
-    fun purchaseProduct(product: CBProduct, customerId: String) {
 
-        CBPurchase.purchaseProduct(product, customerId,  object : CBCallback.PurchaseCallback<String>{
+    fun validateReceipt(context: Context, product: CBProduct) {
+        CBPurchase.validateReceipt(context = context, product = product, completionCallback = object : CBCallback.PurchaseCallback<String>{
             override fun onSuccess(result: ReceiptDetail, status:Boolean) {
                 Log.i(TAG, "Subscription ID:  ${result.subscription_id}")
                 Log.i(TAG, "Plan ID:  ${result.plan_id}")
