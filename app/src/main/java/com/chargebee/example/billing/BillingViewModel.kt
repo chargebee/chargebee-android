@@ -49,7 +49,7 @@ class BillingViewModel : ViewModel() {
             }
         })
     }
-    fun purchaseProduct(product: CBProduct, customerId: String) {
+    fun purchaseProduct(context: Context, product: CBProduct, customerId: String) {
 
         CBPurchase.purchaseProduct(product, customerId,  object : CBCallback.PurchaseCallback<String>{
             override fun onSuccess(result: ReceiptDetail, status:Boolean) {
@@ -59,7 +59,11 @@ class BillingViewModel : ViewModel() {
             }
             override fun onError(error: CBException) {
                 try {
-                    cbException.postValue(error)
+                    if (error.httpStatusCode!! in 500..599) {
+                        validateReceipt(context = context, product = product)
+                    } else {
+                        cbException.postValue(error)
+                    }
                 }catch (exp: Exception){
                     Log.i(TAG, "Exception :${exp.message}")
                 }

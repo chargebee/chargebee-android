@@ -419,6 +419,7 @@ class BillingClientManager(context: Context) : PurchasesUpdatedListener {
     }
 
     internal fun validateReceiptWithChargebee(product: CBProduct, completionCallback: CBCallback.PurchaseCallback<String> ) {
+        this.purchaseCallBack = completionCallback
         onConnected({ status ->
             if (status)
                 queryPurchaseHistory { purchaseHistoryList ->

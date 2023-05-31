@@ -146,7 +146,7 @@ public class BillingActivity extends BaseActivity implements ProductListAdapter.
     }
 
     private void purchaseProduct(String customerId){
-        this.billingViewModel.purchaseProduct(productList.get(position), customerId);
+        this.billingViewModel.purchaseProduct(this, productList.get(position), customerId);
     }
     private void purchaseProduct(){
         this.billingViewModel.purchaseProduct(this,productList.get(position), cbCustomer);
