@@ -1,6 +1,7 @@
 package com.chargebee.example.billing
 
 import android.content.Context
+import android.content.SharedPreferences
 import android.util.Log
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -14,7 +15,6 @@ import com.chargebee.android.exceptions.ChargebeeResult
 import com.chargebee.android.models.*
 import com.chargebee.android.network.CBCustomer
 import com.chargebee.android.network.ReceiptDetail
-import com.google.gson.Gson
 
 class BillingViewModel : ViewModel() {
 
@@ -27,9 +27,10 @@ class BillingViewModel : ViewModel() {
     var error: MutableLiveData<String?> = MutableLiveData()
     var entitlementsResult: MutableLiveData<String?> = MutableLiveData()
     private var subscriptionId: String = ""
+    private lateinit var sharedPreference : SharedPreferences
 
     fun purchaseProduct(context: Context,product: CBProduct, customer: CBCustomer) {
-
+        sharedPreference =  context.getSharedPreferences("PREFERENCE_NAME",Context.MODE_PRIVATE)
         CBPurchase.purchaseProduct(product, customer,  object : CBCallback.PurchaseCallback<String>{
             override fun onSuccess(result: ReceiptDetail, status:Boolean) {
                 Log.i(TAG, "Subscription ID:  ${result.subscription_id}")
@@ -40,6 +41,9 @@ class BillingViewModel : ViewModel() {
                 try {
                     if (error.httpStatusCode!! in 500..599) {
                         validateReceipt(context = context, product = product)
+                    } else if (error.httpStatusCode!! == 120){
+                        storeInLocal(product.productId)
+                        cbException.postValue(error)
                     } else {
                         cbException.postValue(error)
                     }
@@ -50,7 +54,7 @@ class BillingViewModel : ViewModel() {
         })
     }
     fun purchaseProduct(context: Context, product: CBProduct, customerId: String) {
-
+        sharedPreference =  context.getSharedPreferences("PREFERENCE_NAME",Context.MODE_PRIVATE)
         CBPurchase.purchaseProduct(product, customerId,  object : CBCallback.PurchaseCallback<String>{
             override fun onSuccess(result: ReceiptDetail, status:Boolean) {
                 Log.i(TAG, "Subscription ID:  ${result.subscription_id}")
@@ -61,10 +65,13 @@ class BillingViewModel : ViewModel() {
                 try {
                     if (error.httpStatusCode!! in 500..599) {
                         validateReceipt(context = context, product = product)
+                    } else if (error.httpStatusCode!! == 120) {
+                        storeInLocal(product.productId)
+                        cbException.postValue(error)
                     } else {
                         cbException.postValue(error)
                     }
-                }catch (exp: Exception){
+                } catch (exp: Exception) {
                     Log.i(TAG, "Exception :${exp.message}")
                 }
             }
@@ -168,5 +175,9 @@ class BillingViewModel : ViewModel() {
             }
         }
     }
-
+    private fun storeInLocal(productId: String){
+        val editor = sharedPreference.edit()
+        editor.putString("productId", productId)
+        editor.apply()
+    }
 }

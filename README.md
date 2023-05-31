@@ -180,6 +180,7 @@ These are the possible error codes and their descriptions:
 ##### Synchronization of Google Play Store Purchases with Chargebee through Receipt Validation
 Receipt validation is crucial to ensure that the purchases made by your users are synced with Chargebee. In rare cases, when a purchase is made at the Google Play Store, and the network connection goes off or the server not responding, the purchase details may not be updated in Chargebee. In such cases, you can use a retry mechanism by following these steps:
 
+* Add a network listener, as shown in the example project.
 * Save the product identifier in the cache once the purchase is initiated and clear the cache once the purchase is successful.
 * When the network connectivity is lost after the purchase is completed at Google Play Store but not synced with Chargebee, retrieve the product from the cache once the network connection is back and initiate validateReceipt() by passing activity `Context`, `CBProduct` and `CBCustomer(optional)` as input. This will validate the receipt and sync the purchase in Chargebee as a subscription. For subscriptions, use the function to validateReceipt().
 
