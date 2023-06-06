@@ -417,4 +417,22 @@ class BillingClientManager(context: Context) : PurchasesUpdatedListener {
             }
         }
     }
+
+    internal fun validateReceiptWithChargebee(product: CBProduct, completionCallback: CBCallback.PurchaseCallback<String> ) {
+        this.purchaseCallBack = completionCallback
+        onConnected({ status ->
+            if (status)
+                queryPurchaseHistory { purchaseHistoryList ->
+                    val purchaseTransaction = purchaseHistoryList.filter {
+                        it.productId.first() == product.productId
+                    }
+                    validateReceipt(purchaseTransaction.first().purchaseToken, product)
+                } else
+                completionCallback.onError(
+                    connectionError
+                )
+        }, { error ->
+            completionCallback.onError(error)
+        })
+    }
 }

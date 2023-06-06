@@ -48,10 +48,14 @@ internal class ResultHandler {
                         ChargebeeResult.Error(ex)
                     } catch (ex: UnknownHostException) {
                         print("failed: ${ex.message}")
-                        ChargebeeResult.Error(exp = CBException(ErrorDetail(ex.message)))
+                        ChargebeeResult.Error(exp = CBException(ErrorDetail(ex.message, httpStatusCode = 502)))
                     } catch (ex: Exception) {
-                        logger?.error(ex.message ?: "failed")
-                        ChargebeeResult.Error(exp = CBException(ErrorDetail(ex.message)))
+                        try {
+                            logger?.error(ex.message ?: "failed")
+                        } catch (ex: Exception) {
+                            print("Exception : ${ex.message}")
+                        }
+                        ChargebeeResult.Error(exp = CBException(ErrorDetail(ex.message, httpStatusCode = 502)))
                     }
                     completion(result)
                 }
