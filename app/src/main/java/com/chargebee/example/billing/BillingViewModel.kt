@@ -30,6 +30,7 @@ class BillingViewModel : ViewModel() {
     private lateinit var sharedPreference : SharedPreferences
 
     fun purchaseProduct(context: Context,product: CBProduct, customer: CBCustomer) {
+        // Cache the product id in sharedPreferences and retry validating the receipt if in case server is not responding or no internet connection.
         sharedPreference =  context.getSharedPreferences("PREFERENCE_NAME",Context.MODE_PRIVATE)
         CBPurchase.purchaseProduct(product, customer,  object : CBCallback.PurchaseCallback<String>{
             override fun onSuccess(result: ReceiptDetail, status:Boolean) {
@@ -39,11 +40,10 @@ class BillingViewModel : ViewModel() {
             }
             override fun onError(error: CBException) {
                 try {
+                    // Handled server not responding and offline
                     if (error.httpStatusCode!! in 500..599) {
-                        validateReceipt(context = context, product = product)
-                    } else if (error.httpStatusCode!! == 120){
                         storeInLocal(product.productId)
-                        cbException.postValue(error)
+                        validateReceipt(context = context, product = product)
                     } else {
                         cbException.postValue(error)
                     }
@@ -64,10 +64,8 @@ class BillingViewModel : ViewModel() {
             override fun onError(error: CBException) {
                 try {
                     if (error.httpStatusCode!! in 500..599) {
-                        validateReceipt(context = context, product = product)
-                    } else if (error.httpStatusCode!! == 120) {
                         storeInLocal(product.productId)
-                        cbException.postValue(error)
+                        validateReceipt(context = context, product = product)
                     } else {
                         cbException.postValue(error)
                     }
@@ -93,6 +91,9 @@ class BillingViewModel : ViewModel() {
                 override fun onSuccess(result: ReceiptDetail, status: Boolean) {
                     Log.i(TAG, "Subscription ID:  ${result.subscription_id}")
                     Log.i(TAG, "Plan ID:  ${result.plan_id}")
+                    // Clear the local cache once receipt validation success
+                    val editor = sharedPreference.edit()
+                    editor.clear().apply()
                     productPurchaseResult.postValue(status)
                 }
 

@@ -141,8 +141,8 @@ object CBPurchase {
     }
 
     /**
-     * This method will be used to validate the receipt with Chargebee.
-     * In case of failed syncing with Chargebee during the purchase flow
+     * This method will be used to validate the receipt with Chargebee,
+     * when syncing with Chargebee fails after the successful purchase in Google Play Store.
      *
      * @param [context] Current activity context
      * @param [productId] Product Identifier.

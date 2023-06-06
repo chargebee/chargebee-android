@@ -185,7 +185,7 @@ Receipt validation is crucial to ensure that the purchases made by your users ar
 * When the network connectivity is lost after the purchase is completed at Google Play Store but not synced with Chargebee, retrieve the product from the cache once the network connection is back and initiate validateReceipt() by passing activity `Context`, `CBProduct` and `CBCustomer(optional)` as input. This will validate the receipt and sync the purchase in Chargebee as a subscription. For subscriptions, use the function to validateReceipt().
 
 Use the function available for the retry mechanism.
-##### Function for subscriptions
+##### Function for validating the receipt
 
 ```kotlin
 CBPurchase.validateReceipt(context = current activity context, product = CBProduct, customer = CBCustomer, object : CBCallback.PurchaseCallback<String> {
