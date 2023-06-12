@@ -108,6 +108,8 @@ class CBRestorePurchaseManager {
                     }
                 }
                 restorePurchases.clear()
+                allTransactions.clear()
+                activeTransactions.clear()
             } else {
                 fetchStoreSubscriptionStatus(context, storeTransactions, completionCallback)
             }

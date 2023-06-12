@@ -14,6 +14,7 @@ import com.chargebee.android.exceptions.CBException
 import com.chargebee.android.exceptions.CBProductIDResult
 import com.chargebee.android.exceptions.ChargebeeResult
 import com.chargebee.android.models.CBProduct
+import com.chargebee.android.models.OfferDetail
 import com.chargebee.android.network.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -51,6 +52,10 @@ class BillingClientManagerTest  {
     private val productIdList = arrayListOf("merchant.pro.android", "merchant.premium.android")
     private var customer = CBCustomer("test","android","test","test@gmail.com")
     private var customerId: String = "test"
+    private val offerDetail = OfferDetail( introductoryPrice = "",
+        introductoryPriceAmountMicros = 0,
+        introductoryPricePeriod = 0,
+        introductoryOfferType = "")
 
 
     @Before
@@ -316,7 +321,8 @@ class BillingClientManagerTest  {
             purchaseToken,
             products.productId,
             customer,
-            Chargebee.channel
+            Chargebee.channel,
+            offerDetail
         )
         val receiptDetail = ReceiptDetail("subscriptionId","customerId","planId")
         val response = CBReceiptResponse(receiptDetail)
@@ -328,7 +334,7 @@ class BillingClientManagerTest  {
                 )
             )
             verify(ReceiptResource(), times(1)).validateReceipt(params)
-            verify(CBReceiptRequestBody("receipt","",null,""), times(1)).toCBReceiptReqBody()
+            verify(CBReceiptRequestBody("receipt","",null,"", offerDetail), times(1)).toCBReceiptReqBody()
         }
     }
     @Test
@@ -355,7 +361,8 @@ class BillingClientManagerTest  {
             purchaseToken,
             products.productId,
             customer,
-            Chargebee.channel
+            Chargebee.channel,
+            offerDetail
         )
         val exception = CBException(ErrorDetail("Error"))
         CoroutineScope(Dispatchers.IO).launch {
@@ -365,7 +372,7 @@ class BillingClientManagerTest  {
                 )
             )
             verify(ReceiptResource(), times(1)).validateReceipt(params)
-            verify(CBReceiptRequestBody("receipt","",null,""), times(1)).toCBReceiptReqBody()
+            verify(CBReceiptRequestBody("receipt","",null,"", offerDetail), times(1)).toCBReceiptReqBody()
         }
     }
 
@@ -427,6 +434,7 @@ class BillingClientManagerTest  {
         }
         lock.await()
     }
+
     @Test
     fun test_purchaseProductWithCBCustomer_error(){
         val products = CBProduct("","","", skuDetails,true)
