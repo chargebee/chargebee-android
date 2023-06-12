@@ -1,5 +1,6 @@
 package com.chargebee.android.restore
 
+import android.content.Context
 import android.util.Log
 import com.chargebee.android.ErrorDetail
 import com.chargebee.android.billingservice.CBCallback
@@ -54,6 +55,7 @@ class CBRestorePurchaseManager {
         }
 
         internal fun fetchStoreSubscriptionStatus(
+            context: Context,
             storeTransactions: ArrayList<PurchaseTransaction>,
             completionCallback: CBCallback.RestorePurchaseCallback
         ) {
@@ -68,9 +70,9 @@ class CBRestorePurchaseManager {
                             StoreStatus.Active.value -> activeTransactions.add(storeTransaction)
                             else -> allTransactions.add(storeTransaction)
                         }
-                        getRestorePurchases(storeTransactions)
+                        getRestorePurchases(context, storeTransactions)
                     }, { _ ->
-                        getRestorePurchases(storeTransactions)
+                        getRestorePurchases(context, storeTransactions)
                     })
                 }
             } else {
@@ -78,7 +80,7 @@ class CBRestorePurchaseManager {
             }
         }
 
-        internal fun getRestorePurchases(storeTransactions: ArrayList<PurchaseTransaction>) {
+        internal fun getRestorePurchases(context: Context, storeTransactions: ArrayList<PurchaseTransaction>) {
             if (storeTransactions.isEmpty()) {
                 if (restorePurchases.isEmpty()) {
                     completionCallback.onError(
@@ -99,38 +101,57 @@ class CBRestorePurchaseManager {
                     }
                     if (CBPurchase.includeInActivePurchases) {
                         completionCallback.onSuccess(allPurchases)
-                        syncPurchaseWithChargebee(allTransactions)
+                        syncPurchaseWithChargebee(allTransactions, context)
                     } else {
                         completionCallback.onSuccess(activePurchases)
-                        syncPurchaseWithChargebee(activeTransactions)
+                        syncPurchaseWithChargebee(activeTransactions, context)
                     }
                 }
                 restorePurchases.clear()
             } else {
-                fetchStoreSubscriptionStatus(storeTransactions, completionCallback)
+                fetchStoreSubscriptionStatus(context, storeTransactions, completionCallback)
             }
         }
 
-        internal fun syncPurchaseWithChargebee(storeTransactions: ArrayList<PurchaseTransaction>) {
+        internal fun syncPurchaseWithChargebee(storeTransactions: ArrayList<PurchaseTransaction>, context: Context) {
             storeTransactions.forEach { productIdList ->
-                validateReceipt(productIdList.purchaseToken, productIdList.productId.first())
+                validateReceipt(productIdList.purchaseToken, productIdList.productId, context)
             }
         }
 
-        internal fun validateReceipt(purchaseToken: String, productId: String) {
-            CBPurchase.validateReceipt(purchaseToken, productId) {
-                when (it) {
-                    is ChargebeeResult.Success -> {
-                        Log.i(javaClass.simpleName, "result :  ${it.data}")
+        internal fun validateReceipt(
+            purchaseToken: String,
+            productId: List<String>,
+            context: Context
+        ) {
+            CBPurchase.retrieveProducts(
+                context,
+                productId as ArrayList<String>,
+                object : CBCallback.ListProductsCallback<ArrayList<CBProduct>> {
+                    override fun onSuccess(productIDs: ArrayList<CBProduct>) {
+                        if (productIDs.size == 0) {
+                            Log.i(javaClass.simpleName, "Product not available")
+                            return
+                        }
+                        CBPurchase.validateReceipt(purchaseToken, productIDs.first()) {
+                            when (it) {
+                                is ChargebeeResult.Success -> {
+                                    Log.i(javaClass.simpleName, "result :  ${it.data}")
+                                }
+                                is ChargebeeResult.Error -> {
+                                    Log.e(
+                                        javaClass.simpleName,
+                                        "Exception from Server - validateReceipt() :  ${it.exp.message}"
+                                    )
+                                }
+                            }
+                        }
                     }
-                    is ChargebeeResult.Error -> {
-                        Log.e(
-                            javaClass.simpleName,
-                            "Exception from Server - validateReceipt() :  ${it.exp.message}"
-                        )
+
+                    override fun onError(error: CBException) {
+                        Log.e(javaClass.simpleName, "Error:  ${error.message}")
                     }
-                }
-            }
+                })
         }
     }
 }

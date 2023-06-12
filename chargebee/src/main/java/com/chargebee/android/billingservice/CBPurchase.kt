@@ -149,7 +149,8 @@ object CBPurchase {
         completion: (ChargebeeResult<Any>) -> Unit
     ) {
         try {
-            validateReceipt(purchaseToken, product.productId, completion)
+            val offerDetail = getOfferDetail(product)
+            validateReceipt(purchaseToken, product.productId, offerDetail, completion)
         } catch (exp: Exception) {
             Log.e(javaClass.simpleName, "Exception in validateReceipt() :" + exp.message)
             ChargebeeResult.Error(
@@ -165,6 +166,7 @@ object CBPurchase {
     internal fun validateReceipt(
         purchaseToken: String,
         productId: String,
+        offerDetail: OfferDetail,
         completion: (ChargebeeResult<Any>) -> Unit
     ) {
         val logger = CBLogger(name = "buy", action = "process_purchase_command")
@@ -172,7 +174,8 @@ object CBPurchase {
             purchaseToken,
             productId,
             customer,
-            Chargebee.channel
+            Chargebee.channel,
+            offerDetail
         )
         ResultHandler.safeExecuter(
             { ReceiptResource().validateReceipt(params) },
@@ -282,4 +285,39 @@ object CBPurchase {
         }
         return billingClientManager as BillingClientManager
     }
+
+    private fun convertIntroductoryPriceAmountInMicros(product: CBProduct): Long {
+        return product.skuDetails.introductoryPriceAmountMicros / 1_000_0
+    }
+
+    private fun getOfferDetail(product: CBProduct): OfferDetail {
+        var offerDetail = OfferDetail( introductoryPrice = "",
+            introductoryPriceAmountMicros = 0,
+            introductoryPricePeriod = 0,
+            introductoryOfferType = "")
+        val introductoryOfferType: String
+        val numberOfUnits: Int
+        if (product.skuDetails.introductoryPrice.isNotEmpty()) {
+            val subscriptionPeriod = product.skuDetails.introductoryPricePeriod
+            if (product.skuDetails.introductoryPriceCycles == 1) {
+                introductoryOfferType = "pay_up_front"
+                numberOfUnits =
+                    subscriptionPeriod.substring(1, subscriptionPeriod.length - 1).toInt()
+            } else {
+                introductoryOfferType = "pay_as_you_go"
+                numberOfUnits = product.skuDetails.introductoryPriceCycles
+            }
+            val introductoryPriceAmountMicros = convertIntroductoryPriceAmountInMicros(product)
+            offerDetail = OfferDetail(
+                introductoryPrice = product.skuDetails.introductoryPrice,
+                introductoryPriceAmountMicros = introductoryPriceAmountMicros,
+                introductoryPricePeriod = numberOfUnits,
+                introductoryOfferType = introductoryOfferType
+            )
+            return offerDetail
+        }
+        return offerDetail
+    }
+
+
 }

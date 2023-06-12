@@ -309,10 +309,13 @@ class BillingClientManager(context: Context) : PurchasesUpdatedListener {
             queryPurchaseHistory { purchaseHistoryList ->
                 val storeTransactions = arrayListOf<PurchaseTransaction>()
                 storeTransactions.addAll(purchaseHistoryList)
-                CBRestorePurchaseManager.fetchStoreSubscriptionStatus(
-                    storeTransactions,
-                    restorePurchaseCallBack
-                )
+                mContext?.let {
+                    CBRestorePurchaseManager.fetchStoreSubscriptionStatus(
+                        it,
+                        storeTransactions,
+                        restorePurchaseCallBack
+                    )
+                }
             }
         } else {
             restorePurchaseCallBack.onError(
