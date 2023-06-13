@@ -16,9 +16,9 @@ import com.chargebee.android.resources.RestorePurchaseResource
 class CBRestorePurchaseManager {
 
     companion object {
-        private var allTransactions = ArrayList<PurchaseTransaction>()
+        internal var allTransactions = ArrayList<PurchaseTransaction>()
         private var restorePurchases = ArrayList<CBRestoreSubscription>()
-        private var activeTransactions = ArrayList<PurchaseTransaction>()
+        internal var activeTransactions = ArrayList<PurchaseTransaction>()
         private lateinit var completionCallback: CBCallback.RestorePurchaseCallback
 
         private fun retrieveStoreSubscription(
@@ -55,11 +55,10 @@ class CBRestorePurchaseManager {
         }
 
         internal fun fetchStoreSubscriptionStatus(
-            context: Context,
             storeTransactions: ArrayList<PurchaseTransaction>,
-            completionCallback: CBCallback.RestorePurchaseCallback
+            result: (List<CBRestoreSubscription>) -> Unit,
+            error: (CBException) -> Unit
         ) {
-            this.completionCallback = completionCallback
             if (storeTransactions.isNotEmpty()) {
                 val storeTransaction =
                     storeTransactions.firstOrNull()?.also { storeTransactions.remove(it) }
@@ -70,20 +69,24 @@ class CBRestorePurchaseManager {
                             StoreStatus.Active.value -> activeTransactions.add(storeTransaction)
                             else -> allTransactions.add(storeTransaction)
                         }
-                        getRestorePurchases(context, storeTransactions)
+                        getRestorePurchases(storeTransactions, result, error)
                     }, { _ ->
-                        getRestorePurchases(context, storeTransactions)
+                        getRestorePurchases(storeTransactions, result, error)
                     })
                 }
             } else {
-                completionCallback.onSuccess(emptyList())
+                result(emptyList())
             }
         }
 
-        internal fun getRestorePurchases(context: Context, storeTransactions: ArrayList<PurchaseTransaction>) {
+        internal fun getRestorePurchases(
+            storeTransactions: ArrayList<PurchaseTransaction>,
+            result: (List<CBRestoreSubscription>) -> Unit,
+            error: (CBException) -> Unit
+        ) {
             if (storeTransactions.isEmpty()) {
                 if (restorePurchases.isEmpty()) {
-                    completionCallback.onError(
+                    error(
                         CBException(
                             ErrorDetail(
                                 message = GPErrorCode.InvalidPurchaseToken.errorMsg,
@@ -92,68 +95,14 @@ class CBRestorePurchaseManager {
                         )
                     )
                 } else {
-                    val activePurchases = restorePurchases.filter { subscription ->
-                        subscription.storeStatus == StoreStatus.Active.value
-                    }
-                    val allPurchases = restorePurchases.filter { subscription ->
-                        subscription.storeStatus == StoreStatus.Active.value || subscription.storeStatus == StoreStatus.InTrial.value
-                                || subscription.storeStatus == StoreStatus.Cancelled.value || subscription.storeStatus == StoreStatus.Paused.value
-                    }
-                    if (CBPurchase.includeInActivePurchases) {
-                        completionCallback.onSuccess(allPurchases)
-                        syncPurchaseWithChargebee(allTransactions, context)
-                    } else {
-                        completionCallback.onSuccess(activePurchases)
-                        syncPurchaseWithChargebee(activeTransactions, context)
-                    }
+                    result(restorePurchases)
                 }
                 restorePurchases.clear()
                 allTransactions.clear()
                 activeTransactions.clear()
             } else {
-                fetchStoreSubscriptionStatus(context, storeTransactions, completionCallback)
+                fetchStoreSubscriptionStatus(storeTransactions, result, error)
             }
-        }
-
-        internal fun syncPurchaseWithChargebee(storeTransactions: ArrayList<PurchaseTransaction>, context: Context) {
-            storeTransactions.forEach { productIdList ->
-                validateReceipt(productIdList.purchaseToken, productIdList.productId, context)
-            }
-        }
-
-        internal fun validateReceipt(
-            purchaseToken: String,
-            productId: List<String>,
-            context: Context
-        ) {
-            CBPurchase.retrieveProducts(
-                context,
-                productId as ArrayList<String>,
-                object : CBCallback.ListProductsCallback<ArrayList<CBProduct>> {
-                    override fun onSuccess(productIDs: ArrayList<CBProduct>) {
-                        if (productIDs.size == 0) {
-                            Log.i(javaClass.simpleName, "Product not available")
-                            return
-                        }
-                        CBPurchase.validateReceipt(purchaseToken, productIDs.first()) {
-                            when (it) {
-                                is ChargebeeResult.Success -> {
-                                    Log.i(javaClass.simpleName, "result :  ${it.data}")
-                                }
-                                is ChargebeeResult.Error -> {
-                                    Log.e(
-                                        javaClass.simpleName,
-                                        "Exception from Server - validateReceipt() :  ${it.exp.message}"
-                                    )
-                                }
-                            }
-                        }
-                    }
-
-                    override fun onError(error: CBException) {
-                        Log.e(javaClass.simpleName, "Error:  ${error.message}")
-                    }
-                })
         }
     }
 }

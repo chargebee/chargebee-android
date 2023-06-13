@@ -13,6 +13,7 @@ import com.chargebee.android.models.PurchaseTransaction
 import com.chargebee.android.exceptions.CBException
 import com.chargebee.android.exceptions.ChargebeeResult
 import com.chargebee.android.models.CBProduct
+import com.chargebee.android.models.StoreStatus
 import com.chargebee.android.network.CBReceiptResponse
 import com.chargebee.android.restore.CBRestorePurchaseManager
 import kotlin.collections.ArrayList
@@ -309,18 +310,69 @@ class BillingClientManager(context: Context) : PurchasesUpdatedListener {
             queryPurchaseHistory { purchaseHistoryList ->
                 val storeTransactions = arrayListOf<PurchaseTransaction>()
                 storeTransactions.addAll(purchaseHistoryList)
-                mContext?.let {
-                    CBRestorePurchaseManager.fetchStoreSubscriptionStatus(
-                        it,
-                        storeTransactions,
-                        restorePurchaseCallBack
-                    )
-                }
+                fetchStoreSubscriptionStatus(storeTransactions)
             }
         } else {
             restorePurchaseCallBack.onError(
                 connectionError
             )
+        }
+    }
+
+    internal fun fetchStoreSubscriptionStatus(storeTransactions: ArrayList<PurchaseTransaction>){
+        CBRestorePurchaseManager.fetchStoreSubscriptionStatus(storeTransactions, result = { restorePurchases ->
+            val activePurchases = restorePurchases.filter { subscription ->
+                subscription.storeStatus == StoreStatus.Active.value
+            }
+            val allPurchases = restorePurchases.filter { subscription ->
+                subscription.storeStatus == StoreStatus.Active.value || subscription.storeStatus == StoreStatus.InTrial.value
+                        || subscription.storeStatus == StoreStatus.Cancelled.value || subscription.storeStatus == StoreStatus.Paused.value
+            }
+            if (CBPurchase.includeInActivePurchases) {
+                restorePurchaseCallBack.onSuccess(allPurchases)
+                syncPurchaseWithChargebee(CBRestorePurchaseManager.allTransactions)
+            } else {
+                restorePurchaseCallBack.onSuccess(activePurchases)
+                 syncPurchaseWithChargebee(CBRestorePurchaseManager.activeTransactions)
+            }
+        }, error = {
+            restorePurchaseCallBack.onError(error = it)
+        })
+    }
+
+    internal fun syncPurchaseWithChargebee(storeTransactions: ArrayList<PurchaseTransaction>) {
+        storeTransactions.forEach { productIdList ->
+            retrieveProducts(
+                CBPurchase.ProductType.SUBS.value,
+                ArrayList(productIdList.productId),
+                object : CBCallback.ListProductsCallback<ArrayList<CBProduct>> {
+                    override fun onSuccess(productIDs: ArrayList<CBProduct>) {
+                        if (productIDs.size == 0) {
+                            Log.i(javaClass.simpleName, "Product not available")
+                            return
+                        }
+                        CBPurchase.validateReceipt(
+                            productIdList.purchaseToken,
+                            productIDs.first()
+                        ) {
+                            when (it) {
+                                is ChargebeeResult.Success -> {
+                                    Log.i(javaClass.simpleName, "result :  ${it.data}")
+                                }
+                                is ChargebeeResult.Error -> {
+                                    Log.e(
+                                        javaClass.simpleName,
+                                        "Exception from Server - validateReceipt() :  ${it.exp.message}"
+                                    )
+                                }
+                            }
+                        }
+                    }
+
+                    override fun onError(error: CBException) {
+                        Log.e(javaClass.simpleName, "Error:  ${error.message}")
+                    }
+                })
         }
     }
 
