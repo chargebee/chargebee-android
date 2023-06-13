@@ -2,13 +2,11 @@ package com.chargebee.android.restore
 
 import com.android.billingclient.api.*
 import com.chargebee.android.Chargebee
-import com.chargebee.android.ErrorDetail
-import com.chargebee.android.billingservice.CBCallback.RestorePurchaseCallback
+import com.chargebee.android.billingservice.TestData
 import com.chargebee.android.exceptions.CBException
 import com.chargebee.android.exceptions.ChargebeeResult
 import com.chargebee.android.models.*
 import com.chargebee.android.network.*
-import com.chargebee.android.resources.ReceiptResource
 import com.chargebee.android.resources.RestorePurchaseResource
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -33,14 +31,7 @@ class RestorePurchaseTest {
     private val list = ArrayList<String>()
     private val storeTransactions = arrayListOf<PurchaseTransaction>()
     private val lock = CountDownLatch(1)
-    private val response =
-        CBReceiptResponse(ReceiptDetail("subscriptionId", "customerId", "planId"))
-    private val error = CBException(
-        ErrorDetail(
-            message = "The Token data sent is not correct or Google service is temporarily down",
-            httpStatusCode = 400
-        )
-    )
+
 
     @Before
     fun setUp() {
@@ -131,7 +122,7 @@ class RestorePurchaseTest {
             Mockito.`when`(RestorePurchaseResource().retrieveStoreSubscription(purchaseToken))
                 .thenReturn(
                     ChargebeeResult.Error(
-                        error
+                        TestData.error
                     )
                 )
             Mockito.verify(RestorePurchaseResource(), Mockito.times(1))

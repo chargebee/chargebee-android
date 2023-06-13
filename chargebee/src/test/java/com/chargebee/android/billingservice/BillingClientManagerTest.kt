@@ -497,4 +497,51 @@ class BillingClientManagerTest {
             verify(CBReceiptRequestBody("receipt", "", null, "", offerDetail), times(1)).toCBReceiptReqBody()
         }
     }
+
+    @Test
+    fun test_syncPurchaseWithChargebee_success() {
+        val purchaseTransaction = TestData.getTransaction(true)
+        val params = Params(
+            purchaseTransaction.first().purchaseToken,
+            purchaseTransaction.first().productId.first(),
+            customer,
+            Chargebee.channel,
+            offerDetail
+        )
+        billingClientManager?.syncPurchaseWithChargebee(purchaseTransaction)
+        CoroutineScope(Dispatchers.IO).launch {
+            Mockito.`when`(params.let { ReceiptResource().validateReceipt(it) }).thenReturn(
+                ChargebeeResult.Success(
+                    TestData.response
+                )
+            )
+            Mockito.verify(ReceiptResource(), Mockito.times(1)).validateReceipt(params)
+            Mockito.verify(CBReceiptRequestBody("receipt", "", null, "", offerDetail), Mockito.times(1))
+                .toCBReceiptReqBody()
+        }
+    }
+
+    @Test
+    fun test_syncPurchaseWithChargebee_failure() {
+        val purchaseTransaction = TestData.getTransaction(false)
+        val params = Params(
+            purchaseTransaction.first().purchaseToken,
+            purchaseTransaction.first().productId.first(),
+            customer,
+            Chargebee.channel,
+            offerDetail
+        )
+        billingClientManager?.syncPurchaseWithChargebee(purchaseTransaction)
+        CoroutineScope(Dispatchers.IO).launch {
+            Mockito.`when`(params.let { ReceiptResource().validateReceipt(it) }).thenReturn(
+                ChargebeeResult.Error(
+                   TestData.error
+                )
+            )
+            Mockito.verify(ReceiptResource(), Mockito.times(1)).validateReceipt(params)
+            Mockito.verify(CBReceiptRequestBody("receipt", "", null, "", offerDetail), Mockito.times(1))
+                .toCBReceiptReqBody()
+        }
+    }
+
 }
