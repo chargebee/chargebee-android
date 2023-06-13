@@ -1,5 +1,7 @@
 package com.chargebee.example.billing
 
+import android.content.Context
+import android.content.SharedPreferences
 import android.util.Log
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -13,7 +15,6 @@ import com.chargebee.android.exceptions.ChargebeeResult
 import com.chargebee.android.models.*
 import com.chargebee.android.network.CBCustomer
 import com.chargebee.android.network.ReceiptDetail
-import com.google.gson.Gson
 
 class BillingViewModel : ViewModel() {
 
@@ -26,9 +27,11 @@ class BillingViewModel : ViewModel() {
     var error: MutableLiveData<String?> = MutableLiveData()
     var entitlementsResult: MutableLiveData<String?> = MutableLiveData()
     private var subscriptionId: String = ""
+    private lateinit var sharedPreference : SharedPreferences
 
-    fun purchaseProduct(product: CBProduct, customer: CBCustomer) {
-
+    fun purchaseProduct(context: Context,product: CBProduct, customer: CBCustomer) {
+        // Cache the product id in sharedPreferences and retry validating the receipt if in case server is not responding or no internet connection.
+        sharedPreference =  context.getSharedPreferences("PREFERENCE_NAME",Context.MODE_PRIVATE)
         CBPurchase.purchaseProduct(product, customer,  object : CBCallback.PurchaseCallback<String>{
             override fun onSuccess(result: ReceiptDetail, status:Boolean) {
                 Log.i(TAG, "Subscription ID:  ${result.subscription_id}")
@@ -37,15 +40,21 @@ class BillingViewModel : ViewModel() {
             }
             override fun onError(error: CBException) {
                 try {
-                    cbException.postValue(error)
-                }catch (exp: Exception){
+                    // Handled server not responding and offline
+                    if (error.httpStatusCode!! in 500..599) {
+                        storeInLocal(product.productId)
+                        validateReceipt(context = context, product = product)
+                    } else {
+                        cbException.postValue(error)
+                    }
+                } catch (exp: Exception) {
                     Log.i(TAG, "Exception :${exp.message}")
                 }
             }
         })
     }
-    fun purchaseProduct(product: CBProduct, customerId: String) {
-
+    fun purchaseProduct(context: Context, product: CBProduct, customerId: String) {
+        sharedPreference =  context.getSharedPreferences("PREFERENCE_NAME",Context.MODE_PRIVATE)
         CBPurchase.purchaseProduct(product, customerId,  object : CBCallback.PurchaseCallback<String>{
             override fun onSuccess(result: ReceiptDetail, status:Boolean) {
                 Log.i(TAG, "Subscription ID:  ${result.subscription_id}")
@@ -54,12 +63,48 @@ class BillingViewModel : ViewModel() {
             }
             override fun onError(error: CBException) {
                 try {
-                    cbException.postValue(error)
-                }catch (exp: Exception){
+                    if (error.httpStatusCode!! in 500..599) {
+                        storeInLocal(product.productId)
+                        validateReceipt(context = context, product = product)
+                    } else {
+                        cbException.postValue(error)
+                    }
+                } catch (exp: Exception) {
                     Log.i(TAG, "Exception :${exp.message}")
                 }
             }
         })
+    }
+
+    private fun validateReceipt(context: Context, product: CBProduct) {
+        val customer = CBCustomer(
+            id = "sync_receipt_android",
+            firstName = "Test",
+            lastName = "Purchase",
+            email = "testreceipt@gmail.com"
+        )
+        CBPurchase.validateReceipt(
+            context = context,
+            product = product,
+            customer = customer,
+            completionCallback = object : CBCallback.PurchaseCallback<String> {
+                override fun onSuccess(result: ReceiptDetail, status: Boolean) {
+                    Log.i(TAG, "Subscription ID:  ${result.subscription_id}")
+                    Log.i(TAG, "Plan ID:  ${result.plan_id}")
+                    // Clear the local cache once receipt validation success
+                    val editor = sharedPreference.edit()
+                    editor.clear().apply()
+                    productPurchaseResult.postValue(status)
+                }
+
+                override fun onError(error: CBException) {
+                    try {
+                        cbException.postValue(error)
+                    } catch (exp: Exception) {
+                        Log.i(TAG, "Exception :${exp.message}")
+                    }
+                }
+            })
     }
 
     fun retrieveProductIdentifers(queryParam: Array<String>){
@@ -131,5 +176,9 @@ class BillingViewModel : ViewModel() {
             }
         }
     }
-
+    private fun storeInLocal(productId: String){
+        val editor = sharedPreference.edit()
+        editor.putString("productId", productId)
+        editor.apply()
+    }
 }

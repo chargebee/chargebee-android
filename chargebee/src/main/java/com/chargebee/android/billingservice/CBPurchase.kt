@@ -3,7 +3,6 @@ package com.chargebee.android.billingservice
 import android.content.Context
 import android.text.TextUtils
 import android.util.Log
-import com.android.billingclient.api.BillingClient
 import com.chargebee.android.Chargebee
 import com.chargebee.android.ErrorDetail
 import com.chargebee.android.exceptions.*
@@ -141,9 +140,29 @@ object CBPurchase {
         sharedInstance(context).restorePurchases(completionCallback)
     }
 
-    /* Chargebee Method - used to validate the receipt of purchase  */
+    /**
+     * This method will be used to validate the receipt with Chargebee,
+     * when syncing with Chargebee fails after the successful purchase in Google Play Store.
+     *
+     * @param [context] Current activity context
+     * @param [productId] Product Identifier.
+     * @param [customer] Optional. Customer Object.
+     * @param [completionCallback] The listener will be called when validate receipt completes.
+     */
     @JvmStatic
     fun validateReceipt(
+        context: Context,
+        product: CBProduct,
+        customer: CBCustomer? = null,
+        completionCallback: CBCallback.PurchaseCallback<String>
+    ) {
+        this.customer = customer
+        sharedInstance(context).validateReceiptWithChargebee(product, completionCallback)
+    }
+
+    /* Chargebee Method - used to validate the receipt of purchase  */
+    @JvmStatic
+    internal fun validateReceipt(
         purchaseToken: String,
         product: CBProduct,
         completion: (ChargebeeResult<Any>) -> Unit

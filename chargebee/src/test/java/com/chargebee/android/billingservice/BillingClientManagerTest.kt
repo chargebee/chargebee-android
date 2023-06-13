@@ -1,4 +1,4 @@
-package com.chargebee.android.resources
+package com.chargebee.android.billingservice
 
 import android.content.Context
 import android.os.Build
@@ -6,16 +6,15 @@ import androidx.test.core.app.ApplicationProvider
 import com.android.billingclient.api.*
 import com.chargebee.android.Chargebee
 import com.chargebee.android.ErrorDetail
-import com.chargebee.android.billingservice.BillingClientManager
-import com.chargebee.android.billingservice.CBCallback
 import com.chargebee.android.billingservice.CBCallback.ListProductsCallback
-import com.chargebee.android.billingservice.CBPurchase
 import com.chargebee.android.exceptions.CBException
 import com.chargebee.android.exceptions.CBProductIDResult
 import com.chargebee.android.exceptions.ChargebeeResult
 import com.chargebee.android.models.CBProduct
 import com.chargebee.android.models.OfferDetail
 import com.chargebee.android.network.*
+import com.chargebee.android.resources.CatalogVersion
+import com.chargebee.android.resources.ReceiptResource
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -37,27 +36,31 @@ import kotlin.collections.ArrayList
 
 @RunWith(MockitoJUnitRunner::class)
 @Config(sdk = [Build.VERSION_CODES.LOLLIPOP])
-class BillingClientManagerTest  {
+class BillingClientManagerTest {
 
     private var billingClientManager: BillingClientManager? = null
+
     @Mock
     lateinit var billingClient: BillingClient
 
-    @Mock
-    lateinit var skuDetails: SkuDetails
-
     private var mContext: Context? = null
-    private var callBack : ListProductsCallback<ArrayList<CBProduct>>? = null
-    private var callBackPurchase : CBCallback.PurchaseCallback<String>? = null
+    private var callBack: ListProductsCallback<ArrayList<CBProduct>>? = null
+    private var callBackPurchase: CBCallback.PurchaseCallback<String>? = null
     private val productIdList = arrayListOf("merchant.pro.android", "merchant.premium.android")
-    private var customer = CBCustomer("test","android","test","test@gmail.com")
+    private var customer = CBCustomer("test", "android", "test", "test@gmail.com")
     private var customerId: String = "test"
+    private val purchaseToken = "56sadmnagdjsd"
+    private val params = Params(
+        "purchaseToken",
+        "product.productId",
+        customer,
+        Chargebee.channel
+    )
+    private val receiptDetail = ReceiptDetail("subscriptionId", "customerId", "planId")
     private val offerDetail = OfferDetail( introductoryPrice = "",
         introductoryPriceAmountMicros = 0,
         introductoryPricePeriod = 0,
         introductoryOfferType = "")
-
-
     @Before
     fun setUp() {
         MockitoAnnotations.initMocks(this)
@@ -245,8 +248,9 @@ class BillingClientManagerTest  {
     }
     @Test
     fun test_purchaseProduct_success(){
-        // val jsonDetails = "{\"productId\":\"merchant.premium.android\",\"type\":\"subs\",\"title\":\"Premium Plan (Chargebee Example)\",\"name\":\"Premium Plan\",\"price\":\"₹2,650.00\",\"price_amount_micros\":2650000000,\"price_currency_code\":\"INR\",\"description\":\"Every 6 Months\",\"subscriptionPeriod\":\"P6M\",\"skuDetailsToken\":\"AEuhp4J0KiD1Bsj3Yq2mHPBRNHUBdzs4nTJY3PWRR8neE-22MJNssuDzH2VLFKv35Ov8\"}"
+         val jsonDetails = "{\"productId\":\"merchant.premium.android\",\"type\":\"subs\",\"title\":\"Premium Plan (Chargebee Example)\",\"name\":\"Premium Plan\",\"price\":\"₹2,650.00\",\"price_amount_micros\":2650000000,\"price_currency_code\":\"INR\",\"description\":\"Every 6 Months\",\"subscriptionPeriod\":\"P6M\",\"skuDetailsToken\":\"AEuhp4J0KiD1Bsj3Yq2mHPBRNHUBdzs4nTJY3PWRR8neE-22MJNssuDzH2VLFKv35Ov8\"}"
 
+        val skuDetails = SkuDetails(jsonDetails)
         val products = CBProduct("","","", skuDetails,true)
         val lock = CountDownLatch(1)
         CoroutineScope(Dispatchers.IO).launch {
@@ -278,6 +282,7 @@ class BillingClientManagerTest  {
     fun test_purchaseProduct_error(){
         val jsonDetails = "{\"productId\":\"merchant.premium.android\",\"type\":\"subs\",\"title\":\"Premium Plan (Chargebee Example)\",\"name\":\"Premium Plan\",\"price\":\"₹2,650.00\",\"price_amount_micros\":2650000000,\"price_currency_code\":\"INR\",\"description\":\"Every 6 Months\",\"subscriptionPeriod\":\"P6M\",\"skuDetailsToken\":\"AEuhp4J0KiD1Bsj3Yq2mHPBRNHUBdzs4nTJY3PWRR8neE-22MJNssuDzH2VLFKv35Ov8\"}"
 
+        val skuDetails = SkuDetails(jsonDetails)
         val products = CBProduct("","","", skuDetails,true)
         CoroutineScope(Dispatchers.IO).launch {
             CBPurchase.purchaseProduct(
@@ -297,12 +302,9 @@ class BillingClientManagerTest  {
     @Test
     fun test_validateReceipt_success(){
         val purchaseToken = "56sadmnagdjsd"
-        val jsonDetails = "{\"productId\":\"merchant.premium.android\",\"type\":\"subs\",\"title\":\"Premium Plan (Chargebee Example)\",\"name\":\"Premium Plan\",\"price\":\"₹2,650.00\",\"price_amount_micros\":2650000000,\"price_currency_code\":\"INR\",\"description\":\"Every 6 Months\",\"subscriptionPeriod\":\"P6M\",\"skuDetailsToken\":\"AEuhp4J0KiD1Bsj3Yq2mHPBRNHUBdzs4nTJY3PWRR8neE-22MJNssuDzH2VLFKv35Ov8\"}"
-
-        val products = CBProduct("merchant.premium.android","Premium Plan (Chargebee Example)","₹2,650.00", skuDetails,true)
         val lock = CountDownLatch(1)
         CoroutineScope(Dispatchers.IO).launch {
-            CBPurchase.validateReceipt(purchaseToken, products) {
+            CBPurchase.validateReceipt(purchaseToken, "productId") {
                 when (it) {
                     is ChargebeeResult.Success -> {
                         lock.countDown()
@@ -316,17 +318,7 @@ class BillingClientManagerTest  {
             }
         }
         lock.await()
-
-        val params = Params(
-            purchaseToken,
-            products.productId,
-            customer,
-            Chargebee.channel,
-            offerDetail
-        )
-        val receiptDetail = ReceiptDetail("subscriptionId","customerId","planId")
         val response = CBReceiptResponse(receiptDetail)
-
         CoroutineScope(Dispatchers.IO).launch {
             Mockito.`when`(params.let { ReceiptResource().validateReceipt(it) }).thenReturn(
                 ChargebeeResult.Success(
@@ -340,12 +332,8 @@ class BillingClientManagerTest  {
     @Test
     fun test_validateReceipt_error(){
         val purchaseToken = "56sadmnagdjsd"
-        val jsonDetails = "{\"productId\":\"merchant.premium.test.android\",\"type\":\"subs\",\"title\":\"Premium Plan (Chargebee Example)\",\"name\":\"Premium Plan\",\"price\":\"₹2,650.00\",\"price_amount_micros\":2650000000,\"price_currency_code\":\"INR\",\"description\":\"Every 6 Months\",\"subscriptionPeriod\":\"P6M\",\"skuDetailsToken\":\"AEuhp4J0KiD1Bsj3Yq2mHPBRNHUBdzs4nTJY3PWRR8neE-22MJNssuDzH2VLFKv35Ov8\"}"
-
-        // val skuDetails: SkuDetails? = null
-        val products = CBProduct("merchant.premium.test.android","Premium Plan (Chargebee Example)","₹2,650.00", skuDetails,true)
         CoroutineScope(Dispatchers.IO).launch {
-            CBPurchase.validateReceipt(purchaseToken, products) {
+            CBPurchase.validateReceipt(purchaseToken, "products") {
                 when (it) {
                     is ChargebeeResult.Success -> {
                         assertThat(it, instanceOf(CBReceiptResponse::class.java))
@@ -356,14 +344,6 @@ class BillingClientManagerTest  {
                 }
             }
         }
-
-        val params = Params(
-            purchaseToken,
-            products.productId,
-            customer,
-            Chargebee.channel,
-            offerDetail
-        )
         val exception = CBException(ErrorDetail("Error"))
         CoroutineScope(Dispatchers.IO).launch {
             Mockito.`when`(params.let { ReceiptResource().validateReceipt(it) }).thenReturn(
@@ -379,6 +359,9 @@ class BillingClientManagerTest  {
     @Test
     fun test_purchaseProductWithEmptyCBCustomer_success(){
         val customer = CBCustomer("","","","")
+        val jsonDetails = "{\"productId\":\"merchant.premium.android\",\"type\":\"subs\",\"title\":\"Premium Plan (Chargebee Example)\",\"name\":\"Premium Plan\",\"price\":\"₹2,650.00\",\"price_amount_micros\":2650000000,\"price_currency_code\":\"INR\",\"description\":\"Every 6 Months\",\"subscriptionPeriod\":\"P6M\",\"skuDetailsToken\":\"AEuhp4J0KiD1Bsj3Yq2mHPBRNHUBdzs4nTJY3PWRR8neE-22MJNssuDzH2VLFKv35Ov8\"}"
+
+        val skuDetails = SkuDetails(jsonDetails)
         val products = CBProduct("","","", skuDetails,true)
         val lock = CountDownLatch(1)
         CoroutineScope(Dispatchers.IO).launch {
@@ -408,6 +391,9 @@ class BillingClientManagerTest  {
 
     @Test
     fun test_purchaseProductWithCBCustomer_success(){
+        val jsonDetails = "{\"productId\":\"merchant.premium.android\",\"type\":\"subs\",\"title\":\"Premium Plan (Chargebee Example)\",\"name\":\"Premium Plan\",\"price\":\"₹2,650.00\",\"price_amount_micros\":2650000000,\"price_currency_code\":\"INR\",\"description\":\"Every 6 Months\",\"subscriptionPeriod\":\"P6M\",\"skuDetailsToken\":\"AEuhp4J0KiD1Bsj3Yq2mHPBRNHUBdzs4nTJY3PWRR8neE-22MJNssuDzH2VLFKv35Ov8\"}"
+
+        val skuDetails = SkuDetails(jsonDetails)
         val products = CBProduct("","","", skuDetails,true)
         val lock = CountDownLatch(1)
         CoroutineScope(Dispatchers.IO).launch {
@@ -437,6 +423,9 @@ class BillingClientManagerTest  {
 
     @Test
     fun test_purchaseProductWithCBCustomer_error(){
+        val jsonDetails = "{\"productId\":\"merchant.premium.android\",\"type\":\"subs\",\"title\":\"Premium Plan (Chargebee Example)\",\"name\":\"Premium Plan\",\"price\":\"₹2,650.00\",\"price_amount_micros\":2650000000,\"price_currency_code\":\"INR\",\"description\":\"Every 6 Months\",\"subscriptionPeriod\":\"P6M\",\"skuDetailsToken\":\"AEuhp4J0KiD1Bsj3Yq2mHPBRNHUBdzs4nTJY3PWRR8neE-22MJNssuDzH2VLFKv35Ov8\"}"
+
+        val skuDetails = SkuDetails(jsonDetails)
         val products = CBProduct("","","", skuDetails,true)
         CoroutineScope(Dispatchers.IO).launch {
             CBPurchase.purchaseProduct(
@@ -451,6 +440,65 @@ class BillingClientManagerTest  {
                         println(" Error :  ${error.message} response code: ${error.httpStatusCode}")
                     }
                 })
+        }
+    }
+
+    @Test
+    fun test_validateReceiptWithChargebee_success() {
+        val response = CBReceiptResponse(receiptDetail)
+        CoroutineScope(Dispatchers.IO).launch {
+            CBPurchase.validateReceipt(
+                purchaseToken = "purchaseToken",
+                productId = "productId"
+            ) {
+                when (it) {
+                    is ChargebeeResult.Success -> {
+                        assertThat(it, instanceOf(ReceiptDetail::class.java))
+                    }
+                    is ChargebeeResult.Error -> {
+                        println(" Error :  ${it.exp}")
+                    }
+                }
+            }
+        }
+            CoroutineScope(Dispatchers.IO).launch {
+                Mockito.`when`(params.let { ReceiptResource().validateReceipt(it) }).thenReturn(
+                    ChargebeeResult.Success(
+                        response
+                    )
+                )
+                verify(ReceiptResource(), times(1)).validateReceipt(params)
+                verify(CBReceiptRequestBody("receipt", "", null, ""), times(1)).toCBReceiptReqBody()
+
+            }
+        }
+
+    @Test
+    fun test_validateReceiptWithChargebee_error() {
+        val exception = CBException(ErrorDetail("Error"))
+        CoroutineScope(Dispatchers.IO).launch {
+            CBPurchase.validateReceipt(
+                purchaseToken = "purchaseToken",
+                productId = "productId"
+            ) {
+                when (it) {
+                    is ChargebeeResult.Success -> {
+                        assertThat(it, instanceOf(ReceiptDetail::class.java))
+                    }
+                    is ChargebeeResult.Error -> {
+                        println(" Error :  ${it.exp}")
+                    }
+                }
+            }
+        }
+        CoroutineScope(Dispatchers.IO).launch {
+            Mockito.`when`(params.let { ReceiptResource().validateReceipt(it) }).thenReturn(
+                ChargebeeResult.Error(
+                    exception
+                )
+            )
+            verify(ReceiptResource(), times(1)).validateReceipt(params)
+            verify(CBReceiptRequestBody("receipt", "", null, ""), times(1)).toCBReceiptReqBody()
         }
     }
 }

@@ -21,7 +21,7 @@ The following requirements must be set up before installing Chargebee’s Androi
 The `Chargebee-Android` SDK can be installed by adding below dependency to the `build.gradle` file:
 
 ```kotlin
-implementation 'com.chargebee:chargebee-android:1.0.17'
+implementation 'com.chargebee:chargebee-android:1.0.18'
 ```
 
 ## Example project
@@ -176,6 +176,29 @@ These are the possible error codes and their descriptions:
 | `BillingErrorCode.ERROR`         | Fatal error during the API action.                             |
 | `BillingErrorCode.SERVICE_DISCONNECTED`         | The app is not connected to the Play Store service via the Google Play Billing Library.                             |
 | `BillingErrorCode.UNKNOWN`         | Unknown error occurred.                             |
+
+##### Synchronization of Google Play Store Purchases with Chargebee through Receipt Validation
+Receipt validation is crucial to ensure that the purchases made by your users are synced with Chargebee. In rare cases, when a purchase is made at the Google Play Store, and the network connection goes off or the server not responding, the purchase details may not be updated in Chargebee. In such cases, you can use a retry mechanism by following these steps:
+
+* Add a network listener, as shown in the example project.
+* Save the product identifier in the cache once the purchase is initiated and clear the cache once the purchase is successful.
+* When the network connectivity is lost after the purchase is completed at Google Play Store but not synced with Chargebee, retrieve the product from the cache once the network connection is back and initiate validateReceipt() by passing activity `Context`, `CBProduct` and `CBCustomer(optional)` as input. This will validate the receipt and sync the purchase in Chargebee as a subscription. For subscriptions, use the function to validateReceipt().
+
+Use the function available for the retry mechanism.
+##### Function for validating the receipt
+
+```kotlin
+CBPurchase.validateReceipt(context = current activity context, product = CBProduct, customer = CBCustomer, object : CBCallback.PurchaseCallback<String> {
+      override fun onSuccess(result: ReceiptDetail, status: Boolean) {
+        Log.i(TAG, "$status")
+        Log.i(TAG, "${result.subscription_id}")
+        Log.i(TAG, "${result.plan_id}")
+      }
+      override fun onError(error: CBException) {
+        Log.e(TAG, "Error:  ${error.message}")
+      }
+})
+ ```
 
 ### Get Subscription Status for Existing Subscribers
 The following are methods for checking the subscription status of a subscriber who already purchased the product.
@@ -403,7 +426,7 @@ Chargebee is available under the [MIT license](https://opensource.org/licenses/M
   To install Chargebee's Android SDK, add the following dependency to the build.gradle file.
   
   ```
-  implementation 'com.chargebee:chargebee-android:1.0.17'
+  implementation 'com.chargebee:chargebee-android:1.0.18'
   ```
   Example project
   ---------------
