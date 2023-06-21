@@ -66,7 +66,10 @@ class CBRestorePurchaseManager {
                     retrieveRestoreSubscription(purchaseToken, {
                         restorePurchases.add(it)
                         when (it.storeStatus) {
-                            StoreStatus.Active.value -> activeTransactions.add(storeTransaction)
+                            StoreStatus.Active.value -> {
+                                activeTransactions.add(storeTransaction)
+                                allTransactions.add(storeTransaction)
+                            }
                             else -> allTransactions.add(storeTransaction)
                         }
                         getRestorePurchases(storeTransactions, result, error)

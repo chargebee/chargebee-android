@@ -324,16 +324,12 @@ class BillingClientManager(context: Context) : PurchasesUpdatedListener {
             val activePurchases = restorePurchases.filter { subscription ->
                 subscription.storeStatus == StoreStatus.Active.value
             }
-            val allPurchases = restorePurchases.filter { subscription ->
-                subscription.storeStatus == StoreStatus.Active.value || subscription.storeStatus == StoreStatus.InTrial.value
-                        || subscription.storeStatus == StoreStatus.Cancelled.value || subscription.storeStatus == StoreStatus.Paused.value
-            }
             if (CBPurchase.includeInActivePurchases) {
-                restorePurchaseCallBack.onSuccess(allPurchases)
+                restorePurchaseCallBack.onSuccess(restorePurchases)
                 syncPurchaseWithChargebee(CBRestorePurchaseManager.allTransactions)
             } else {
                 restorePurchaseCallBack.onSuccess(activePurchases)
-                 syncPurchaseWithChargebee(CBRestorePurchaseManager.activeTransactions)
+                syncPurchaseWithChargebee(CBRestorePurchaseManager.activeTransactions)
             }
         }, error = {
             restorePurchaseCallBack.onError(error = it)

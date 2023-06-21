@@ -19,6 +19,9 @@ object CBPurchase {
     val productIdList = arrayListOf<String>()
     private var customer: CBCustomer? = null
     internal var includeInActivePurchases = false
+    private var offerDetail: OfferDetail? = null
+    private lateinit var introductoryOfferType: OfferType
+    private var numberOfUnits: Int = 0
 
     internal enum class ProductType(val value: String) {
         SUBS("subs"),
@@ -185,7 +188,7 @@ object CBPurchase {
     internal fun validateReceipt(
         purchaseToken: String,
         productId: String,
-        offerDetail: OfferDetail,
+        offerDetail: OfferDetail?,
         completion: (ChargebeeResult<Any>) -> Unit
     ) {
         val logger = CBLogger(name = "buy", action = "process_purchase_command")
@@ -309,34 +312,25 @@ object CBPurchase {
         return product.skuDetails.introductoryPriceAmountMicros / 1_000_0
     }
 
-    private fun getOfferDetail(product: CBProduct): OfferDetail {
-        var offerDetail = OfferDetail( introductoryPrice = "",
-            introductoryPriceAmountMicros = 0,
-            introductoryPricePeriod = 0,
-            introductoryOfferType = "")
-        val introductoryOfferType: String
-        val numberOfUnits: Int
+    private fun getOfferDetail(product: CBProduct): OfferDetail? {
         if (product.skuDetails.introductoryPrice.isNotEmpty()) {
             val subscriptionPeriod = product.skuDetails.introductoryPricePeriod
+            val introductoryPriceAmountMicros = convertIntroductoryPriceAmountInMicros(product)
             if (product.skuDetails.introductoryPriceCycles == 1) {
-                introductoryOfferType = "pay_up_front"
+                introductoryOfferType = OfferType.PAY_UP_FRONT
                 numberOfUnits =
                     subscriptionPeriod.substring(1, subscriptionPeriod.length - 1).toInt()
             } else {
-                introductoryOfferType = "pay_as_you_go"
+                introductoryOfferType = OfferType.PAY_AS_YOU_GO
                 numberOfUnits = product.skuDetails.introductoryPriceCycles
             }
-            val introductoryPriceAmountMicros = convertIntroductoryPriceAmountInMicros(product)
             offerDetail = OfferDetail(
                 introductoryPrice = product.skuDetails.introductoryPrice,
                 introductoryPriceAmountMicros = introductoryPriceAmountMicros,
                 introductoryPricePeriod = numberOfUnits,
                 introductoryOfferType = introductoryOfferType
             )
-            return offerDetail
         }
         return offerDetail
     }
-
-
 }
