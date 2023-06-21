@@ -2,13 +2,11 @@ package com.chargebee.android.restore
 
 import com.android.billingclient.api.*
 import com.chargebee.android.Chargebee
-import com.chargebee.android.ErrorDetail
-import com.chargebee.android.billingservice.CBCallback.RestorePurchaseCallback
+import com.chargebee.android.billingservice.TestData
 import com.chargebee.android.exceptions.CBException
 import com.chargebee.android.exceptions.ChargebeeResult
 import com.chargebee.android.models.*
 import com.chargebee.android.network.*
-import com.chargebee.android.resources.ReceiptResource
 import com.chargebee.android.resources.RestorePurchaseResource
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -33,14 +31,7 @@ class RestorePurchaseTest {
     private val list = ArrayList<String>()
     private val storeTransactions = arrayListOf<PurchaseTransaction>()
     private val lock = CountDownLatch(1)
-    private val response =
-        CBReceiptResponse(ReceiptDetail("subscriptionId", "customerId", "planId"))
-    private val error = CBException(
-        ErrorDetail(
-            message = "The Token data sent is not correct or Google service is temporarily down",
-            httpStatusCode = 400
-        )
-    )
+
 
     @Before
     fun setUp() {
@@ -67,48 +58,39 @@ class RestorePurchaseTest {
     fun test_fetchStoreSubscriptionStatus_success() {
         val lock = CountDownLatch(1)
         val purchaseTransaction = getTransaction(true)
-
         CBRestorePurchaseManager.fetchStoreSubscriptionStatus(
             purchaseTransaction,
-            completionCallback = object : RestorePurchaseCallback {
-                override fun onSuccess(result: List<CBRestoreSubscription>) {
-                    lock.countDown()
-                    result.forEach {
-                        MatcherAssert.assertThat(
-                            (it),
-                            Matchers.instanceOf(CBRestoreSubscription::class.java)
-                        )
-                    }
-
-                }
-
-                override fun onError(error: CBException) {
-                    lock.countDown()
+            result = { restorePurchases ->
+                lock.countDown()
+                restorePurchases.forEach {
                     MatcherAssert.assertThat(
-                        error,
-                        Matchers.instanceOf(CBException::class.java)
+                        (it),
+                        Matchers.instanceOf(CBRestoreSubscription::class.java)
                     )
                 }
+            }, error = {
+                lock.countDown()
             })
+        CoroutineScope(Dispatchers.IO).launch {
+            Mockito.verify(RestorePurchaseResource(), Mockito.times(1))
+                .retrieveStoreSubscription(purchaseTransaction.first().purchaseToken)
+        }
         lock.await()
     }
 
     @Test
     fun test_fetchStoreSubscriptionStatus_failure() {
         val purchaseTransaction = getTransaction(false)
-
-        val storeTransaction =
-            purchaseTransaction.firstOrNull()?.also { purchaseTransaction.remove(it) }
-        storeTransaction?.purchaseToken?.let { purchaseToken ->
-            CBRestorePurchaseManager.retrieveRestoreSubscription(purchaseToken, {}, { error ->
-                lock.countDown()
-                MatcherAssert.assertThat(
-                    (error),
-                    Matchers.instanceOf(CBException::class.java)
-                )
-                Mockito.verify(CBRestorePurchaseManager, Mockito.times(1))
-                    .getRestorePurchases(purchaseTransaction)
-            })
+        CBRestorePurchaseManager.fetchStoreSubscriptionStatus(purchaseTransaction, {}, { error ->
+            lock.countDown()
+            MatcherAssert.assertThat(
+                (error),
+                Matchers.instanceOf(CBException::class.java)
+            )
+        })
+        CoroutineScope(Dispatchers.IO).launch {
+            Mockito.verify(RestorePurchaseResource(), Mockito.times(1))
+                .retrieveStoreSubscription(purchaseTransaction.first().purchaseToken)
         }
         lock.await()
     }
@@ -140,101 +122,11 @@ class RestorePurchaseTest {
             Mockito.`when`(RestorePurchaseResource().retrieveStoreSubscription(purchaseToken))
                 .thenReturn(
                     ChargebeeResult.Error(
-                        error
+                        TestData.error
                     )
                 )
             Mockito.verify(RestorePurchaseResource(), Mockito.times(1))
                 .retrieveStoreSubscription(purchaseToken)
-        }
-    }
-
-    @Test
-    fun test_validateReceipt_success() {
-        val purchaseTransaction = getTransaction(true)
-        val params = Params(
-            purchaseTransaction.first().purchaseToken,
-            purchaseTransaction.first().productId.first(),
-            customer,
-            Chargebee.channel
-        )
-        CBRestorePurchaseManager.validateReceipt(
-            params.receipt,
-            purchaseTransaction.first().productType
-        )
-        CoroutineScope(Dispatchers.IO).launch {
-            Mockito.`when`(params.let { ReceiptResource().validateReceipt(it) }).thenReturn(
-                ChargebeeResult.Success(
-                    response
-                )
-            )
-            Mockito.verify(ReceiptResource(), Mockito.times(1)).validateReceipt(params)
-            Mockito.verify(CBReceiptRequestBody("receipt", "", null, ""), Mockito.times(1))
-                .toCBReceiptReqBody()
-        }
-    }
-
-    @Test
-    fun test_validateReceipt_failure() {
-        val purchaseTransaction = getTransaction(false)
-        val params = Params(
-            purchaseTransaction.first().purchaseToken,
-            purchaseTransaction.first().productId.first(),
-            customer,
-            Chargebee.channel
-        )
-        CoroutineScope(Dispatchers.IO).launch {
-            Mockito.`when`(params.let { ReceiptResource().validateReceipt(it) }).thenReturn(
-                ChargebeeResult.Error(
-                    error
-                )
-            )
-            Mockito.verify(ReceiptResource(), Mockito.times(1)).validateReceipt(params)
-            Mockito.verify(CBReceiptRequestBody("receipt", "", null, ""), Mockito.times(1))
-                .toCBReceiptReqBody()
-        }
-    }
-
-    @Test
-    fun test_syncPurchaseWithChargebee_success() {
-        val purchaseTransaction = getTransaction(false)
-        val params = Params(
-            purchaseTransaction.first().purchaseToken,
-            purchaseTransaction.first().productId.first(),
-            customer,
-            Chargebee.channel
-        )
-        CBRestorePurchaseManager.syncPurchaseWithChargebee(purchaseTransaction)
-        CoroutineScope(Dispatchers.IO).launch {
-            Mockito.`when`(params.let { ReceiptResource().validateReceipt(it) }).thenReturn(
-                ChargebeeResult.Success(
-                    response
-                )
-            )
-            Mockito.verify(ReceiptResource(), Mockito.times(1)).validateReceipt(params)
-            Mockito.verify(CBReceiptRequestBody("receipt", "", null, ""), Mockito.times(1))
-                .toCBReceiptReqBody()
-        }
-    }
-
-    @Test
-    fun test_syncPurchaseWithChargebee_failure() {
-        val purchaseTransaction = getTransaction(false)
-        val params = Params(
-            purchaseTransaction.first().purchaseToken,
-            purchaseTransaction.first().productId.first(),
-            customer,
-            Chargebee.channel
-        )
-        CBRestorePurchaseManager.syncPurchaseWithChargebee(purchaseTransaction)
-        CoroutineScope(Dispatchers.IO).launch {
-            Mockito.`when`(params.let { ReceiptResource().validateReceipt(it) }).thenReturn(
-                ChargebeeResult.Error(
-                    error
-                )
-            )
-            Mockito.verify(ReceiptResource(), Mockito.times(1)).validateReceipt(params)
-            Mockito.verify(CBReceiptRequestBody("receipt", "", null, ""), Mockito.times(1))
-                .toCBReceiptReqBody()
         }
     }
 
