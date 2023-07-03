@@ -7,8 +7,11 @@ import android.content.SharedPreferences
 import android.util.Log
 import com.chargebee.android.billingservice.CBCallback
 import com.chargebee.android.billingservice.CBPurchase
+import com.chargebee.android.billingservice.OneTimeProductType
+import com.chargebee.android.billingservice.ProductType
 import com.chargebee.android.exceptions.CBException
 import com.chargebee.android.models.CBProduct
+import com.chargebee.android.models.NonSubscriptionResponse
 import com.chargebee.android.network.CBCustomer
 import com.chargebee.android.network.ReceiptDetail
 import com.chargebee.example.util.NetworkUtil
@@ -17,6 +20,12 @@ class ExampleApplication : Application(), NetworkUtil.NetworkListener {
     private lateinit var networkUtil: NetworkUtil
     private lateinit var sharedPreference: SharedPreferences
     lateinit var mContext: Context
+    private val customer = CBCustomer(
+        id = "sync_receipt_android",
+        firstName = "Test",
+        lastName = "Purchase",
+        email = "testreceipt@gmail.com"
+    )
 
     override fun onCreate() {
         super.onCreate()
@@ -46,7 +55,10 @@ class ExampleApplication : Application(), NetworkUtil.NetworkListener {
             productIdList,
             object : CBCallback.ListProductsCallback<ArrayList<CBProduct>> {
                 override fun onSuccess(productIDs: ArrayList<CBProduct>) {
-                    validateReceipt(mContext, productIDs.first())
+                    if (productIDs.first().skuDetails.type == ProductType.SUBS.value)
+                        validateReceipt(mContext, productIDs.first())
+                    else
+                        validateNonSubscriptionReceipt(mContext, productIDs.first())
                 }
 
                 override fun onError(error: CBException) {
@@ -56,12 +68,7 @@ class ExampleApplication : Application(), NetworkUtil.NetworkListener {
     }
 
     private fun validateReceipt(context: Context, product: CBProduct) {
-        val customer = CBCustomer(
-            id = "sync_receipt_android",
-            firstName = "Test",
-            lastName = "Purchase",
-            email = "testreceipt@gmail.com"
-        )
+
         CBPurchase.validateReceipt(
             context = context,
             product = product,
@@ -74,6 +81,29 @@ class ExampleApplication : Application(), NetworkUtil.NetworkListener {
                     Log.i(javaClass.simpleName, "Subscription ID:  ${result.subscription_id}")
                     Log.i(javaClass.simpleName, "Plan ID:  ${result.plan_id}")
                     Log.i(javaClass.simpleName, "Customer ID:  ${result.customer_id}")
+                    Log.i(javaClass.simpleName, "Status:  $status")
+                }
+
+                override fun onError(error: CBException) {
+                    Log.e(javaClass.simpleName, "Exception :$error")
+                }
+            })
+    }
+
+    private fun validateNonSubscriptionReceipt(context: Context, product: CBProduct) {
+        CBPurchase.validateReceiptForNonSubscriptions(
+            context = context,
+            product = product,
+            customer = customer,
+            productType = OneTimeProductType.CONSUMABLE,
+            completionCallback = object : CBCallback.OneTimePurchaseCallback {
+                override fun onSuccess(result: NonSubscriptionResponse, status: Boolean) {
+                    // Clear the local cache once receipt validation success
+                    val editor = sharedPreference.edit()
+                    editor.clear().apply()
+                    Log.i(javaClass.simpleName, "Subscription ID:  ${result.invoiceId}")
+                    Log.i(javaClass.simpleName, "Plan ID:  ${result.chargeId}")
+                    Log.i(javaClass.simpleName, "Customer ID:  ${result.customerId}")
                     Log.i(javaClass.simpleName, "Status:  $status")
                 }
 
