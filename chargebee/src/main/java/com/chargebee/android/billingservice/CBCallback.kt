@@ -24,4 +24,9 @@ interface CBCallback {
         fun onSuccess(result: List<CBRestoreSubscription>)
         fun onError(error: CBException)
     }
+
+    interface OneTimePurchaseCallback {
+        fun onSuccess(result: NonSubscriptionResponse, status: Boolean)
+        fun onError(error: CBException)
+    }
 }

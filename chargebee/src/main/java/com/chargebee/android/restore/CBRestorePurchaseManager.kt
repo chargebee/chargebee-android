@@ -5,6 +5,7 @@ import com.chargebee.android.ErrorDetail
 import com.chargebee.android.billingservice.CBCallback
 import com.chargebee.android.billingservice.CBPurchase
 import com.chargebee.android.billingservice.GPErrorCode
+import com.chargebee.android.billingservice.ProductType
 import com.chargebee.android.exceptions.CBException
 import com.chargebee.android.exceptions.ChargebeeResult
 import com.chargebee.android.loggers.CBLogger
@@ -65,7 +66,10 @@ class CBRestorePurchaseManager {
                     retrieveRestoreSubscription(purchaseToken, {
                         restorePurchases.add(it)
                         when (it.storeStatus) {
-                            StoreStatus.Active.value -> activeTransactions.add(storeTransaction)
+                            StoreStatus.Active.value -> {
+                                activeTransactions.add(storeTransaction)
+                                allTransactions.add(storeTransaction)
+                            }
                             else -> allTransactions.add(storeTransaction)
                         }
                         getRestorePurchases(storeTransactions)
@@ -93,12 +97,8 @@ class CBRestorePurchaseManager {
                     val activePurchases = restorePurchases.filter { subscription ->
                         subscription.storeStatus == StoreStatus.Active.value
                     }
-                    val allPurchases = restorePurchases.filter { subscription ->
-                        subscription.storeStatus == StoreStatus.Active.value || subscription.storeStatus == StoreStatus.InTrial.value
-                                || subscription.storeStatus == StoreStatus.Cancelled.value || subscription.storeStatus == StoreStatus.Paused.value
-                    }
                     if (CBPurchase.includeInActivePurchases) {
-                        completionCallback.onSuccess(allPurchases)
+                        completionCallback.onSuccess(restorePurchases)
                         syncPurchaseWithChargebee(allTransactions)
                     } else {
                         completionCallback.onSuccess(activePurchases)
@@ -106,14 +106,20 @@ class CBRestorePurchaseManager {
                     }
                 }
                 restorePurchases.clear()
+                allTransactions.clear()
+                activeTransactions.clear()
             } else {
                 fetchStoreSubscriptionStatus(storeTransactions, completionCallback)
             }
         }
 
         internal fun syncPurchaseWithChargebee(storeTransactions: ArrayList<PurchaseTransaction>) {
-            storeTransactions.forEach { productIdList ->
-                validateReceipt(productIdList.purchaseToken, productIdList.productId.first())
+            storeTransactions.forEach { purchaseTransaction ->
+                if (purchaseTransaction.productType == ProductType.SUBS.value) {
+                    validateReceipt(purchaseTransaction.purchaseToken, purchaseTransaction.productId.first())
+                } else {
+                    validateNonSubscriptionReceipt(purchaseTransaction.purchaseToken, purchaseTransaction.productId.first())
+                }
             }
         }
 
@@ -127,6 +133,22 @@ class CBRestorePurchaseManager {
                         Log.e(
                             javaClass.simpleName,
                             "Exception from Server - validateReceipt() :  ${it.exp.message}"
+                        )
+                    }
+                }
+            }
+        }
+
+        internal fun validateNonSubscriptionReceipt(purchaseToken: String, productId: String) {
+            CBPurchase.validateNonSubscriptionReceipt(purchaseToken, productId) {
+                when (it) {
+                    is ChargebeeResult.Success -> {
+                        Log.i(javaClass.simpleName, "result :  ${it.data}")
+                    }
+                    is ChargebeeResult.Error -> {
+                        Log.e(
+                            javaClass.simpleName,
+                            "Exception from Server - validateNonSubscriptionReceipt() :  ${it.exp.message}"
                         )
                     }
                 }

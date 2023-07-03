@@ -12,6 +12,7 @@ import com.chargebee.android.billingservice.BillingErrorCode.Companion.throwCBEx
 import com.chargebee.android.models.PurchaseTransaction
 import com.chargebee.android.exceptions.CBException
 import com.chargebee.android.exceptions.ChargebeeResult
+import com.chargebee.android.models.CBNonSubscriptionResponse
 import com.chargebee.android.models.CBProduct
 import com.chargebee.android.network.CBReceiptResponse
 import com.chargebee.android.restore.CBRestorePurchaseManager
@@ -28,30 +29,55 @@ class BillingClientManager(context: Context) : PurchasesUpdatedListener {
     private val TAG = javaClass.simpleName
     lateinit var product: CBProduct
     private lateinit var restorePurchaseCallBack: CBCallback.RestorePurchaseCallback
+    private var oneTimePurchaseCallback: CBCallback.OneTimePurchaseCallback? = null
 
     init {
         this.mContext = context
     }
 
     internal fun retrieveProducts(
-        @BillingClient.SkuType skuType: String,
         skuList: ArrayList<String>, callBack: CBCallback.ListProductsCallback<ArrayList<CBProduct>>
+    ) {
+        val productsList = ArrayList<CBProduct>()
+        retrieveProducts(ProductType.SUBS.value, skuList, { subsProductsList ->
+            productsList.addAll(subsProductsList)
+            retrieveProducts(ProductType.INAPP.value, skuList, { inAppProductsList ->
+                productsList.addAll(inAppProductsList)
+                callBack.onSuccess(productsList)
+            }, { error ->
+                callBack.onError(error)
+            })
+        }, { error ->
+            callBack.onError(error)
+        })
+    }
+
+    internal fun retrieveProducts(
+        @BillingClient.SkuType skuType: String,
+        skuList: ArrayList<String>, response: (ArrayList<CBProduct>) -> Unit,
+        errorDetail: (CBException) -> Unit
     ) {
         onConnected({ status ->
             if (status)
-                loadProductDetails(skuType, skuList, callBack)
+                loadProductDetails(skuType, skuList, {
+                    response(it)
+                }, {
+                    errorDetail(it)
+                })
             else
-                callBack.onError(
+                errorDetail(
                     connectionError
                 )
         }, { error ->
-            callBack.onError(error)
+            errorDetail(error)
         })
     }
     /* Get the SKU/Products from Play Console */
     private fun loadProductDetails(
         @BillingClient.SkuType skuType: String,
-        skuList: ArrayList<String>, callBack: CBCallback.ListProductsCallback<ArrayList<CBProduct>>
+        skuList: ArrayList<String>,
+        response: (ArrayList<CBProduct>) -> Unit,
+        errorDetail: (CBException) -> Unit
     ) {
         try {
             val params = SkuDetailsParams
@@ -72,14 +98,15 @@ class BillingClientManager(context: Context) : PurchasesUpdatedListener {
                                 skuProduct.title,
                                 skuProduct.price,
                                 skuProduct,
-                                false
+                                false,
+                                skuProduct.type
                             )
                             skusWithSkuDetails.add(product)
                         }
                         Log.i(TAG, "Product details :$skusWithSkuDetails")
-                        callBack.onSuccess(productIDs = skusWithSkuDetails)
+                        response(skusWithSkuDetails)
                     } catch (ex: CBException) {
-                        callBack.onError(
+                        errorDetail(
                             CBException(
                                 ErrorDetail(
                                     message = "Error while parsing data",
@@ -91,14 +118,14 @@ class BillingClientManager(context: Context) : PurchasesUpdatedListener {
                     }
                 } else {
                     Log.e(TAG, "Response Code :" + billingResult.responseCode)
-                    callBack.onError(
+                    errorDetail(
                         throwCBException(billingResult)
                     )
                 }
             }
         } catch (exp: CBException) {
             Log.e(TAG, "exception :$exp.message")
-            callBack.onError(CBException(ErrorDetail(message = "${exp.message}")))
+            errorDetail(CBException(ErrorDetail(message = "${exp.message}")))
         }
     }
 
@@ -133,14 +160,21 @@ class BillingClientManager(context: Context) : PurchasesUpdatedListener {
                 billingResult?.responseCode != OK
             }?.let { billingResult ->
                 Log.e(TAG, "Failed to launch billing flow $billingResult")
-                purchaseCallBack?.onError(
-                    CBException(
-                        ErrorDetail(
-                            message = GPErrorCode.LaunchBillingFlowError.errorMsg,
-                            httpStatusCode = billingResult.responseCode
-                        )
+                val billingError = CBException(
+                    ErrorDetail(
+                        message = GPErrorCode.LaunchBillingFlowError.errorMsg,
+                        httpStatusCode = billingResult.responseCode
                     )
                 )
+                if (product.skuDetails.type == ProductType.SUBS.value) {
+                    purchaseCallBack?.onError(
+                        billingError
+                    )
+                } else {
+                    oneTimePurchaseCallback?.onError(
+                        billingError
+                    )
+                }
             }
     }
 
@@ -219,25 +253,54 @@ class BillingClientManager(context: Context) : PurchasesUpdatedListener {
                 }
             }
            else -> {
-               purchaseCallBack?.onError(
-                   throwCBException(billingResult)
-               )
+               if (product.skuDetails.type == ProductType.SUBS.value)
+                   purchaseCallBack?.onError(
+                       throwCBException(billingResult)
+                   )
+               else
+                   oneTimePurchaseCallback?.onError(
+                       throwCBException(billingResult)
+                   )
            }
         }
     }
 
     /* Acknowledge the Purchases */
     private fun acknowledgePurchase(purchase: Purchase) {
+        when(product.skuDetails.type){
+            ProductType.SUBS.value ->  {
+                isAcknowledgedPurchase(purchase,{
+                    validateReceipt(purchase.purchaseToken, product)
+                }, {
+                    purchaseCallBack?.onError(it)
+                })
+            }
+            ProductType.INAPP.value -> {
+                if (CBPurchase.productType == OneTimeProductType.CONSUMABLE) {
+                    consumeAsyncPurchase(purchase.purchaseToken)
+                } else {
+                    isAcknowledgedPurchase(purchase, {
+                        validateNonSubscriptionReceipt(purchase.purchaseToken, product)
+                    }, {
+                        oneTimePurchaseCallback?.onError(it)
+                    })
+                }
+            }
+        }
+    }
+
+    private fun isAcknowledgedPurchase(purchase: Purchase, success: () -> Unit, error: (CBException) -> Unit){
         if (!purchase.isAcknowledged) {
             val params = AcknowledgePurchaseParams.newBuilder()
                 .setPurchaseToken(purchase.purchaseToken)
                 .build()
             billingClient?.acknowledgePurchase(params) { billingResult ->
-                if (billingResult.responseCode == OK) {
-                    try {
-                        if (purchase.purchaseToken.isEmpty()) {
-                            Log.e(TAG, "Receipt Not Found")
-                            purchaseCallBack?.onError(
+                when (billingResult.responseCode) {
+                    OK -> {
+                        if (purchase.purchaseToken.isNotEmpty()) {
+                            success()
+                        } else {
+                            error(
                                 CBException(
                                     ErrorDetail(
                                         message = GPErrorCode.PurchaseReceiptNotFound.errorMsg,
@@ -245,19 +308,50 @@ class BillingClientManager(context: Context) : PurchasesUpdatedListener {
                                     )
                                 )
                             )
-                        } else {
-                            Log.i(TAG, "Google Purchase - success")
-                            Log.i(TAG, "Purchase Token -${purchase.purchaseToken}")
-                            validateReceipt(purchase.purchaseToken, product)
                         }
-
-                    } catch (ex: CBException) {
-                        Log.e("Error", ex.toString())
-                        purchaseCallBack?.onError(CBException(ErrorDetail(message = ex.message)))
+                    }
+                    else -> {
+                        error(
+                            throwCBException(billingResult)
+                        )
                     }
                 }
             }
         }
+    }
+
+    /* Consume the Purchases */
+    private fun consumeAsyncPurchase(token: String) {
+        consumePurchase(token) { billingResult, purchaseToken ->
+            when(billingResult.responseCode){
+                OK -> {
+                    validateNonSubscriptionReceipt(purchaseToken, product)
+                }
+                else -> {
+                    oneTimePurchaseCallback?.onError(
+                        throwCBException(billingResult)
+                    )
+                }
+            }
+        }
+    }
+
+    internal fun consumePurchase(
+        token: String,
+        onConsumed: (billingResult: BillingResult, purchaseToken: String) -> Unit
+    ) {
+        onConnected({ status ->
+            if (status)
+                billingClient?.consumeAsync(
+                    ConsumeParams.newBuilder().setPurchaseToken(token).build(), onConsumed
+                )
+            else
+                oneTimePurchaseCallback?.onError(
+                    connectionError
+                )
+        }, { error ->
+            oneTimePurchaseCallback?.onError(error)
+        })
     }
 
     /* Chargebee method called here to validate receipt */
@@ -324,12 +418,12 @@ class BillingClientManager(context: Context) : PurchasesUpdatedListener {
     private fun queryPurchaseHistory(
         storeTransactions: (List<PurchaseTransaction>) -> Unit
     ) {
-        queryAllSubsPurchaseHistory(CBPurchase.ProductType.SUBS.value) { subscriptionHistory ->
-            queryAllInAppPurchaseHistory(CBPurchase.ProductType.INAPP.value) { inAppHistory ->
-                val purchaseTransactionHistory = inAppHistory?.let {
-                    subscriptionHistory?.plus(it)
-                }
-                storeTransactions(purchaseTransactionHistory ?: emptyList())
+        val purchaseTransactionHistory = mutableListOf<PurchaseTransaction>()
+        queryAllSubsPurchaseHistory(ProductType.SUBS.value) { subscriptionHistory ->
+            purchaseTransactionHistory.addAll(subscriptionHistory ?: emptyList())
+            queryAllInAppPurchaseHistory(ProductType.INAPP.value) { inAppHistory ->
+                purchaseTransactionHistory.addAll(inAppHistory ?: emptyList())
+                storeTransactions(purchaseTransactionHistory)
             }
         }
     }
@@ -427,6 +521,70 @@ class BillingClientManager(context: Context) : PurchasesUpdatedListener {
                         it.productId.first() == product.productId
                     }
                     validateReceipt(purchaseTransaction.first().purchaseToken, product)
+                } else
+                completionCallback.onError(
+                    connectionError
+                )
+        }, { error ->
+            completionCallback.onError(error)
+        })
+    }
+
+    internal fun purchaseNonSubscriptionProduct(
+        product: CBProduct,
+        oneTimePurchaseCallback: CBCallback.OneTimePurchaseCallback
+    ) {
+        this.oneTimePurchaseCallback = oneTimePurchaseCallback
+        onConnected({ status ->
+            if (status)
+                purchase(product)
+            else
+                oneTimePurchaseCallback.onError(
+                    connectionError
+                )
+        }, { error ->
+            oneTimePurchaseCallback.onError(error)
+        })
+    }
+
+    /* Chargebee method called here to validate receipt */
+    private fun validateNonSubscriptionReceipt(purchaseToken: String, product: CBProduct) {
+        CBPurchase.validateNonSubscriptionReceipt(purchaseToken, product) {
+            when (it) {
+                is ChargebeeResult.Success -> {
+                    Log.i(
+                        TAG,
+                        "Validate Non-Subscription Receipt Response:  ${(it.data as CBNonSubscriptionResponse).nonSubscription}"
+                    )
+                    if (it.data.nonSubscription != null) {
+                        val invoiceId = (it.data).nonSubscription.invoiceId
+                        Log.i(TAG, "Invoice ID:  $invoiceId")
+                        val subscriptionResult = (it.data).nonSubscription
+                        if (invoiceId.isEmpty()) {
+                            oneTimePurchaseCallback?.onSuccess(subscriptionResult, false)
+                        } else {
+                            oneTimePurchaseCallback?.onSuccess(subscriptionResult, true)
+                        }
+                    } else {
+                        oneTimePurchaseCallback?.onError(CBException(ErrorDetail(message = GPErrorCode.PurchaseInvalid.errorMsg)))
+                    }
+                }
+                is ChargebeeResult.Error -> {
+                    Log.e(TAG, "Exception from Server - validateNonSubscriptionReceipt() :  ${it.exp.message}")
+                    oneTimePurchaseCallback?.onError(it.exp)
+                }
+            }
+        }
+    }
+
+    internal fun validateNonSubscriptionReceiptWithChargebee(product: CBProduct, completionCallback: CBCallback.OneTimePurchaseCallback) {
+        onConnected({ status ->
+            if (status)
+                queryPurchaseHistory { purchaseHistoryList ->
+                    val purchaseTransaction = purchaseHistoryList.filter {
+                        it.productId.first() == product.productId
+                    }
+                    validateNonSubscriptionReceipt(purchaseTransaction.first().purchaseToken, product)
                 } else
                 completionCallback.onError(
                     connectionError

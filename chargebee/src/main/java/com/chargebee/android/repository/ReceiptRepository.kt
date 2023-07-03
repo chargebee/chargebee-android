@@ -1,6 +1,7 @@
 package com.chargebee.android.repository
 
 import com.chargebee.android.Chargebee
+import com.chargebee.android.models.CBNonSubscriptionResponse
 import com.chargebee.android.network.CBReceiptResponse
 import retrofit2.Response
 import retrofit2.http.*
@@ -15,4 +16,13 @@ interface ReceiptRepository {
         @Header("version") sdkVersion: String = Chargebee.sdkVersion,
         @Path("sdkKey") sdkKey: String = Chargebee.sdkKey,
         @FieldMap data: Map<String, String?>): Response<CBReceiptResponse?>
+
+    @FormUrlEncoded
+    @POST("v2/non_subscriptions/{sdkKey}/one_time_purchase/")
+    suspend fun validateReceiptForNonSubscription(
+        @Header("Authorization") token: String = Chargebee.encodedApiKey,
+        @Header("platform") platform: String = Chargebee.platform,
+        @Header("version") sdkVersion: String = Chargebee.sdkVersion,
+        @Path("sdkKey") sdkKey: String = Chargebee.sdkKey,
+        @FieldMap data: Map<String, String?>): Response<CBNonSubscriptionResponse?>
 }

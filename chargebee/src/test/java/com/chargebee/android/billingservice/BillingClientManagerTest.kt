@@ -53,7 +53,8 @@ class BillingClientManagerTest {
         "purchaseToken",
         "product.productId",
         customer,
-        Chargebee.channel
+        Chargebee.channel,
+        null
     )
     private val receiptDetail = ReceiptDetail("subscriptionId", "customerId", "planId")
 
@@ -86,7 +87,7 @@ class BillingClientManagerTest {
         val productIdList = arrayListOf("merchant.pro.android", "merchant.premium.android")
 
         CoroutineScope(Dispatchers.IO).launch {
-            val skuType = CBPurchase.ProductType.SUBS
+            val skuType = ProductType.SUBS
             Mockito.`when`(mContext?.let {
                 CBPurchase.retrieveProducts(
                     it,
@@ -247,7 +248,7 @@ class BillingClientManagerTest {
          val jsonDetails = "{\"productId\":\"merchant.premium.android\",\"type\":\"subs\",\"title\":\"Premium Plan (Chargebee Example)\",\"name\":\"Premium Plan\",\"price\":\"₹2,650.00\",\"price_amount_micros\":2650000000,\"price_currency_code\":\"INR\",\"description\":\"Every 6 Months\",\"subscriptionPeriod\":\"P6M\",\"skuDetailsToken\":\"AEuhp4J0KiD1Bsj3Yq2mHPBRNHUBdzs4nTJY3PWRR8neE-22MJNssuDzH2VLFKv35Ov8\"}"
 
         val skuDetails = SkuDetails(jsonDetails)
-        val products = CBProduct("","","", skuDetails,true)
+        val products = CBProduct("","","", skuDetails,true, "subs")
         val lock = CountDownLatch(1)
         CoroutineScope(Dispatchers.IO).launch {
             CBPurchase.purchaseProduct(
@@ -279,7 +280,7 @@ class BillingClientManagerTest {
         val jsonDetails = "{\"productId\":\"merchant.premium.android\",\"type\":\"subs\",\"title\":\"Premium Plan (Chargebee Example)\",\"name\":\"Premium Plan\",\"price\":\"₹2,650.00\",\"price_amount_micros\":2650000000,\"price_currency_code\":\"INR\",\"description\":\"Every 6 Months\",\"subscriptionPeriod\":\"P6M\",\"skuDetailsToken\":\"AEuhp4J0KiD1Bsj3Yq2mHPBRNHUBdzs4nTJY3PWRR8neE-22MJNssuDzH2VLFKv35Ov8\"}"
 
         val skuDetails = SkuDetails(jsonDetails)
-        val products = CBProduct("","","", skuDetails,true)
+        val products = CBProduct("","","", skuDetails,true, "subs")
         CoroutineScope(Dispatchers.IO).launch {
             CBPurchase.purchaseProduct(
                 products,"",
@@ -322,7 +323,7 @@ class BillingClientManagerTest {
                 )
             )
             verify(ReceiptResource(), times(1)).validateReceipt(params)
-            verify(CBReceiptRequestBody("receipt","",null,""), times(1)).toCBReceiptReqBody()
+            verify(CBReceiptRequestBody("receipt","",null,"", null), times(1)).toCBReceiptReqBody()
         }
     }
     @Test
@@ -348,7 +349,7 @@ class BillingClientManagerTest {
                 )
             )
             verify(ReceiptResource(), times(1)).validateReceipt(params)
-            verify(CBReceiptRequestBody("receipt","",null,""), times(1)).toCBReceiptReqBody()
+            verify(CBReceiptRequestBody("receipt","",null,"", null), times(1)).toCBReceiptReqBody()
         }
     }
 
@@ -358,7 +359,7 @@ class BillingClientManagerTest {
         val jsonDetails = "{\"productId\":\"merchant.premium.android\",\"type\":\"subs\",\"title\":\"Premium Plan (Chargebee Example)\",\"name\":\"Premium Plan\",\"price\":\"₹2,650.00\",\"price_amount_micros\":2650000000,\"price_currency_code\":\"INR\",\"description\":\"Every 6 Months\",\"subscriptionPeriod\":\"P6M\",\"skuDetailsToken\":\"AEuhp4J0KiD1Bsj3Yq2mHPBRNHUBdzs4nTJY3PWRR8neE-22MJNssuDzH2VLFKv35Ov8\"}"
 
         val skuDetails = SkuDetails(jsonDetails)
-        val products = CBProduct("","","", skuDetails,true)
+        val products = CBProduct("","","", skuDetails,true, "subs")
         val lock = CountDownLatch(1)
         CoroutineScope(Dispatchers.IO).launch {
             CBPurchase.purchaseProduct(
@@ -390,7 +391,7 @@ class BillingClientManagerTest {
         val jsonDetails = "{\"productId\":\"merchant.premium.android\",\"type\":\"subs\",\"title\":\"Premium Plan (Chargebee Example)\",\"name\":\"Premium Plan\",\"price\":\"₹2,650.00\",\"price_amount_micros\":2650000000,\"price_currency_code\":\"INR\",\"description\":\"Every 6 Months\",\"subscriptionPeriod\":\"P6M\",\"skuDetailsToken\":\"AEuhp4J0KiD1Bsj3Yq2mHPBRNHUBdzs4nTJY3PWRR8neE-22MJNssuDzH2VLFKv35Ov8\"}"
 
         val skuDetails = SkuDetails(jsonDetails)
-        val products = CBProduct("","","", skuDetails,true)
+        val products = CBProduct("","","", skuDetails,true, "subs")
         val lock = CountDownLatch(1)
         CoroutineScope(Dispatchers.IO).launch {
             CBPurchase.purchaseProduct(
@@ -421,7 +422,7 @@ class BillingClientManagerTest {
         val jsonDetails = "{\"productId\":\"merchant.premium.android\",\"type\":\"subs\",\"title\":\"Premium Plan (Chargebee Example)\",\"name\":\"Premium Plan\",\"price\":\"₹2,650.00\",\"price_amount_micros\":2650000000,\"price_currency_code\":\"INR\",\"description\":\"Every 6 Months\",\"subscriptionPeriod\":\"P6M\",\"skuDetailsToken\":\"AEuhp4J0KiD1Bsj3Yq2mHPBRNHUBdzs4nTJY3PWRR8neE-22MJNssuDzH2VLFKv35Ov8\"}"
 
         val skuDetails = SkuDetails(jsonDetails)
-        val products = CBProduct("","","", skuDetails,true)
+        val products = CBProduct("","","", skuDetails,true, "subs")
         CoroutineScope(Dispatchers.IO).launch {
             CBPurchase.purchaseProduct(
                 products,customer,
@@ -463,7 +464,7 @@ class BillingClientManagerTest {
                     )
                 )
                 verify(ReceiptResource(), times(1)).validateReceipt(params)
-                verify(CBReceiptRequestBody("receipt", "", null, ""), times(1)).toCBReceiptReqBody()
+                verify(CBReceiptRequestBody("receipt", "", null, "", null), times(1)).toCBReceiptReqBody()
 
             }
         }
@@ -493,7 +494,7 @@ class BillingClientManagerTest {
                 )
             )
             verify(ReceiptResource(), times(1)).validateReceipt(params)
-            verify(CBReceiptRequestBody("receipt", "", null, ""), times(1)).toCBReceiptReqBody()
+            verify(CBReceiptRequestBody("receipt", "", null, "", null), times(1)).toCBReceiptReqBody()
         }
     }
 }

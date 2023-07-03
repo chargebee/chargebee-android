@@ -19,11 +19,7 @@ object CBPurchase {
     val productIdList = arrayListOf<String>()
     private var customer: CBCustomer? = null
     internal var includeInActivePurchases = false
-
-    internal enum class ProductType(val value: String) {
-        SUBS("subs"),
-        INAPP("inapp")
-    }
+    internal lateinit var productType: OneTimeProductType
 
     /*
     * Get the product ID's from chargebee system
@@ -54,7 +50,7 @@ object CBPurchase {
         params: ArrayList<String>,
         callBack: CBCallback.ListProductsCallback<ArrayList<CBProduct>>
     ) {
-        sharedInstance(context).retrieveProducts(ProductType.SUBS.value, params, callBack)
+        sharedInstance(context).retrieveProducts(params, callBack)
     }
 
     /**
@@ -90,28 +86,53 @@ object CBPurchase {
     }
 
     private fun purchaseProduct(product: CBProduct, callback: CBCallback.PurchaseCallback<String>) {
+        isSDKKeyValid({
+            billingClientManager?.purchase(product, callback)
+        }, {
+            callback.onError(it)
+        })
+    }
+
+    /**
+     * Buy the non-subscription product with/without customer data
+     * @param [product] The product that wish to purchase
+     * @param [customer] Optional. Customer Object.
+     * @param [productType] One time Product Type. Consumable or Non-Consumable
+     * @param [callback] listener will be called when product purchase completes.
+     */
+    @JvmStatic
+    fun purchaseNonSubscriptionProduct(
+        product: CBProduct, customer: CBCustomer? = null,
+        productType: OneTimeProductType,
+        callback: CBCallback.OneTimePurchaseCallback
+    ) {
+        this.customer = customer
+        this.productType = productType
+        isSDKKeyValid({
+            billingClientManager?.purchaseNonSubscriptionProduct(product, callback)
+        }, {
+            callback.onError(it)
+        })
+    }
+
+    private fun isSDKKeyValid(success: () -> Unit, error: (CBException) -> Unit) {
         if (!TextUtils.isEmpty(Chargebee.sdkKey)) {
             CBAuthentication.isSDKKeyValid(Chargebee.sdkKey) {
                 when (it) {
                     is ChargebeeResult.Success -> {
                         if (billingClientManager?.isFeatureSupported() == true) {
-                            if (billingClientManager?.isBillingClientReady() == true) {
-                                billingClientManager?.purchase(product, callback)
-                            } else {
-                                callback.onError(CBException(ErrorDetail(GPErrorCode.BillingClientNotReady.errorMsg)))
-                            }
+                            success()
                         } else {
-                            callback.onError(CBException(ErrorDetail(GPErrorCode.FeatureNotSupported.errorMsg)))
+                            error(CBException(ErrorDetail(GPErrorCode.FeatureNotSupported.errorMsg, httpStatusCode = BillingErrorCode.FEATURE_NOT_SUPPORTED.code)))
                         }
                     }
                     is ChargebeeResult.Error -> {
-                        Log.i(javaClass.simpleName, "Exception from server :${it.exp.message}")
-                        callback.onError(it.exp)
+                        error(it.exp)
                     }
                 }
             }
         } else {
-            callback.onError(
+            error(
                 CBException(
                     ErrorDetail(
                         message = GPErrorCode.SDKKeyNotAvailable.errorMsg,
@@ -191,10 +212,62 @@ object CBPurchase {
             purchaseToken,
             productId,
             customer,
-            Chargebee.channel
+            Chargebee.channel,
+            null
         )
         ResultHandler.safeExecuter(
             { ReceiptResource().validateReceipt(params) },
+            completion,
+            logger
+        )
+    }
+
+    /**
+     * This method will be used to validate the receipt with Chargebee,
+     * when syncing with Chargebee fails after the successful purchase in Google Play Store.
+     *
+     * @param [context] Current activity context
+     * @param [productId] Product Identifier.
+     * @param [customer] Optional. Customer Object.
+     * @param [productType] Product Type. Consumable or Non-Consumable product
+     * @param [completionCallback] The listener will be called when validate receipt completes.
+     */
+    @JvmStatic
+    fun validateReceiptForNonSubscriptions(
+        context: Context,
+        product: CBProduct,
+        customer: CBCustomer? = null,
+        productType: OneTimeProductType,
+        completionCallback: CBCallback.OneTimePurchaseCallback
+    ) {
+        this.customer = customer
+        this.productType = productType
+        sharedInstance(context).validateNonSubscriptionReceiptWithChargebee(product, completionCallback)
+    }
+
+    internal fun validateNonSubscriptionReceipt(
+        purchaseToken: String,
+        product: CBProduct,
+        completion: (ChargebeeResult<Any>) -> Unit
+    ) {
+        validateNonSubscriptionReceipt(purchaseToken, product.productId, completion)
+    }
+
+    internal fun validateNonSubscriptionReceipt(
+        purchaseToken: String,
+        productId: String,
+        completion: (ChargebeeResult<Any>) -> Unit
+    ) {
+        val logger = CBLogger(name = "buy", action = "one_time_purchase")
+        val params = Params(
+            purchaseToken,
+            productId,
+            customer,
+            Chargebee.channel,
+            productType
+        )
+        ResultHandler.safeExecuter(
+            { ReceiptResource().validateReceiptForNonSubscription(params) },
             completion,
             logger
         )
