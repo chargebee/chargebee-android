@@ -10,6 +10,8 @@ import com.chargebee.android.billingservice.CBCallback.ListProductsCallback
 import com.chargebee.android.exceptions.CBException
 import com.chargebee.android.exceptions.CBProductIDResult
 import com.chargebee.android.exceptions.ChargebeeResult
+import com.chargebee.android.models.CBNonSubscriptionResponse
+import com.chargebee.android.models.NonSubscriptionResponse
 import com.chargebee.android.models.CBProduct
 import com.chargebee.android.network.*
 import com.chargebee.android.resources.CatalogVersion
@@ -57,6 +59,8 @@ class BillingClientManagerTest {
         null
     )
     private val receiptDetail = ReceiptDetail("subscriptionId", "customerId", "planId")
+    private var callBackOneTimePurchase: CBCallback.OneTimePurchaseCallback? = null
+    private val nonSubscriptionDetail = NonSubscriptionResponse("invoiceId", "customerId", "chargeId")
 
     @Before
     fun setUp() {
@@ -87,7 +91,6 @@ class BillingClientManagerTest {
         val productIdList = arrayListOf("merchant.pro.android", "merchant.premium.android")
 
         CoroutineScope(Dispatchers.IO).launch {
-            val skuType = ProductType.SUBS
             Mockito.`when`(mContext?.let {
                 CBPurchase.retrieveProducts(
                     it,
@@ -116,7 +119,6 @@ class BillingClientManagerTest {
     @Test
     fun test_retrieveProducts_error(){
         val productIdList = arrayListOf("")
-
         CoroutineScope(Dispatchers.IO).launch {
             Mockito.`when`(mContext?.let {
                 CBPurchase.retrieveProducts(
@@ -273,7 +275,6 @@ class BillingClientManagerTest {
             }
         }
         lock.await()
-
     }
     @Test
     fun test_purchaseProduct_error(){
@@ -495,6 +496,131 @@ class BillingClientManagerTest {
             )
             verify(ReceiptResource(), times(1)).validateReceipt(params)
             verify(CBReceiptRequestBody("receipt", "", null, "", null), times(1)).toCBReceiptReqBody()
+        }
+    }
+
+    @Test
+    fun test_purchaseNonSubscriptionProduct_success(){
+        val products = CBProduct("","","", SkuDetails(""),true, "inapp")
+        val lock = CountDownLatch(1)
+        CoroutineScope(Dispatchers.IO).launch {
+            CBPurchase.purchaseNonSubscriptionProduct(
+                product = products,
+                productType = OneTimeProductType.CONSUMABLE,
+                callback = object : CBCallback.OneTimePurchaseCallback {
+                    override fun onError(error: CBException) {
+                        lock.countDown()
+                        assertThat(error, instanceOf(CBException::class.java))
+                        println(" Error :  ${error.message} response code: ${error.httpStatusCode}")
+                    }
+
+                    override fun onSuccess(result: NonSubscriptionResponse, status: Boolean) {
+                        lock.countDown()
+                        assertThat(result, instanceOf(NonSubscriptionResponse::class.java))
+                    }
+                })
+
+            Mockito.`when`(callBackOneTimePurchase?.let {
+                billingClientManager?.purchaseNonSubscriptionProduct(products, it)
+            }).thenReturn(Unit)
+            callBackOneTimePurchase?.let {
+                verify(billingClientManager, times(1))?.purchaseNonSubscriptionProduct(
+                    products,
+                    oneTimePurchaseCallback = it
+                )
+            }
+        }
+        lock.await()
+    }
+
+    @Test
+    fun test_purchaseNonSubscriptionProduct_error(){
+        val products = CBProduct("","","", SkuDetails(""),true, "inapp")
+        val lock = CountDownLatch(1)
+        CoroutineScope(Dispatchers.IO).launch {
+            CBPurchase.purchaseNonSubscriptionProduct(
+                product = products,
+                productType = OneTimeProductType.CONSUMABLE,
+                callback = object : CBCallback.OneTimePurchaseCallback {
+                    override fun onError(error: CBException) {
+                        lock.countDown()
+                        assertThat(error, instanceOf(CBException::class.java))
+                    }
+
+                    override fun onSuccess(result: NonSubscriptionResponse, status: Boolean) {
+                        lock.countDown()
+                        assertThat(result, instanceOf(NonSubscriptionResponse::class.java))
+                    }
+                })
+
+            Mockito.`when`(callBackOneTimePurchase?.let {
+                billingClientManager?.purchaseNonSubscriptionProduct(products, it)
+            }).thenReturn(Unit)
+            callBackOneTimePurchase?.let {
+                verify(billingClientManager, times(1))?.purchaseNonSubscriptionProduct(
+                    products,
+                    oneTimePurchaseCallback = it
+                )
+            }
+        }
+        lock.await()
+    }
+
+    @Test
+    fun test_validateNonSubscriptionReceipt_success(){
+        val purchaseToken = "56sadmnagdjsd"
+        val lock = CountDownLatch(1)
+        CoroutineScope(Dispatchers.IO).launch {
+            CBPurchase.validateNonSubscriptionReceipt(purchaseToken, "productId") {
+                when (it) {
+                    is ChargebeeResult.Success -> {
+                        lock.countDown()
+                        assertThat(it, instanceOf(CBNonSubscriptionResponse::class.java))
+                    }
+                    is ChargebeeResult.Error -> {
+                        lock.countDown()
+                        println(" Error :  ${it.exp.message}")
+                    }
+                }
+            }
+        }
+        lock.await()
+        val response = CBNonSubscriptionResponse(nonSubscriptionDetail)
+        CoroutineScope(Dispatchers.IO).launch {
+            Mockito.`when`(params.let { ReceiptResource().validateReceiptForNonSubscription(it) }).thenReturn(
+                ChargebeeResult.Success(
+                    response
+                )
+            )
+            verify(ReceiptResource(), times(1)).validateReceiptForNonSubscription(params)
+            verify(CBReceiptRequestBody("receipt","",null,"", null), times(1)).toMapNonSubscription()
+        }
+    }
+
+    @Test
+    fun test_validateNonSubscriptionReceipt_error(){
+        val purchaseToken = "56sadmnagdjsd"
+        CoroutineScope(Dispatchers.IO).launch {
+            CBPurchase.validateNonSubscriptionReceipt(purchaseToken, "products") {
+                when (it) {
+                    is ChargebeeResult.Success -> {
+                        assertThat(it, instanceOf(CBNonSubscriptionResponse::class.java))
+                    }
+                    is ChargebeeResult.Error -> {
+                        println(" Error :  ${it.exp.message} response code: ${it.exp.httpStatusCode}")
+                    }
+                }
+            }
+        }
+        val exception = CBException(ErrorDetail("Error"))
+        CoroutineScope(Dispatchers.IO).launch {
+            Mockito.`when`(params.let { ReceiptResource().validateReceiptForNonSubscription(it) }).thenReturn(
+                ChargebeeResult.Error(
+                    exception
+                )
+            )
+            verify(ReceiptResource(), times(1)).validateReceiptForNonSubscription(params)
+            verify(CBReceiptRequestBody("receipt","",null,"", null), times(1)).toMapNonSubscription()
         }
     }
 }

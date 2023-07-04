@@ -19,7 +19,7 @@ object CBPurchase {
     val productIdList = arrayListOf<String>()
     private var customer: CBCustomer? = null
     internal var includeInActivePurchases = false
-    internal lateinit var productType: OneTimeProductType
+    internal var productType = OneTimeProductType.UNKNOWN
 
     /*
     * Get the product ID's from chargebee system
