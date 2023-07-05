@@ -298,8 +298,10 @@ class BillingClientManager(context: Context) : PurchasesUpdatedListener {
                 when (billingResult.responseCode) {
                     OK -> {
                         if (purchase.purchaseToken.isNotEmpty()) {
+                            Log.i(TAG, "Google Purchase - success")
                             success()
                         } else {
+                            Log.e(TAG, "Receipt Not Found")
                             error(
                                 CBException(
                                     ErrorDetail(
@@ -422,7 +424,7 @@ class BillingClientManager(context: Context) : PurchasesUpdatedListener {
         queryAllSubsPurchaseHistory(ProductType.SUBS.value) { subscriptionHistory ->
             purchaseTransactionHistory.addAll(subscriptionHistory ?: emptyList())
             queryAllInAppPurchaseHistory(ProductType.INAPP.value) { inAppHistory ->
-                purchaseTransactionHistory.addAll(inAppHistory ?: emptyList())
+                //purchaseTransactionHistory.addAll(inAppHistory ?: emptyList())
                 storeTransactions(purchaseTransactionHistory)
             }
         }

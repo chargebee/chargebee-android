@@ -128,8 +128,8 @@ public class BillingActivity extends BaseActivity implements ProductListAdapter.
         EditText inputLastName = dialog.findViewById(R.id.lastNameText);
         EditText inputEmail = dialog.findViewById(R.id.emailText);
         inputProductType = dialog.findViewById(R.id.productTypeText);
-        if (isOneTimeProduct()) inputProductType.setVisibility(View.GONE);
-        else inputProductType.setVisibility(View.VISIBLE);
+        if (isOneTimeProduct()) inputProductType.setVisibility(View.VISIBLE);
+        else inputProductType.setVisibility(View.GONE);
 
         Button dialogButton = dialog.findViewById(R.id.btn_ok);
         dialogButton.setText("Ok");
