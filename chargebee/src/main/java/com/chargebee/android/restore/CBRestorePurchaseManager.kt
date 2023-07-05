@@ -117,8 +117,6 @@ class CBRestorePurchaseManager {
             storeTransactions.forEach { purchaseTransaction ->
                 if (purchaseTransaction.productType == ProductType.SUBS.value) {
                     validateReceipt(purchaseTransaction.purchaseToken, purchaseTransaction.productId.first())
-                } else {
-                    validateNonSubscriptionReceipt(purchaseTransaction.purchaseToken, purchaseTransaction.productId.first())
                 }
             }
         }
@@ -133,22 +131,6 @@ class CBRestorePurchaseManager {
                         Log.e(
                             javaClass.simpleName,
                             "Exception from Server - validateReceipt() :  ${it.exp.message}"
-                        )
-                    }
-                }
-            }
-        }
-
-        internal fun validateNonSubscriptionReceipt(purchaseToken: String, productId: String) {
-            CBPurchase.validateNonSubscriptionReceipt(purchaseToken, productId) {
-                when (it) {
-                    is ChargebeeResult.Success -> {
-                        Log.i(javaClass.simpleName, "result :  ${it.data}")
-                    }
-                    is ChargebeeResult.Error -> {
-                        Log.e(
-                            javaClass.simpleName,
-                            "Exception from Server - validateNonSubscriptionReceipt() :  ${it.exp.message}"
                         )
                     }
                 }
