@@ -146,7 +146,7 @@ The `purchaseNonSubscriptionProduct` function handles the one-time purchase agai
 
 ```kotlin
 CBPurchase.purchaseNonSubscriptionProduct(product = CBProduct, customer = CBCustomer, productType = OneTimeProductType.CONSUMABLE, callback = object : CBCallback.OneTimePurchaseCallback{
-      override fun onSuccess(result: NonSubscriptionResponse, status:Boolean) {
+      override fun onSuccess(result: NonSubscription, status:Boolean) {
         Log.i(TAG, "invoice ID:  ${result.invoiceId}")
         Log.i(TAG, "charge ID:  ${result.chargeId}")
         Log.i(TAG, "customer ID:  ${result.customerId}")
@@ -159,12 +159,12 @@ CBPurchase.purchaseNonSubscriptionProduct(product = CBProduct, customer = CBCust
 The given code defines a function named `purchaseNonSubscriptionProduct` in the CBPurchase class, which takes four input parameters:
 
 - `product`: An instance of `CBProduct` class, initialized with a `SkuDetails` instance representing the product to be purchased from the Google Play Store.
-- `customer`: Optional. An instance of `CBCustomer` class, initialized with the customer's details such as `customerID`, `firstName`, `lastName`, and `email`.
+- `customer`: Optional. An instance of `CBCustomer` class, initialized with the customer's details such as `customerId`, `firstName`, `lastName`, and `email`.
 - `productType`: An enum instance of `productType` type, indicating the type of product to be purchased. It can be either .`consumable`, or `non_consumable`.
 - `callback`:  The `OneTimePurchaseCallback` listener will be invoked when product purchase completes.
 
 The function is called asynchronously, and it returns a `Result` object with a `success` or `failure` case, which can be handled in the listener.
-- If the purchase is successful, the listener will be called with the `success` case, it returns `NonSubscriptionResponse` object. which includes the `customerID`, `chargeID`, and `invoiceID` associated with the purchase.
+- If the purchase is successful, the listener will be called with the `success` case, it returns `NonSubscriptionResponse` object. which includes the `customerId`, `chargeId`, and `invoiceId` associated with the purchase.
 - If there is any failure during the purchase, the listener will be called with the `error` case, it returns `CBException`. which includes an error object that can be used to handle the error.
 
 ### Restore Purchase
@@ -230,7 +230,7 @@ CBPurchase.validateReceipt(context = current activity context, product = CBProdu
 
 ```kotlin
 CBPurchase.validateReceiptForNonSubscriptions(context = current activity context, product = CBProduct, customer = CBCustomer, productType = OneTimeProductType.CONSUMABLE, object : CBCallback.OneTimePurchaseCallback {
-      override fun onSuccess(result: NonSubscriptionResponse, status: Boolean) {
+      override fun onSuccess(result: NonSubscription, status: Boolean) {
         Log.i(TAG, "invoice ID:  ${result.invoiceId}")
         Log.i(TAG, "charge ID:  ${result.chargeId}")
         Log.i(TAG, "customer ID:  ${result.customerId}")

@@ -11,8 +11,8 @@ import com.chargebee.android.exceptions.CBException
 import com.chargebee.android.exceptions.CBProductIDResult
 import com.chargebee.android.exceptions.ChargebeeResult
 import com.chargebee.android.models.CBNonSubscriptionResponse
-import com.chargebee.android.models.NonSubscriptionResponse
 import com.chargebee.android.models.CBProduct
+import com.chargebee.android.models.NonSubscription
 import com.chargebee.android.network.*
 import com.chargebee.android.resources.CatalogVersion
 import com.chargebee.android.resources.ReceiptResource
@@ -60,7 +60,9 @@ class BillingClientManagerTest {
     )
     private val receiptDetail = ReceiptDetail("subscriptionId", "customerId", "planId")
     private var callBackOneTimePurchase: CBCallback.OneTimePurchaseCallback? = null
-    private val nonSubscriptionDetail = NonSubscriptionResponse("invoiceId", "customerId", "chargeId")
+    private val nonSubscriptionDetail = NonSubscription("invoiceId", "customerId", "chargeId")
+    private val otpProducts = CBProduct("test.consumable","Example product","100.0", SkuDetails(""),true, productType = ProductType.INAPP)
+    private val subProducts = CBProduct("chargebee.premium.android","Premium Plan","", SkuDetails(""),true, ProductType.SUBS)
 
     @Before
     fun setUp() {
@@ -250,11 +252,11 @@ class BillingClientManagerTest {
          val jsonDetails = "{\"productId\":\"merchant.premium.android\",\"type\":\"subs\",\"title\":\"Premium Plan (Chargebee Example)\",\"name\":\"Premium Plan\",\"price\":\"₹2,650.00\",\"price_amount_micros\":2650000000,\"price_currency_code\":\"INR\",\"description\":\"Every 6 Months\",\"subscriptionPeriod\":\"P6M\",\"skuDetailsToken\":\"AEuhp4J0KiD1Bsj3Yq2mHPBRNHUBdzs4nTJY3PWRR8neE-22MJNssuDzH2VLFKv35Ov8\"}"
 
         val skuDetails = SkuDetails(jsonDetails)
-        val products = CBProduct("","","", skuDetails,true, "subs")
+
         val lock = CountDownLatch(1)
         CoroutineScope(Dispatchers.IO).launch {
             CBPurchase.purchaseProduct(
-                products,"",
+                subProducts,"",
                 object : CBCallback.PurchaseCallback<String> {
                     override fun onError(error: CBException) {
                         lock.countDown()
@@ -268,10 +270,10 @@ class BillingClientManagerTest {
                 })
 
             Mockito.`when`(callBackPurchase?.let {
-                billingClientManager?.purchase(products, it)
+                billingClientManager?.purchase(subProducts, it)
             }).thenReturn(Unit)
             callBackPurchase?.let {
-                verify(billingClientManager, times(1))?.purchase(products,purchaseCallBack = it)
+                verify(billingClientManager, times(1))?.purchase(subProducts,purchaseCallBack = it)
             }
         }
         lock.await()
@@ -281,10 +283,9 @@ class BillingClientManagerTest {
         val jsonDetails = "{\"productId\":\"merchant.premium.android\",\"type\":\"subs\",\"title\":\"Premium Plan (Chargebee Example)\",\"name\":\"Premium Plan\",\"price\":\"₹2,650.00\",\"price_amount_micros\":2650000000,\"price_currency_code\":\"INR\",\"description\":\"Every 6 Months\",\"subscriptionPeriod\":\"P6M\",\"skuDetailsToken\":\"AEuhp4J0KiD1Bsj3Yq2mHPBRNHUBdzs4nTJY3PWRR8neE-22MJNssuDzH2VLFKv35Ov8\"}"
 
         val skuDetails = SkuDetails(jsonDetails)
-        val products = CBProduct("","","", skuDetails,true, "subs")
         CoroutineScope(Dispatchers.IO).launch {
             CBPurchase.purchaseProduct(
-                products,"",
+                subProducts,"",
                 object : CBCallback.PurchaseCallback<String> {
 
                     override fun onSuccess(result: ReceiptDetail, status: Boolean) {
@@ -360,11 +361,10 @@ class BillingClientManagerTest {
         val jsonDetails = "{\"productId\":\"merchant.premium.android\",\"type\":\"subs\",\"title\":\"Premium Plan (Chargebee Example)\",\"name\":\"Premium Plan\",\"price\":\"₹2,650.00\",\"price_amount_micros\":2650000000,\"price_currency_code\":\"INR\",\"description\":\"Every 6 Months\",\"subscriptionPeriod\":\"P6M\",\"skuDetailsToken\":\"AEuhp4J0KiD1Bsj3Yq2mHPBRNHUBdzs4nTJY3PWRR8neE-22MJNssuDzH2VLFKv35Ov8\"}"
 
         val skuDetails = SkuDetails(jsonDetails)
-        val products = CBProduct("","","", skuDetails,true, "subs")
         val lock = CountDownLatch(1)
         CoroutineScope(Dispatchers.IO).launch {
             CBPurchase.purchaseProduct(
-                products,customer,
+                subProducts,customer,
                 object : CBCallback.PurchaseCallback<String> {
                     override fun onError(error: CBException) {
                         lock.countDown()
@@ -378,10 +378,10 @@ class BillingClientManagerTest {
                 })
 
             Mockito.`when`(callBackPurchase?.let {
-                billingClientManager?.purchase(products, it)
+                billingClientManager?.purchase(subProducts, it)
             }).thenReturn(Unit)
             callBackPurchase?.let {
-                verify(billingClientManager, times(1))?.purchase(products,purchaseCallBack = it)
+                verify(billingClientManager, times(1))?.purchase(subProducts,purchaseCallBack = it)
             }
         }
         lock.await()
@@ -392,11 +392,10 @@ class BillingClientManagerTest {
         val jsonDetails = "{\"productId\":\"merchant.premium.android\",\"type\":\"subs\",\"title\":\"Premium Plan (Chargebee Example)\",\"name\":\"Premium Plan\",\"price\":\"₹2,650.00\",\"price_amount_micros\":2650000000,\"price_currency_code\":\"INR\",\"description\":\"Every 6 Months\",\"subscriptionPeriod\":\"P6M\",\"skuDetailsToken\":\"AEuhp4J0KiD1Bsj3Yq2mHPBRNHUBdzs4nTJY3PWRR8neE-22MJNssuDzH2VLFKv35Ov8\"}"
 
         val skuDetails = SkuDetails(jsonDetails)
-        val products = CBProduct("","","", skuDetails,true, "subs")
         val lock = CountDownLatch(1)
         CoroutineScope(Dispatchers.IO).launch {
             CBPurchase.purchaseProduct(
-                products,customer,
+                subProducts,customer,
                 object : CBCallback.PurchaseCallback<String> {
                     override fun onError(error: CBException) {
                         lock.countDown()
@@ -410,10 +409,10 @@ class BillingClientManagerTest {
                 })
 
             Mockito.`when`(callBackPurchase?.let {
-                billingClientManager?.purchase(products, it)
+                billingClientManager?.purchase(subProducts, it)
             }).thenReturn(Unit)
             callBackPurchase?.let {
-                verify(billingClientManager, times(1))?.purchase(products,purchaseCallBack = it)
+                verify(billingClientManager, times(1))?.purchase(subProducts,purchaseCallBack = it)
             }
         }
         lock.await()
@@ -423,10 +422,9 @@ class BillingClientManagerTest {
         val jsonDetails = "{\"productId\":\"merchant.premium.android\",\"type\":\"subs\",\"title\":\"Premium Plan (Chargebee Example)\",\"name\":\"Premium Plan\",\"price\":\"₹2,650.00\",\"price_amount_micros\":2650000000,\"price_currency_code\":\"INR\",\"description\":\"Every 6 Months\",\"subscriptionPeriod\":\"P6M\",\"skuDetailsToken\":\"AEuhp4J0KiD1Bsj3Yq2mHPBRNHUBdzs4nTJY3PWRR8neE-22MJNssuDzH2VLFKv35Ov8\"}"
 
         val skuDetails = SkuDetails(jsonDetails)
-        val products = CBProduct("","","", skuDetails,true, "subs")
         CoroutineScope(Dispatchers.IO).launch {
             CBPurchase.purchaseProduct(
-                products,customer,
+                subProducts,customer,
                 object : CBCallback.PurchaseCallback<String> {
 
                     override fun onSuccess(result: ReceiptDetail, status: Boolean) {
@@ -501,11 +499,10 @@ class BillingClientManagerTest {
 
     @Test
     fun test_purchaseNonSubscriptionProduct_success(){
-        val products = CBProduct("","","", SkuDetails(""),true, "inapp")
         val lock = CountDownLatch(1)
         CoroutineScope(Dispatchers.IO).launch {
             CBPurchase.purchaseNonSubscriptionProduct(
-                product = products,
+                product = otpProducts,
                 productType = OneTimeProductType.CONSUMABLE,
                 callback = object : CBCallback.OneTimePurchaseCallback {
                     override fun onError(error: CBException) {
@@ -514,18 +511,18 @@ class BillingClientManagerTest {
                         println(" Error :  ${error.message} response code: ${error.httpStatusCode}")
                     }
 
-                    override fun onSuccess(result: NonSubscriptionResponse, status: Boolean) {
+                    override fun onSuccess(result: NonSubscription, status: Boolean) {
                         lock.countDown()
-                        assertThat(result, instanceOf(NonSubscriptionResponse::class.java))
+                        assertThat(result, instanceOf(NonSubscription::class.java))
                     }
                 })
 
             Mockito.`when`(callBackOneTimePurchase?.let {
-                billingClientManager?.purchaseNonSubscriptionProduct(products, it)
+                billingClientManager?.purchaseNonSubscriptionProduct(otpProducts, it)
             }).thenReturn(Unit)
             callBackOneTimePurchase?.let {
                 verify(billingClientManager, times(1))?.purchaseNonSubscriptionProduct(
-                    products,
+                    otpProducts,
                     oneTimePurchaseCallback = it
                 )
             }
@@ -535,11 +532,10 @@ class BillingClientManagerTest {
 
     @Test
     fun test_purchaseNonSubscriptionProduct_error(){
-        val products = CBProduct("","","", SkuDetails(""),true, "inapp")
         val lock = CountDownLatch(1)
         CoroutineScope(Dispatchers.IO).launch {
             CBPurchase.purchaseNonSubscriptionProduct(
-                product = products,
+                product = otpProducts,
                 productType = OneTimeProductType.CONSUMABLE,
                 callback = object : CBCallback.OneTimePurchaseCallback {
                     override fun onError(error: CBException) {
@@ -547,18 +543,18 @@ class BillingClientManagerTest {
                         assertThat(error, instanceOf(CBException::class.java))
                     }
 
-                    override fun onSuccess(result: NonSubscriptionResponse, status: Boolean) {
+                    override fun onSuccess(result: NonSubscription, status: Boolean) {
                         lock.countDown()
-                        assertThat(result, instanceOf(NonSubscriptionResponse::class.java))
+                        assertThat(result, instanceOf(NonSubscription::class.java))
                     }
                 })
 
             Mockito.`when`(callBackOneTimePurchase?.let {
-                billingClientManager?.purchaseNonSubscriptionProduct(products, it)
+                billingClientManager?.purchaseNonSubscriptionProduct(otpProducts, it)
             }).thenReturn(Unit)
             callBackOneTimePurchase?.let {
                 verify(billingClientManager, times(1))?.purchaseNonSubscriptionProduct(
-                    products,
+                    otpProducts,
                     oneTimePurchaseCallback = it
                 )
             }

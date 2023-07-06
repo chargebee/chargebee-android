@@ -187,7 +187,7 @@ class BillingViewModel : ViewModel() {
         CBPurchase.purchaseNonSubscriptionProduct(
             product, customer,
             productType, object : CBCallback.OneTimePurchaseCallback {
-            override fun onSuccess(result: NonSubscriptionResponse, status:Boolean) {
+            override fun onSuccess(result: NonSubscription, status:Boolean) {
                 Log.i(TAG, "invoice ID:  ${result.invoiceId}")
                 Log.i(TAG, "charge ID:  ${result.chargeId}")
                 productPurchaseResult.postValue(status)
@@ -221,7 +221,7 @@ class BillingViewModel : ViewModel() {
             customer = customer,
             productType = productType,
             completionCallback = object : CBCallback.OneTimePurchaseCallback {
-                override fun onSuccess(result: NonSubscriptionResponse, status: Boolean) {
+                override fun onSuccess(result: NonSubscription, status: Boolean) {
                     Log.i(TAG, "Invoice ID:  ${result.invoiceId}")
                     Log.i(TAG, "Plan ID:  ${result.chargeId}")
                     // Clear the local cache once receipt validation success

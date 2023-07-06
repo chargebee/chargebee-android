@@ -2,7 +2,7 @@ package com.chargebee.android.models
 
 import com.google.gson.annotations.SerializedName
 
-data class NonSubscriptionResponse(
+data class NonSubscription(
     @SerializedName("invoice_id")
     val invoiceId: String,
     @SerializedName("customer_id")
@@ -13,5 +13,5 @@ data class NonSubscriptionResponse(
 
 data class CBNonSubscriptionResponse(
     @SerializedName("non_subscription")
-    val nonSubscription: NonSubscriptionResponse
+    val nonSubscription: NonSubscription
 )

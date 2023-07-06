@@ -167,7 +167,7 @@ public class BillingActivity extends BaseActivity implements ProductListAdapter.
     }
 
     private boolean isOneTimeProduct(){
-        return productList.get(position).getProductType().equalsIgnoreCase(ProductType.INAPP.getValue());
+        return productList.get(position).getProductType() == ProductType.INAPP;
     }
 
     private void purchaseProduct(String customerId) {

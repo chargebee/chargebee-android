@@ -1,6 +1,7 @@
 package com.chargebee.android.models
 
 import com.android.billingclient.api.SkuDetails
+import com.chargebee.android.billingservice.ProductType
 
 data class CBProduct(
     val productId: String,
@@ -8,5 +9,5 @@ data class CBProduct(
     val productPrice: String,
     var skuDetails: SkuDetails,
     var subStatus: Boolean,
-    var productType: String
+    var productType: ProductType
 )

@@ -11,7 +11,7 @@ import com.chargebee.android.billingservice.OneTimeProductType
 import com.chargebee.android.billingservice.ProductType
 import com.chargebee.android.exceptions.CBException
 import com.chargebee.android.models.CBProduct
-import com.chargebee.android.models.NonSubscriptionResponse
+import com.chargebee.android.models.NonSubscription
 import com.chargebee.android.network.CBCustomer
 import com.chargebee.android.network.ReceiptDetail
 import com.chargebee.example.util.NetworkUtil
@@ -55,7 +55,7 @@ class ExampleApplication : Application(), NetworkUtil.NetworkListener {
             productIdList,
             object : CBCallback.ListProductsCallback<ArrayList<CBProduct>> {
                 override fun onSuccess(productIDs: ArrayList<CBProduct>) {
-                    if (productIDs.first().productType == ProductType.SUBS.value)
+                    if (productIDs.first().productType == ProductType.SUBS)
                         validateReceipt(mContext, productIDs.first())
                     else
                         validateNonSubscriptionReceipt(mContext, productIDs.first())
@@ -97,7 +97,7 @@ class ExampleApplication : Application(), NetworkUtil.NetworkListener {
             customer = customer,
             productType = OneTimeProductType.CONSUMABLE,
             completionCallback = object : CBCallback.OneTimePurchaseCallback {
-                override fun onSuccess(result: NonSubscriptionResponse, status: Boolean) {
+                override fun onSuccess(result: NonSubscription, status: Boolean) {
                     // Clear the local cache once receipt validation success
                     val editor = sharedPreference.edit()
                     editor.clear().apply()

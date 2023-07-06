@@ -99,7 +99,7 @@ class BillingClientManager(context: Context) : PurchasesUpdatedListener {
                                 skuProduct.price,
                                 skuProduct,
                                 false,
-                                skuProduct.type
+                                ProductType.getProductType(skuProduct.type)
                             )
                             skusWithSkuDetails.add(product)
                         }
@@ -267,15 +267,15 @@ class BillingClientManager(context: Context) : PurchasesUpdatedListener {
 
     /* Acknowledge the Purchases */
     private fun acknowledgePurchase(purchase: Purchase) {
-        when(product.skuDetails.type){
-            ProductType.SUBS.value ->  {
+        when(product.productType){
+            ProductType.SUBS ->  {
                 isAcknowledgedPurchase(purchase,{
                     validateReceipt(purchase.purchaseToken, product)
                 }, {
                     purchaseCallBack?.onError(it)
                 })
             }
-            ProductType.INAPP.value -> {
+            ProductType.INAPP -> {
                 if (CBPurchase.productType == OneTimeProductType.CONSUMABLE) {
                     consumeAsyncPurchase(purchase.purchaseToken)
                 } else {
@@ -561,11 +561,11 @@ class BillingClientManager(context: Context) : PurchasesUpdatedListener {
                     if (it.data.nonSubscription != null) {
                         val invoiceId = (it.data).nonSubscription.invoiceId
                         Log.i(TAG, "Invoice ID:  $invoiceId")
-                        val subscriptionResult = (it.data).nonSubscription
+                        val nonSubscriptionResult = (it.data).nonSubscription
                         if (invoiceId.isEmpty()) {
-                            oneTimePurchaseCallback?.onSuccess(subscriptionResult, false)
+                            oneTimePurchaseCallback?.onSuccess(nonSubscriptionResult, false)
                         } else {
-                            oneTimePurchaseCallback?.onSuccess(subscriptionResult, true)
+                            oneTimePurchaseCallback?.onSuccess(nonSubscriptionResult, true)
                         }
                     } else {
                         oneTimePurchaseCallback?.onError(CBException(ErrorDetail(message = GPErrorCode.PurchaseInvalid.errorMsg)))
