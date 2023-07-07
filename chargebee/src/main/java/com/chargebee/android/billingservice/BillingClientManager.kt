@@ -406,8 +406,11 @@ class BillingClientManager(context: Context) : PurchasesUpdatedListener {
                 val storeTransactions = arrayListOf<PurchaseTransaction>()
                 storeTransactions.addAll(purchaseHistoryList)
                 CBRestorePurchaseManager.fetchStoreSubscriptionStatus(
-                    storeTransactions,
-                    restorePurchaseCallBack
+                    storeTransactions = storeTransactions,
+                    allTransactions = arrayListOf(),
+                    activeTransactions = arrayListOf(),
+                    restorePurchases = arrayListOf(),
+                    completionCallback = restorePurchaseCallBack
                 )
             }
         } else {

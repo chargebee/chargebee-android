@@ -16,9 +16,6 @@ import com.chargebee.android.resources.RestorePurchaseResource
 class CBRestorePurchaseManager {
 
     companion object {
-        private var allTransactions = ArrayList<PurchaseTransaction>()
-        private var restorePurchases = ArrayList<CBRestoreSubscription>()
-        private var activeTransactions = ArrayList<PurchaseTransaction>()
         private lateinit var completionCallback: CBCallback.RestorePurchaseCallback
 
         private fun retrieveStoreSubscription(
@@ -56,6 +53,9 @@ class CBRestorePurchaseManager {
 
         internal fun fetchStoreSubscriptionStatus(
             storeTransactions: ArrayList<PurchaseTransaction>,
+            allTransactions: ArrayList<PurchaseTransaction>,
+            activeTransactions: ArrayList<PurchaseTransaction>,
+            restorePurchases: ArrayList<CBRestoreSubscription>,
             completionCallback: CBCallback.RestorePurchaseCallback
         ) {
             this.completionCallback = completionCallback
@@ -72,9 +72,9 @@ class CBRestorePurchaseManager {
                             }
                             else -> allTransactions.add(storeTransaction)
                         }
-                        getRestorePurchases(storeTransactions)
+                        getRestorePurchases(storeTransactions, allTransactions, activeTransactions, restorePurchases)
                     }, { _ ->
-                        getRestorePurchases(storeTransactions)
+                        getRestorePurchases(storeTransactions, allTransactions, activeTransactions, restorePurchases)
                     })
                 }
             } else {
@@ -82,7 +82,12 @@ class CBRestorePurchaseManager {
             }
         }
 
-        internal fun getRestorePurchases(storeTransactions: ArrayList<PurchaseTransaction>) {
+        internal fun getRestorePurchases(
+            storeTransactions: ArrayList<PurchaseTransaction>,
+            allTransactions: ArrayList<PurchaseTransaction>,
+            activeTransactions: ArrayList<PurchaseTransaction>,
+            restorePurchases: ArrayList<CBRestoreSubscription>
+        ) {
             if (storeTransactions.isEmpty()) {
                 if (restorePurchases.isEmpty()) {
                     completionCallback.onError(
@@ -105,11 +110,8 @@ class CBRestorePurchaseManager {
                         syncPurchaseWithChargebee(activeTransactions)
                     }
                 }
-                restorePurchases.clear()
-                allTransactions.clear()
-                activeTransactions.clear()
             } else {
-                fetchStoreSubscriptionStatus(storeTransactions, completionCallback)
+                fetchStoreSubscriptionStatus(storeTransactions,allTransactions, activeTransactions,restorePurchases, completionCallback)
             }
         }
 

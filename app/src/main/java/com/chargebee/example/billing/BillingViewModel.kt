@@ -26,6 +26,7 @@ class BillingViewModel : ViewModel() {
     var entitlementsResult: MutableLiveData<String?> = MutableLiveData()
     private var subscriptionId: String = ""
     private lateinit var sharedPreference : SharedPreferences
+    var restorePurchaseResult: MutableLiveData<List<CBRestoreSubscription?>> = MutableLiveData()
 
     fun purchaseProduct(context: Context,product: CBProduct, customer: CBCustomer) {
         // Cache the product id in sharedPreferences and retry validating the receipt if in case server is not responding or no internet connection.
@@ -236,6 +237,24 @@ class BillingViewModel : ViewModel() {
                     } catch (exp: Exception) {
                         Log.i(TAG, "Exception :${exp.message}")
                     }
+                }
+            })
+    }
+
+    fun restorePurchases(context: Context, includeInActivePurchases: Boolean = false) {
+        CBPurchase.restorePurchases(
+            context = context, includeInActivePurchases = includeInActivePurchases,
+            completionCallback = object : CBCallback.RestorePurchaseCallback {
+                override fun onSuccess(result: List<CBRestoreSubscription>) {
+                    result.forEach {
+                        Log.i(javaClass.simpleName, "status : ${it.storeStatus}")
+                        Log.i(javaClass.simpleName, "data : $it")
+                    }
+                    restorePurchaseResult.postValue(result)
+                }
+
+                override fun onError(error: CBException) {
+                    cbException.postValue(error)
                 }
             })
     }
