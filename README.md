@@ -141,6 +141,32 @@ CBPurchase.purchaseProduct(product=CBProduct, customer=CBCustomer, object : CBCa
  ```
 The above function will handle the purchase against Google Play Store and send the IAP token for server-side token verification to your Chargebee account. Use the Subscription ID returned by the above function, to check for Subscription status on Chargebee and confirm the access - granted or denied.
 
+### One-Time Purchases
+The `purchaseNonSubscriptionProduct` function handles the one-time purchase against Google Play Store and sends the IAP receipt for server-side receipt verification to your Chargebee account. Post verification a Charge corresponding to this one-time purchase will be created in Chargebee. There are two types of one-time purchases `consumable` and `non_consumable`.
+
+```kotlin
+CBPurchase.purchaseNonSubscriptionProduct(product = CBProduct, customer = CBCustomer, productType = OneTimeProductType.CONSUMABLE, callback = object : CBCallback.OneTimePurchaseCallback{
+      override fun onSuccess(result: NonSubscription, status:Boolean) {
+        Log.i(TAG, "invoice ID:  ${result.invoiceId}")
+        Log.i(TAG, "charge ID:  ${result.chargeId}")
+        Log.i(TAG, "customer ID:  ${result.customerId}")
+      }
+      override fun onError(error: CBException) {
+        Log.e(TAG, "Error:  ${error.message}")
+      }
+})
+ ```
+The given code defines a function named `purchaseNonSubscriptionProduct` in the CBPurchase class, which takes four input parameters:
+
+- `product`: An instance of `CBProduct` class, initialized with a `SkuDetails` instance representing the product to be purchased from the Google Play Store.
+- `customer`: Optional. An instance of `CBCustomer` class, initialized with the customer's details such as `customerId`, `firstName`, `lastName`, and `email`.
+- `productType`: An enum instance of `productType` type, indicating the type of product to be purchased. It can be either .`consumable`, or `non_consumable`.
+- `callback`:  The `OneTimePurchaseCallback` listener will be invoked when product purchase completes.
+
+The function is called asynchronously, and it returns a `Result` object with a `success` or `failure` case, which can be handled in the listener.
+- If the purchase is successful, the listener will be called with the `success` case, it returns `NonSubscriptionResponse` object. which includes the `customerId`, `chargeId`, and `invoiceId` associated with the purchase.
+- If there is any failure during the purchase, the listener will be called with the `error` case, it returns `CBException`. which includes an error object that can be used to handle the error.
+
 ### Restore Purchase
 
 The `restorePurchases()` function helps to recover your app user's previous purchases without making them pay again. Sometimes, your app user may want to restore their previous purchases after switching to a new device or reinstalling your app. You can use the `restorePurchases()` function to allow your app user to easily restore their previous purchases.
@@ -182,10 +208,10 @@ Receipt validation is crucial to ensure that the purchases made by your users ar
 
 * Add a network listener, as shown in the example project.
 * Save the product identifier in the cache once the purchase is initiated and clear the cache once the purchase is successful.
-* When the network connectivity is lost after the purchase is completed at Google Play Store but not synced with Chargebee, retrieve the product from the cache once the network connection is back and initiate validateReceipt() by passing activity `Context`, `CBProduct` and `CBCustomer(optional)` as input. This will validate the receipt and sync the purchase in Chargebee as a subscription. For subscriptions, use the function to validateReceipt().
+* When the network connectivity is lost after the purchase is completed at Google Play Store but not synced with Chargebee, retrieve the product from the cache once the network connection is back and initiate `validateReceipt() / validateReceiptForNonSubscriptions()` by passing activity `Context`, `CBProduct` and `CBCustomer(optional)` as input. This will validate the receipt and sync the purchase in Chargebee as a subscription or one-time purchase. For subscriptions, use the function to `validateReceipt()`;for one-time purchases, use the function `validateReceiptForNonSubscriptions()`.
 
 Use the function available for the retry mechanism.
-##### Function for validating the receipt
+##### Function for validating the Subscriptions receipt
 
 ```kotlin
 CBPurchase.validateReceipt(context = current activity context, product = CBProduct, customer = CBCustomer, object : CBCallback.PurchaseCallback<String> {
@@ -193,6 +219,21 @@ CBPurchase.validateReceipt(context = current activity context, product = CBProdu
         Log.i(TAG, "$status")
         Log.i(TAG, "${result.subscription_id}")
         Log.i(TAG, "${result.plan_id}")
+      }
+      override fun onError(error: CBException) {
+        Log.e(TAG, "Error:  ${error.message}")
+      }
+})
+ ```
+
+##### Function for validating the One-Time Purchases receipt
+
+```kotlin
+CBPurchase.validateReceiptForNonSubscriptions(context = current activity context, product = CBProduct, customer = CBCustomer, productType = OneTimeProductType.CONSUMABLE, object : CBCallback.OneTimePurchaseCallback {
+      override fun onSuccess(result: NonSubscription, status: Boolean) {
+        Log.i(TAG, "invoice ID:  ${result.invoiceId}")
+        Log.i(TAG, "charge ID:  ${result.chargeId}")
+        Log.i(TAG, "customer ID:  ${result.customerId}")
       }
       override fun onError(error: CBException) {
         Log.e(TAG, "Error:  ${error.message}")

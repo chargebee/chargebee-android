@@ -2,8 +2,6 @@ package com.chargebee.android
 
 import android.text.TextUtils
 import android.util.Log
-import com.chargebee.android.BuildConfig
-import com.chargebee.android.billingservice.CBPurchase
 import com.chargebee.android.exceptions.*
 import com.chargebee.android.gateway.GatewayTokenizer
 import com.chargebee.android.loggers.CBLogger

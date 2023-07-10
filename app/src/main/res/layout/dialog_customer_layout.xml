@@ -74,6 +74,25 @@
             android:hint="Email"
             android:inputType="textPersonName" />
     </com.google.android.material.textfield.TextInputLayout>
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/productTypeInputLayout"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="20dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.497"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/emailInputLayout">
+        <EditText
+            android:id="@+id/productTypeText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:ems="13"
+            android:hint="Product Type"
+            android:inputType="text"
+
+            />
+    </com.google.android.material.textfield.TextInputLayout>
     <TextView
         android:id="@+id/textView"
         android:layout_width="wrap_content"
@@ -94,6 +113,6 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.497"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/emailInputLayout" />
+        app:layout_constraintTop_toBottomOf="@+id/productTypeInputLayout" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
