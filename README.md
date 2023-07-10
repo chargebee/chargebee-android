@@ -592,9 +592,7 @@ The above function will determine your product catalog version in Chargebee and 
   
   The above function will handle the purchase against Google Play Store and send the IAP token for server-side token verification to your Chargebee account. Use the Subscription ID returned by the above function, to check for Subscription status on Chargebee and confirm the access - granted or denied.
 
-  ##### Returns Plan Object
-
-  This function returns the plan ID associated with a subscription. You can associate JSON metadata with the Google Play Store plans in Chargebee and retrieve the same by passing plan ID to the SDK method - [retrievePlan](https://github.com/chargebee/chargebee-android#get-plan-details)(PC 1.0) or [retrieveItem](https://github.com/chargebee/chargebee-android#get-item-details)(PC 2.0).
+  This function also returns the plan ID associated with a subscription. You can associate JSON metadata with the Google Play Store plans in Chargebee and retrieve the same by passing plan ID to the SDK method - [retrievePlan](https://github.com/chargebee/chargebee-android#get-plan-details)(PC 1.0) or [retrieveItem](https://github.com/chargebee/chargebee-android#get-item-details)(PC 2.0).
   
   #### Get Subscription Status for Existing Subscribers
   
