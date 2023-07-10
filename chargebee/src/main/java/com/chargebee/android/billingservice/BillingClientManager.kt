@@ -402,9 +402,9 @@ class BillingClientManager(context: Context) : PurchasesUpdatedListener {
         connectionStatus: Boolean
     ) {
         if (connectionStatus) {
-            queryPurchaseHistory { purchaseHistoryList ->
+            queryAllSubsPurchaseHistory(ProductType.SUBS.value) { purchaseHistoryList ->
                 val storeTransactions = arrayListOf<PurchaseTransaction>()
-                storeTransactions.addAll(purchaseHistoryList)
+                storeTransactions.addAll(purchaseHistoryList ?: emptyList())
                 CBRestorePurchaseManager.fetchStoreSubscriptionStatus(
                     storeTransactions = storeTransactions,
                     allTransactions = arrayListOf(),
@@ -427,7 +427,7 @@ class BillingClientManager(context: Context) : PurchasesUpdatedListener {
         queryAllSubsPurchaseHistory(ProductType.SUBS.value) { subscriptionHistory ->
             purchaseTransactionHistory.addAll(subscriptionHistory ?: emptyList())
             queryAllInAppPurchaseHistory(ProductType.INAPP.value) { inAppHistory ->
-                //purchaseTransactionHistory.addAll(inAppHistory ?: emptyList())
+                purchaseTransactionHistory.addAll(inAppHistory ?: emptyList())
                 storeTransactions(purchaseTransactionHistory)
             }
         }
