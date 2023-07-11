@@ -6,7 +6,8 @@ import com.chargebee.android.resources.LogType
 import com.chargebee.android.resources.LoggerResource
 
 class CBLogger(private val name: String,
-            private val action: String) {
+               private val action: String,
+               private val additionalInfo: Map<String, String>? = null) {
 
     suspend fun error(message: String, code: Int? = null) {
         postLog(LogType.ERROR, message, code)
