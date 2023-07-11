@@ -1,5 +1,9 @@
 package com.chargebee.android
 
+import android.content.Context
+import android.content.Intent
+import android.net.Uri
+import androidx.core.content.ContextCompat
 import android.text.TextUtils
 import android.util.Log
 import com.chargebee.android.BuildConfig
@@ -34,6 +38,9 @@ object Chargebee {
     const val platform: String = "Android"
     const val sdkVersion: String = BuildConfig.VERSION_NAME
     const val limit: String = "100"
+    private const val PLAY_STORE_SUBSCRIPTION_URL = "https://play.google.com/store/account/subscriptions"
+    private const val SUBSCRIPTION_URL
+            = "https://play.google.com/store/account/subscriptions?sku=%s&package=%s"
 
     /* Configure the app details with chargebee system */
     fun configure(site: String, publishableApiKey: String, allowErrorLogging: Boolean = true, sdkKey: String="", packageName: String="" ) {
@@ -229,5 +236,23 @@ object Chargebee {
             )
             Success(cbTempToken)
         }, completion, logger)
+    }
+
+    fun showManageSubscriptionsSettings(
+        context: Context,
+        productId: String = "",
+        packageName: String = ""
+    ) {
+        val uriString = if (productId.isNotEmpty() && packageName.isNotEmpty()) {
+            String.format(
+                SUBSCRIPTION_URL,
+                productId, packageName
+            );
+        } else {
+            PLAY_STORE_SUBSCRIPTION_URL
+        }
+        val intent = Intent(Intent.ACTION_VIEW)
+        intent.data = Uri.parse(uriString)
+        ContextCompat.startActivity(context, intent, null)
     }
 }
