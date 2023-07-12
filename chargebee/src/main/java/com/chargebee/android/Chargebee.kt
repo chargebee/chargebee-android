@@ -246,16 +246,16 @@ object Chargebee {
      */
     fun showManageSubscriptionsSettings(
         context: Context,
-        productId: String? = "",
-        packageName: String? = ""
+        productId: String? = null,
+        packageName: String? = null
     ) {
-        val uriString = if (productId?.isNotEmpty() == true && packageName?.isNotEmpty() == true) {
+        val uriString = if (productId == null && packageName == null) {
+            PLAY_STORE_SUBSCRIPTION_URL
+        } else {
             String.format(
                 SUBSCRIPTION_URL,
                 productId, packageName
             );
-        } else {
-            PLAY_STORE_SUBSCRIPTION_URL
         }
         val intent = Intent(Intent.ACTION_VIEW)
         intent.data = Uri.parse(uriString)
