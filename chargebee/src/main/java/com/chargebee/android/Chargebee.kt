@@ -2,6 +2,7 @@ package com.chargebee.android
 
 import android.content.Context
 import android.content.Intent
+import android.content.Intent.*
 import android.net.Uri
 import androidx.core.content.ContextCompat
 import android.text.TextUtils
@@ -260,6 +261,7 @@ object Chargebee {
         }
         val intent = Intent(Intent.ACTION_VIEW)
         intent.data = Uri.parse(uriString)
+        intent.flags = FLAG_ACTIVITY_NEW_TASK
         ContextCompat.startActivity(context, intent, null)
     }
 }
