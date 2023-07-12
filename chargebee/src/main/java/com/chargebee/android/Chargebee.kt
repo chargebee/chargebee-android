@@ -246,10 +246,10 @@ object Chargebee {
      */
     fun showManageSubscriptionsSettings(
         context: Context,
-        productId: String = "",
-        packageName: String = ""
+        productId: String? = "",
+        packageName: String? = ""
     ) {
-        val uriString = if (productId.isNotEmpty() && packageName.isNotEmpty()) {
+        val uriString = if (productId?.isNotEmpty() == true && packageName?.isNotEmpty() == true) {
             String.format(
                 SUBSCRIPTION_URL,
                 productId, packageName
