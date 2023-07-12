@@ -45,7 +45,7 @@ internal class LoggerResource: BaseResource(Chargebee.baseUrl) {
         )
         errorMessage?.let { data["error_message"] = it }
         errorCode?.let { data["error_code"] = "$it" }
-        additionalInfo?.let {"additional_info" to it }
+        additionalInfo?.let { data.putAll(it) }
         Log.i(javaClass.simpleName, "logData :$data")
         return data
     }

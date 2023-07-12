@@ -35,7 +35,8 @@ class CBLogger(private val name: String,
                 deviceModelName,
                 platform,
                 osVersion,
-                sdkVersion
+                sdkVersion,
+                additionalInfo
             )
         }
     }

@@ -391,7 +391,7 @@ object CBPurchase {
     }
     private fun additionalInfo(customer: CBCustomer?, product: CBProduct, productType: OneTimeProductType? = null): Map<String, String> {
         val map = mutableMapOf("product" to product.productId)
-        customer?.let { "customerId" to (it.id ?: "") }
+        customer?.let { map["customerId"] = (it.id ?: "") }
         productType?.let { map["productType"] = it.toString() }
         return map
     }
