@@ -87,6 +87,7 @@ object CBPurchase {
 
     private fun purchaseProduct(product: CBProduct, callback: CBCallback.PurchaseCallback<String>) {
         isSDKKeyValid({
+            log(customer, product)
             billingClientManager?.purchase(product, callback)
         }, {
             callback.onError(it)
@@ -108,7 +109,9 @@ object CBPurchase {
     ) {
         this.customer = customer
         this.productType = productType
+
         isSDKKeyValid({
+            log(CBPurchase.customer, product, productType)
             billingClientManager?.purchaseNonSubscriptionProduct(product, callback)
         }, {
             callback.onError(it)
@@ -207,7 +210,8 @@ object CBPurchase {
         productId: String,
         completion: (ChargebeeResult<Any>) -> Unit
     ) {
-        val logger = CBLogger(name = "buy", action = "process_purchase_command")
+        val logger = CBLogger(name = "buy", action = "process_purchase_command",
+            additionalInfo = mapOf("customerId" to (customer?.id ?: ""), "product" to productId, "purchaseToken" to purchaseToken))
         val params = Params(
             purchaseToken,
             productId,
@@ -258,7 +262,8 @@ object CBPurchase {
         productId: String,
         completion: (ChargebeeResult<Any>) -> Unit
     ) {
-        val logger = CBLogger(name = "buy", action = "one_time_purchase")
+        val logger = CBLogger(name = "buy", action = "one_time_purchase",
+            additionalInfo = mapOf("customerId" to (customer?.id ?: ""), "product" to productId, "purchaseToken" to purchaseToken))
         val params = Params(
             purchaseToken,
             productId,
@@ -374,4 +379,21 @@ object CBPurchase {
         }
         return billingClientManager as BillingClientManager
     }
+
+    private fun log(customer: CBCustomer?, product: CBProduct, productType: OneTimeProductType? = null) {
+        val additionalInfo = additionalInfo(customer, product, productType)
+        val logger = CBLogger(
+            name = "buy",
+            action = "before_purchase_command",
+            additionalInfo = additionalInfo
+        )
+        ResultHandler.safeExecute { logger.info() }
+    }
+    private fun additionalInfo(customer: CBCustomer?, product: CBProduct, productType: OneTimeProductType? = null): Map<String, String> {
+        val map = mutableMapOf("product" to product.productId)
+        customer?.let { map["customerId"] = (it.id ?: "") }
+        productType?.let { map["productType"] = it.toString() }
+        return map
+    }
+
 }

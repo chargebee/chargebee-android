@@ -9,20 +9,29 @@ import com.chargebee.android.repository.LoggerRepository
 
 internal class LoggerResource: BaseResource(Chargebee.baseUrl) {
 
-    suspend fun log(action: String, type: LogType, errorMessage: String? = null, errorCode: Int? = null, deviceModelName: String? = null,
-                    platform: String? = null,
-                    osVersion: String? = null,
-                    sdkVersion: String? = null): CBResult<String?> {
-        var data = logData(action, type, errorMessage, errorCode,deviceModelName,platform, osVersion, sdkVersion)
+    suspend fun log(
+        action: String, type: LogType, errorMessage: String? = null, errorCode: Int? = null, deviceModelName: String? = null,
+        platform: String? = null,
+        osVersion: String? = null,
+        sdkVersion: String? = null,
+        additionalInfo: Map<String, String>? = null): CBResult<String?> {
+        var data = logData(action, type, errorMessage, errorCode,deviceModelName,platform, osVersion, sdkVersion, additionalInfo)
         val logDetail = LogDetail(data = data)
         apiClient.create(LoggerRepository::class.java).log(logDetail = logDetail)
         return Success(null)
     }
 
-    private fun logData(action: String, type: LogType, errorMessage: String?, errorCode: Int?,deviceModelName: String? = null,
-                        platform: String? = null,
-                        osVersion: String? = null,
-                        sdkVersion: String? = null): MutableMap<String, String?> {
+    private fun logData(
+        action: String,
+        type: LogType,
+        errorMessage: String?,
+        errorCode: Int?,
+        deviceModelName: String? = null,
+        platform: String? = null,
+        osVersion: String? = null,
+        sdkVersion: String? = null,
+        additionalInfo: Map<String, String>? = null
+    ): MutableMap<String, String?> {
         var data = mutableMapOf(
             "key" to "cb.logging",
             "ref_module" to Chargebee.environment,
@@ -36,6 +45,7 @@ internal class LoggerResource: BaseResource(Chargebee.baseUrl) {
         )
         errorMessage?.let { data["error_message"] = it }
         errorCode?.let { data["error_code"] = "$it" }
+        additionalInfo?.let { data.putAll(it) }
         Log.i(javaClass.simpleName, "logData :$data")
         return data
     }
