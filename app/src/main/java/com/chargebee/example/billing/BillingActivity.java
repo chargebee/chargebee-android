@@ -9,8 +9,9 @@ import android.widget.EditText;
 import androidx.recyclerview.widget.DefaultItemAnimator;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
-
 import com.chargebee.android.ProgressBarListener;
+import com.chargebee.android.billingservice.OneTimeProductType;
+import com.chargebee.android.billingservice.ProductType;
 import com.chargebee.android.models.CBProduct;
 import com.chargebee.android.network.CBCustomer;
 import com.chargebee.example.BaseActivity;
@@ -32,6 +33,7 @@ public class BillingActivity extends BaseActivity implements ProductListAdapter.
     private static final String TAG = "BillingActivity";
     private int position = 0;
     CBCustomer cbCustomer;
+    private EditText inputProductType;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -125,31 +127,62 @@ public class BillingActivity extends BaseActivity implements ProductListAdapter.
         EditText inputFirstName = dialog.findViewById(R.id.firstNameText);
         EditText inputLastName = dialog.findViewById(R.id.lastNameText);
         EditText inputEmail = dialog.findViewById(R.id.emailText);
+        inputProductType = dialog.findViewById(R.id.productTypeText);
+        if (isOneTimeProduct()) inputProductType.setVisibility(View.VISIBLE);
+        else inputProductType.setVisibility(View.GONE);
 
         Button dialogButton = dialog.findViewById(R.id.btn_ok);
         dialogButton.setText("Ok");
-        dialogButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                showProgressDialog();
-                String customerId = input.getText().toString();
-                String firstName = inputFirstName.getText().toString();
-                String lastName = inputLastName.getText().toString();
-                String email = inputEmail.getText().toString();
-                cbCustomer = new CBCustomer(customerId,firstName,lastName,email);
+        dialogButton.setOnClickListener(view -> {
+            String customerId = input.getText().toString();
+            String firstName = inputFirstName.getText().toString();
+            String lastName = inputLastName.getText().toString();
+            String email = inputEmail.getText().toString();
+            String productType = inputProductType.getText().toString();
+            cbCustomer = new CBCustomer(customerId,firstName,lastName,email);
+            if (isOneTimeProduct()){
+                if (checkProductTypeFiled()) {
+                    if (productType.trim().equalsIgnoreCase(OneTimeProductType.CONSUMABLE.getValue())) {
+                        purchaseNonSubscriptionProduct(OneTimeProductType.CONSUMABLE);
+                    } else if (productType.trim().equalsIgnoreCase(OneTimeProductType.NON_CONSUMABLE.getValue())) {
+                        purchaseNonSubscriptionProduct(OneTimeProductType.NON_CONSUMABLE);
+                    }
+                    dialog.dismiss();
+                }
+            } else {
                 purchaseProduct(customerId);
-                //purchaseProduct();
+                // purchaseProduct();
                 dialog.dismiss();
             }
         });
         dialog.show();
     }
 
-    private void purchaseProduct(String customerId){
+    private boolean checkProductTypeFiled(){
+        if (inputProductType.getText().toString().length() == 0) {
+            inputProductType.setError("This field is required");
+            return false;
+        }
+        return true;
+    }
+
+    private boolean isOneTimeProduct(){
+        return productList.get(position).getProductType() == ProductType.INAPP;
+    }
+
+    private void purchaseProduct(String customerId) {
+        showProgressDialog();
         this.billingViewModel.purchaseProduct(this, productList.get(position), customerId);
     }
-    private void purchaseProduct(){
-        this.billingViewModel.purchaseProduct(this,productList.get(position), cbCustomer);
+
+    private void purchaseProduct() {
+        showProgressDialog();
+        this.billingViewModel.purchaseProduct(this, productList.get(position), cbCustomer);
+    }
+
+    private void purchaseNonSubscriptionProduct(OneTimeProductType productType) {
+        showProgressDialog();
+        this.billingViewModel.purchaseNonSubscriptionProduct(this, productList.get(position), cbCustomer, productType);
     }
 
     private void updateSubscribeStatus(){

@@ -6,9 +6,7 @@ import android.util.Log
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.chargebee.android.Chargebee
-import com.chargebee.android.ErrorDetail
-import com.chargebee.android.billingservice.CBCallback
-import com.chargebee.android.billingservice.CBPurchase
+import com.chargebee.android.billingservice.*
 import com.chargebee.android.exceptions.CBException
 import com.chargebee.android.exceptions.CBProductIDResult
 import com.chargebee.android.exceptions.ChargebeeResult
@@ -28,6 +26,7 @@ class BillingViewModel : ViewModel() {
     var entitlementsResult: MutableLiveData<String?> = MutableLiveData()
     private var subscriptionId: String = ""
     private lateinit var sharedPreference : SharedPreferences
+    var restorePurchaseResult: MutableLiveData<List<CBRestoreSubscription?>> = MutableLiveData()
 
     fun purchaseProduct(context: Context,product: CBProduct, customer: CBCustomer) {
         // Cache the product id in sharedPreferences and retry validating the receipt if in case server is not responding or no internet connection.
@@ -180,5 +179,83 @@ class BillingViewModel : ViewModel() {
         val editor = sharedPreference.edit()
         editor.putString("productId", productId)
         editor.apply()
+    }
+
+    fun purchaseNonSubscriptionProduct(context: Context,product: CBProduct, customer: CBCustomer, productType: OneTimeProductType) {
+        // Cache the product id in sharedPreferences and retry validating the receipt if in case server is not responding or no internet connection.
+        sharedPreference =  context.getSharedPreferences("PREFERENCE_NAME",Context.MODE_PRIVATE)
+
+        CBPurchase.purchaseNonSubscriptionProduct(
+            product, customer,
+            productType, object : CBCallback.OneTimePurchaseCallback {
+            override fun onSuccess(result: NonSubscription, status:Boolean) {
+                Log.i(TAG, "invoice ID:  ${result.invoiceId}")
+                Log.i(TAG, "charge ID:  ${result.chargeId}")
+                productPurchaseResult.postValue(status)
+            }
+            override fun onError(error: CBException) {
+                try {
+                    // Handled server not responding and offline
+                    if (error.httpStatusCode!! in 500..599) {
+                        storeInLocal(product.productId)
+                        validateNonSubscriptionReceipt(context = context, product = product, productType = productType)
+                    } else {
+                        cbException.postValue(error)
+                    }
+                } catch (exp: Exception) {
+                    Log.i(TAG, "Exception :${exp.message}")
+                }
+            }
+        })
+    }
+
+    private fun validateNonSubscriptionReceipt(context: Context, product: CBProduct, productType: OneTimeProductType) {
+        val customer = CBCustomer(
+            id = "sync_receipt_android",
+            firstName = "Test",
+            lastName = "Purchase",
+            email = "testreceipt@gmail.com"
+        )
+        CBPurchase.validateReceiptForNonSubscriptions(
+            context = context,
+            product = product,
+            customer = customer,
+            productType = productType,
+            completionCallback = object : CBCallback.OneTimePurchaseCallback {
+                override fun onSuccess(result: NonSubscription, status: Boolean) {
+                    Log.i(TAG, "Invoice ID:  ${result.invoiceId}")
+                    Log.i(TAG, "Plan ID:  ${result.chargeId}")
+                    // Clear the local cache once receipt validation success
+                    val editor = sharedPreference.edit()
+                    editor.clear().apply()
+                    productPurchaseResult.postValue(status)
+                }
+
+                override fun onError(error: CBException) {
+                    try {
+                        cbException.postValue(error)
+                    } catch (exp: Exception) {
+                        Log.i(TAG, "Exception :${exp.message}")
+                    }
+                }
+            })
+    }
+
+    fun restorePurchases(context: Context, includeInActivePurchases: Boolean = false) {
+        CBPurchase.restorePurchases(
+            context = context, includeInActivePurchases = includeInActivePurchases,
+            completionCallback = object : CBCallback.RestorePurchaseCallback {
+                override fun onSuccess(result: List<CBRestoreSubscription>) {
+                    result.forEach {
+                        Log.i(javaClass.simpleName, "status : ${it.storeStatus}")
+                        Log.i(javaClass.simpleName, "data : $it")
+                    }
+                    restorePurchaseResult.postValue(result)
+                }
+
+                override fun onError(error: CBException) {
+                    cbException.postValue(error)
+                }
+            })
     }
 }

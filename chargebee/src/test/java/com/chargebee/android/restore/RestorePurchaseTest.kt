@@ -4,6 +4,8 @@ import com.android.billingclient.api.*
 import com.chargebee.android.Chargebee
 import com.chargebee.android.ErrorDetail
 import com.chargebee.android.billingservice.CBCallback.RestorePurchaseCallback
+import com.chargebee.android.billingservice.OneTimeProductType
+import com.chargebee.android.billingservice.ProductType
 import com.chargebee.android.exceptions.CBException
 import com.chargebee.android.exceptions.ChargebeeResult
 import com.chargebee.android.models.*
@@ -155,7 +157,8 @@ class RestorePurchaseTest {
             purchaseTransaction.first().purchaseToken,
             purchaseTransaction.first().productId.first(),
             customer,
-            Chargebee.channel
+            Chargebee.channel,
+            null
         )
         CBRestorePurchaseManager.validateReceipt(
             params.receipt,
@@ -168,7 +171,7 @@ class RestorePurchaseTest {
                 )
             )
             Mockito.verify(ReceiptResource(), Mockito.times(1)).validateReceipt(params)
-            Mockito.verify(CBReceiptRequestBody("receipt", "", null, ""), Mockito.times(1))
+            Mockito.verify(CBReceiptRequestBody("receipt", "", null, "", null), Mockito.times(1))
                 .toCBReceiptReqBody()
         }
     }
@@ -180,7 +183,8 @@ class RestorePurchaseTest {
             purchaseTransaction.first().purchaseToken,
             purchaseTransaction.first().productId.first(),
             customer,
-            Chargebee.channel
+            Chargebee.channel,
+            null
         )
         CoroutineScope(Dispatchers.IO).launch {
             Mockito.`when`(params.let { ReceiptResource().validateReceipt(it) }).thenReturn(
@@ -189,7 +193,7 @@ class RestorePurchaseTest {
                 )
             )
             Mockito.verify(ReceiptResource(), Mockito.times(1)).validateReceipt(params)
-            Mockito.verify(CBReceiptRequestBody("receipt", "", null, ""), Mockito.times(1))
+            Mockito.verify(CBReceiptRequestBody("receipt", "", null, "", null), Mockito.times(1))
                 .toCBReceiptReqBody()
         }
     }
@@ -201,7 +205,8 @@ class RestorePurchaseTest {
             purchaseTransaction.first().purchaseToken,
             purchaseTransaction.first().productId.first(),
             customer,
-            Chargebee.channel
+            Chargebee.channel,
+            null
         )
         CBRestorePurchaseManager.syncPurchaseWithChargebee(purchaseTransaction)
         CoroutineScope(Dispatchers.IO).launch {
@@ -211,7 +216,7 @@ class RestorePurchaseTest {
                 )
             )
             Mockito.verify(ReceiptResource(), Mockito.times(1)).validateReceipt(params)
-            Mockito.verify(CBReceiptRequestBody("receipt", "", null, ""), Mockito.times(1))
+            Mockito.verify(CBReceiptRequestBody("receipt", "", null, "", null), Mockito.times(1))
                 .toCBReceiptReqBody()
         }
     }
@@ -223,7 +228,8 @@ class RestorePurchaseTest {
             purchaseTransaction.first().purchaseToken,
             purchaseTransaction.first().productId.first(),
             customer,
-            Chargebee.channel
+            Chargebee.channel,
+            null
         )
         CBRestorePurchaseManager.syncPurchaseWithChargebee(purchaseTransaction)
         CoroutineScope(Dispatchers.IO).launch {
@@ -233,7 +239,7 @@ class RestorePurchaseTest {
                 )
             )
             Mockito.verify(ReceiptResource(), Mockito.times(1)).validateReceipt(params)
-            Mockito.verify(CBReceiptRequestBody("receipt", "", null, ""), Mockito.times(1))
+            Mockito.verify(CBReceiptRequestBody("receipt", "", null, "", null), Mockito.times(1))
                 .toCBReceiptReqBody()
         }
     }

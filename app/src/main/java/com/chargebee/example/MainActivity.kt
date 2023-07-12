@@ -73,6 +73,15 @@ class MainActivity : BaseActivity(), ListItemsAdapter.ItemClickListener {
             Log.i(javaClass.simpleName, "Google play product identifiers:  $it")
             alertListProductId(it)
         }
+
+        this.mBillingViewModel!!.restorePurchaseResult.observeForever {
+            hideProgressDialog()
+            if (it.isNotEmpty()) {
+                alertSuccess("${it.size} purchases restored successfully")
+            } else {
+                alertSuccess("Purchases not found to restore")
+            }
+        }
     }
 
     private fun setListAdapter() {
@@ -133,7 +142,7 @@ class MainActivity : BaseActivity(), ListItemsAdapter.ItemClickListener {
                 getSubscriptionId()
             }
             CBMenu.RestorePurchase.value -> {
-                restorePurchases()
+                mBillingViewModel?.restorePurchases(this)
             }
             CBMenu.ManageSubscription.value ->
                 Chargebee.showManageSubscriptionsSettings(context = this, productId = "chargebee.pro.mobile",packageName = this.packageName)
@@ -206,34 +215,6 @@ class MainActivity : BaseActivity(), ListItemsAdapter.ItemClickListener {
                 override fun onError(error: CBException) {
                     Log.e(javaClass.simpleName, "Error:  ${error.message}")
                     showDialog(getCBError(error))
-                }
-            })
-    }
-
-    private fun restorePurchases() {
-        showProgressDialog()
-        CBPurchase.restorePurchases(
-            context = this, includeInActivePurchases = true,
-            completionCallback = object : CBCallback.RestorePurchaseCallback {
-                override fun onSuccess(result: List<CBRestoreSubscription>) {
-                    hideProgressDialog()
-                    result.forEach {
-                        Log.i(javaClass.simpleName, "status : ${it.storeStatus}")
-                    }
-                    CoroutineScope(Dispatchers.Main).launch {
-                        if (result.isNotEmpty())
-                            alertSuccess("${result.size} purchases restored successfully")
-                         else
-                            alertSuccess("Purchases not found to restore")
-                    }
-                }
-
-                override fun onError(error: CBException) {
-                    hideProgressDialog()
-                    Log.e(javaClass.simpleName, "error message: ${error.message}")
-                    CoroutineScope(Dispatchers.Main).launch {
-                        showDialog("${error.message}, ${error.httpStatusCode}")
-                    }
                 }
             })
     }
