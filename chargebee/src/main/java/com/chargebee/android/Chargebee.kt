@@ -238,6 +238,13 @@ object Chargebee {
         }, completion, logger)
     }
 
+    /**
+     * This method will be used to show the Manage Subscriptions Settings in your App,
+     *
+     * @param [context] Current activity context
+     * @param [productId] Optional. Product Identifier.
+     * @param [packageName] Optional. Application Id.
+     */
     fun showManageSubscriptionsSettings(
         context: Context,
         productId: String = "",
