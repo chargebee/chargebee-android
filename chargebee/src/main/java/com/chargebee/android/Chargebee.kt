@@ -1,5 +1,10 @@
 package com.chargebee.android
 
+import android.content.Context
+import android.content.Intent
+import android.content.Intent.*
+import android.net.Uri
+import androidx.core.content.ContextCompat
 import android.text.TextUtils
 import android.util.Log
 import com.chargebee.android.exceptions.*
@@ -32,6 +37,9 @@ object Chargebee {
     const val platform: String = "Android"
     const val sdkVersion: String = BuildConfig.VERSION_NAME
     const val limit: String = "100"
+    private const val PLAY_STORE_SUBSCRIPTION_URL = "https://play.google.com/store/account/subscriptions"
+    private const val SUBSCRIPTION_URL
+            = "https://play.google.com/store/account/subscriptions?sku=%s&package=%s"
 
     /* Configure the app details with chargebee system */
     fun configure(site: String, publishableApiKey: String, allowErrorLogging: Boolean = true, sdkKey: String="", packageName: String="" ) {
@@ -227,5 +235,31 @@ object Chargebee {
             )
             Success(cbTempToken)
         }, completion, logger)
+    }
+
+    /**
+     * This method will be used to show the Manage Subscriptions Settings in your App,
+     *
+     * @param [context] Current activity context
+     * @param [productId] Optional. Product Identifier.
+     * @param [packageName] Optional. Application Id.
+     */
+    fun showManageSubscriptionsSettings(
+        context: Context,
+        productId: String? = null,
+        packageName: String? = null
+    ) {
+        val uriString = if (productId == null && packageName == null) {
+            PLAY_STORE_SUBSCRIPTION_URL
+        } else {
+            String.format(
+                SUBSCRIPTION_URL,
+                productId, packageName
+            );
+        }
+        val intent = Intent(Intent.ACTION_VIEW)
+        intent.data = Uri.parse(uriString)
+        intent.flags = FLAG_ACTIVITY_NEW_TASK
+        ContextCompat.startActivity(context, intent, null)
     }
 }

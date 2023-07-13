@@ -144,6 +144,8 @@ class MainActivity : BaseActivity(), ListItemsAdapter.ItemClickListener {
             CBMenu.RestorePurchase.value -> {
                 mBillingViewModel?.restorePurchases(this)
             }
+            CBMenu.ManageSubscription.value ->
+                Chargebee.showManageSubscriptionsSettings(context = this, productId = "chargebee.pro.mobile",packageName = this.packageName)
             else -> {
                 Log.i(javaClass.simpleName, " Not implemented")
             }

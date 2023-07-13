@@ -429,6 +429,9 @@ Once your customer’s card data is processed and stored, and a Chargebee token 
 
 Please refer to the [Chargebee API Docs](https://apidocs.chargebee.com/docs/api) for subsequent integration steps.
 
+### Invoke Manage Subscriptions in your App
+The `showManageSubscriptionsSettings()` function is designed to invoke the Manage Subscriptions in your app using Chargebee's Android SDKs. `Chargebee.showManageSubscriptionsSettings()`, opens the Play Store App subscriptions settings page.
+
 ## License
 
 Chargebee is available under the [MIT license](https://opensource.org/licenses/MIT). See the LICENSE file for more info.
