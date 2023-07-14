@@ -37,12 +37,19 @@ object Chargebee {
     const val platform: String = "Android"
     const val sdkVersion: String = BuildConfig.VERSION_NAME
     const val limit: String = "100"
-    private const val PLAY_STORE_SUBSCRIPTION_URL = "https://play.google.com/store/account/subscriptions"
-    private const val SUBSCRIPTION_URL
-            = "https://play.google.com/store/account/subscriptions?sku=%s&package=%s"
+    private const val PLAY_STORE_SUBSCRIPTION_URL =
+        "https://play.google.com/store/account/subscriptions"
+    private const val SUBSCRIPTION_URL =
+        "https://play.google.com/store/account/subscriptions?sku=%s&package=%s"
 
     /* Configure the app details with chargebee system */
-    fun configure(site: String, publishableApiKey: String, allowErrorLogging: Boolean = true, sdkKey: String="", packageName: String="" ) {
+    fun configure(
+        site: String,
+        publishableApiKey: String,
+        allowErrorLogging: Boolean = true,
+        sdkKey: String = "",
+        packageName: String = ""
+    ) {
         this.applicationId = packageName
         this.publishableApiKey = publishableApiKey
         this.site = site
@@ -50,11 +57,11 @@ object Chargebee {
         this.baseUrl = "https://${site}.chargebee.com/api/"
         this.allowErrorLogging = allowErrorLogging
         this.sdkKey = sdkKey
-        val auth = Auth(sdkKey,applicationId,appName, channel)
+        val auth = Auth(sdkKey, applicationId, appName, channel)
 
         CBAuthentication.authenticate(auth) {
-            when(it){
-                is ChargebeeResult.Success ->{
+            when (it) {
+                is ChargebeeResult.Success -> {
                     Log.i(javaClass.simpleName, "Environment Setup Completed")
                     Log.i(javaClass.simpleName, " Response :${it.data}")
                     val response = it.data as CBAuthResponse
@@ -62,7 +69,7 @@ object Chargebee {
                     this.applicationId = response.in_app_detail.app_id
                     this.appName = response.in_app_detail.app_name
                 }
-                is ChargebeeResult.Error ->{
+                is ChargebeeResult.Error -> {
                     Log.i(javaClass.simpleName, "Exception from server :${it.exp.message}")
                     this.version = CatalogVersion.Unknown.value
                 }
@@ -112,45 +119,69 @@ object Chargebee {
     @Throws(InvalidRequestException::class, OperationFailedException::class)
     fun retrieveSubscription(subscriptionId: String, completion: (ChargebeeResult<Any>) -> Unit) {
         val logger = CBLogger(name = "Subscription", action = "Fetch Subscription")
-        ResultHandler.safeExecuter({ SubscriptionResource().retrieveSubscription(subscriptionId) }, completion, logger)
+        ResultHandler.safeExecuter(
+            { SubscriptionResource().retrieveSubscription(subscriptionId) },
+            completion,
+            logger
+        )
     }
+
     /* Get the subscriptions list from chargebee system by using Customer Id */
     @Throws(InvalidRequestException::class, OperationFailedException::class)
-    fun retrieveSubscriptions(queryParams: Map<String, String> = mapOf(), completion: (ChargebeeResult<Any>) -> Unit) {
-        val logger = CBLogger(name = "Subscription", action = "Fetch Subscription by using CustomerId")
+    fun retrieveSubscriptions(
+        queryParams: Map<String, String> = mapOf(),
+        completion: (ChargebeeResult<Any>) -> Unit
+    ) {
+        val logger =
+            CBLogger(name = "Subscription", action = "Fetch Subscription by using CustomerId")
         if (queryParams.isNotEmpty()) {
 
-                ResultHandler.safeExecuter(
-                    { SubscriptionResource().retrieveSubscriptions(queryParams) },
-                    completion,
-                    logger
+            ResultHandler.safeExecuter(
+                { SubscriptionResource().retrieveSubscriptions(queryParams) },
+                completion,
+                logger
+            )
+        } else {
+            completion(
+                ChargebeeResult.Error(
+                    exp = CBException(
+                        error = ErrorDetail(
+                            message = "Array/Query Param is empty",
+                            apiErrorCode = "400",
+                            httpStatusCode = 400
+                        )
+                    )
                 )
-        }else{
-            completion(ChargebeeResult.Error(
-                exp = CBException(
-                    error = ErrorDetail(message = "Array/Query Param is empty", apiErrorCode = "400", httpStatusCode = 400)
-                )
-            ))
+            )
         }
     }
 
     /* Get the Plan details from chargebee system */
     @Throws(InvalidRequestException::class, OperationFailedException::class)
-    fun retrievePlan(planId: String, completion : (ChargebeeResult<Any>) -> Unit) {
+    fun retrievePlan(planId: String, completion: (ChargebeeResult<Any>) -> Unit) {
         val logger = CBLogger(name = "plan", action = "getPlan")
         if (TextUtils.isEmpty(planId))
-            completion(ChargebeeResult.Error(
-                exp = CBException(
-                    error = ErrorDetail(message = "Plan ID is empty",  apiErrorCode = "400", httpStatusCode = 400)
+            completion(
+                ChargebeeResult.Error(
+                    exp = CBException(
+                        error = ErrorDetail(
+                            message = "Plan ID is empty",
+                            apiErrorCode = "400",
+                            httpStatusCode = 400
+                        )
+                    )
                 )
-            ))
+            )
         else
             ResultHandler.safeExecuter({ PlanResource().retrievePlan(planId) }, completion, logger)
     }
 
     /* Get the list of Plan's from chargebee system */
     @Throws(InvalidRequestException::class, OperationFailedException::class)
-    fun retrieveAllPlans(params: Array<String> = arrayOf(), completion : (ChargebeeResult<Any>) -> Unit) {
+    fun retrieveAllPlans(
+        params: Array<String> = arrayOf(),
+        completion: (ChargebeeResult<Any>) -> Unit
+    ) {
         val logger = CBLogger(name = "plans", action = "getAllPlan")
         if (params.isNotEmpty()) {
             ResultHandler.safeExecuter(
@@ -196,14 +227,20 @@ object Chargebee {
 
     /* Get the Item details from chargebee system */
     @Throws(InvalidRequestException::class, OperationFailedException::class)
-    fun retrieveItem(itemId: String, completion : (ChargebeeResult<Any>) -> Unit) {
+    fun retrieveItem(itemId: String, completion: (ChargebeeResult<Any>) -> Unit) {
         val logger = CBLogger(name = "item", action = "getItem")
         if (TextUtils.isEmpty(itemId))
-            completion(ChargebeeResult.Error(
-                exp = CBException(
-                    error = ErrorDetail(message = "Item ID is empty", apiErrorCode = "400", httpStatusCode = 400)
+            completion(
+                ChargebeeResult.Error(
+                    exp = CBException(
+                        error = ErrorDetail(
+                            message = "Item ID is empty",
+                            apiErrorCode = "400",
+                            httpStatusCode = 400
+                        )
+                    )
                 )
-            ))
+            )
         else
             ResultHandler.safeExecuter({ ItemsResource().retrieveItem(itemId) }, completion, logger)
     }
@@ -212,7 +249,11 @@ object Chargebee {
     @Throws(InvalidRequestException::class, OperationFailedException::class)
     fun retrieveEntitlements(subscriptionId: String, completion: (ChargebeeResult<Any>) -> Unit) {
         val logger = CBLogger(name = "Entitlements", action = "retrieve_entitlements")
-        ResultHandler.safeExecuter({ EntitlementsResource().retrieveEntitlements(subscriptionId) }, completion, logger)
+        ResultHandler.safeExecuter(
+            { EntitlementsResource().retrieveEntitlements(subscriptionId) },
+            completion,
+            logger
+        )
     }
 
     @Throws(InvalidRequestException::class, OperationFailedException::class)
@@ -221,7 +262,11 @@ object Chargebee {
         ResultHandler.safeExecute({ AddonResource().retrieve(addonId) }, handler, logger)
     }
 
-    @Throws(InvalidRequestException::class, OperationFailedException::class, PaymentException::class)
+    @Throws(
+        InvalidRequestException::class,
+        OperationFailedException::class,
+        PaymentException::class
+    )
     fun createTempToken(detail: PaymentDetail, completion: (CBResult<String>) -> Unit) {
         val logger = CBLogger(name = "cb_temp_token", action = "create_temp_token")
         ResultHandler.safeExecute({
