@@ -141,6 +141,9 @@ CBPurchase.purchaseProduct(product=CBProduct, customer=CBCustomer, object : CBCa
  ```
 The above function will handle the purchase against Google Play Store and send the IAP token for server-side token verification to your Chargebee account. Use the Subscription ID returned by the above function, to check for Subscription status on Chargebee and confirm the access - granted or denied.
 
+### Invoke Manage Subscriptions in your App
+The `showManageSubscriptionsSettings()` function is designed to invoke the Manage Subscriptions in your app using Chargebee's Android SDKs. `Chargebee.showManageSubscriptionsSettings()`, opens the Play Store App subscriptions settings page.
+
 ### One-Time Purchases
 The `purchaseNonSubscriptionProduct` function handles the one-time purchase against Google Play Store and sends the IAP receipt for server-side receipt verification to your Chargebee account. Post verification a Charge corresponding to this one-time purchase will be created in Chargebee. There are two types of one-time purchases `consumable` and `non_consumable`.
 
@@ -429,8 +432,6 @@ Once your customer’s card data is processed and stored, and a Chargebee token 
 
 Please refer to the [Chargebee API Docs](https://apidocs.chargebee.com/docs/api) for subsequent integration steps.
 
-### Invoke Manage Subscriptions in your App
-The `showManageSubscriptionsSettings()` function is designed to invoke the Manage Subscriptions in your app using Chargebee's Android SDKs. `Chargebee.showManageSubscriptionsSettings()`, opens the Play Store App subscriptions settings page.
 
 ## License
 
