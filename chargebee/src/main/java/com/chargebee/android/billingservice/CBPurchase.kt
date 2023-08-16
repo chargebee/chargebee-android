@@ -151,16 +151,19 @@ object CBPurchase {
      * And the associated purchases will be synced with Chargebee.
      *
      * @param [context] Current activity context
+     * @param [customer] Optional. Customer Object.
      * @param [includeInActivePurchases] False by default. if true, only active purchases restores and synced with Chargebee.
      * @param [completionCallback] The listener will be called when restore purchase completes.
      */
     @JvmStatic
     fun restorePurchases(
         context: Context,
+        customer: CBCustomer? = null,
         includeInActivePurchases: Boolean = false,
         completionCallback: CBCallback.RestorePurchaseCallback
     ) {
         this.includeInActivePurchases = includeInActivePurchases
+        this.customer = customer
         sharedInstance(context).restorePurchases(completionCallback)
     }
 
