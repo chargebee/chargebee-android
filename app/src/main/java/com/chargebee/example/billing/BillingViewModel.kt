@@ -242,8 +242,9 @@ class BillingViewModel : ViewModel() {
     }
 
     fun restorePurchases(context: Context, includeInActivePurchases: Boolean = false) {
+        val customer = CBCustomer("test-restore","","","")
         CBPurchase.restorePurchases(
-            context = context, includeInActivePurchases = includeInActivePurchases,
+            context = context, customer = customer, includeInActivePurchases = includeInActivePurchases,
             completionCallback = object : CBCallback.RestorePurchaseCallback {
                 override fun onSuccess(result: List<CBRestoreSubscription>) {
                     result.forEach {

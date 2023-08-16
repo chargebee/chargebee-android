@@ -176,8 +176,10 @@ The `restorePurchases()` function helps to recover your app user's previous purc
 
 To retrieve **inactive** purchases along with the **active** purchases for your app user, you can call the `restorePurchases()` function with the `includeInActiveProducts` parameter set to `true`. If you only want to restore active subscriptions, set the parameter to `false`. Here is an example of how to use the `restorePurchases()` function in your code with the `includeInActiveProducts` parameter set to `true`.
 
+`CBCustomer` - **Optional object**. Although this is an optional object, we recommend passing the necessary customer details, such as `customerId`, `firstName`, `lastName`, and `email` if it is available before the user subscribes to your App. This ensures that the customer details in your database match the customer details in Chargebee. If the `customerId` is not passed in the customer's details, then the value of `customerId` will be the same as the `SubscriptionId` created in Chargebee.
+
 ```kotlin
-CBPurchase.restorePurchases(context = current activity context, includeInActivePurchases = false, object : CBCallback.RestorePurchaseCallback{
+CBPurchase.restorePurchases(context = current activity context, customer = CBCustomer, includeInActivePurchases = false, object : CBCallback.RestorePurchaseCallback{
       override fun onSuccess(result: List<CBRestoreSubscription>) {
         result.forEach {
           Log.i(javaClass.simpleName, "Successfully restored purchases")
