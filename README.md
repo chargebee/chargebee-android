@@ -159,6 +159,7 @@ CBPurchase.purchaseNonSubscriptionProduct(product = CBProduct, customer = CBCust
       }
 })
  ```
+
 The given code defines a function named `purchaseNonSubscriptionProduct` in the CBPurchase class, which takes four input parameters:
 
 - `product`: An instance of `CBProduct` class, initialized with a `SkuDetails` instance representing the product to be purchased from the Google Play Store.
