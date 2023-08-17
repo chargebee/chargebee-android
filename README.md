@@ -21,7 +21,7 @@ The following requirements must be set up before installing Chargebee’s Androi
 The `Chargebee-Android` SDK can be installed by adding below dependency to the `build.gradle` file:
 
 ```kotlin
-implementation 'com.chargebee:chargebee-android:1.0.20'
+implementation 'com.chargebee:chargebee-android:1.0.21'
 ```
 
 ## Example project
@@ -176,7 +176,7 @@ The `restorePurchases()` function helps to recover your app user's previous purc
 
 To retrieve **inactive** purchases along with the **active** purchases for your app user, you can call the `restorePurchases()` function with the `includeInActiveProducts` parameter set to `true`. If you only want to restore active subscriptions, set the parameter to `false`. Here is an example of how to use the `restorePurchases()` function in your code with the `includeInActiveProducts` parameter set to `true`.
 
-`CBCustomer` - **Optional object**. Although this is an optional object, we recommend passing the necessary customer details, such as `customerId`, `firstName`, `lastName`, and `email` if it is available before the user subscribes to your App. This ensures that the customer details in your database match the customer details in Chargebee. If the `customerId` is not passed in the customer's details, then the value of `customerId` will be the same as the `SubscriptionId` created in Chargebee.
+`CBCustomer` - **Optional object**. Although this is an optional object, we recommend passing the necessary customer details, such as `customerId`, `firstName`, `lastName`, and `email` if it is available before the user subscribes to your App. This ensures that the customer details in your database match the customer details in Chargebee. If the `customerId` is not passed in the customer's details, then the value of `customerId` will be the same as the `subscriptionId` created in Chargebee. Also, the restored subscriptions will not be associate with existing customerId.
 
 ```kotlin
 CBPurchase.restorePurchases(context = current activity context, customer = CBCustomer, includeInActivePurchases = false, object : CBCallback.RestorePurchaseCallback{
@@ -473,7 +473,7 @@ Chargebee is available under the [MIT license](https://opensource.org/licenses/M
   To install Chargebee's Android SDK, add the following dependency to the build.gradle file.
   
   ```
-  implementation 'com.chargebee:chargebee-android:1.0.20'
+  implementation 'com.chargebee:chargebee-android:1.0.21'
   ```
   Example project
   ---------------
