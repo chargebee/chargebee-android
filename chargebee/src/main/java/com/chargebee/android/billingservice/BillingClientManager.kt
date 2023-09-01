@@ -398,6 +398,13 @@ class BillingClientManager(context: Context) : PurchasesUpdatedListener {
         )
     )
 
+    private fun itemNotOwnedException(): CBException {
+        return CBException(ErrorDetail(
+            message = BillingErrorCode.ITEM_NOT_OWNED.message,
+            httpStatusCode = BillingErrorCode.ITEM_NOT_OWNED.code
+        ))
+    }
+
     private fun queryPurchaseHistoryFromStore(
         connectionStatus: Boolean
     ) {
@@ -517,7 +524,10 @@ class BillingClientManager(context: Context) : PurchasesUpdatedListener {
         }
     }
 
-    internal fun validateReceiptWithChargebee(product: CBProduct, completionCallback: CBCallback.PurchaseCallback<String> ) {
+    internal fun validateReceiptWithChargebee(
+        product: CBProduct,
+        completionCallback: CBCallback.PurchaseCallback<String>
+    ) {
         this.purchaseCallBack = completionCallback
         onConnected({ status ->
             if (status)
@@ -525,7 +535,13 @@ class BillingClientManager(context: Context) : PurchasesUpdatedListener {
                     val purchaseTransaction = purchaseHistoryList.filter {
                         it.productId.first() == product.productId
                     }
-                    validateReceipt(purchaseTransaction.first().purchaseToken, product)
+                    val transaction = purchaseTransaction.firstOrNull()
+                    transaction?.let {
+                        validateReceipt(transaction.purchaseToken, product)
+                    } ?: run {
+                        completionCallback.onError(itemNotOwnedException())
+                    }
+
                 } else
                 completionCallback.onError(
                     connectionError
@@ -582,14 +598,24 @@ class BillingClientManager(context: Context) : PurchasesUpdatedListener {
         }
     }
 
-    internal fun validateNonSubscriptionReceiptWithChargebee(product: CBProduct, completionCallback: CBCallback.OneTimePurchaseCallback) {
+    internal fun validateNonSubscriptionReceiptWithChargebee(
+        product: CBProduct,
+        completionCallback: CBCallback.OneTimePurchaseCallback
+    ) {
+        this.oneTimePurchaseCallback = completionCallback
         onConnected({ status ->
             if (status)
                 queryPurchaseHistory { purchaseHistoryList ->
                     val purchaseTransaction = purchaseHistoryList.filter {
                         it.productId.first() == product.productId
                     }
-                    validateNonSubscriptionReceipt(purchaseTransaction.first().purchaseToken, product)
+                    val transaction = purchaseTransaction.firstOrNull()
+                    transaction?.let {
+                        validateNonSubscriptionReceipt(transaction.purchaseToken, product)
+                    } ?: run {
+                        completionCallback.onError(itemNotOwnedException())
+                    }
+
                 } else
                 completionCallback.onError(
                     connectionError
