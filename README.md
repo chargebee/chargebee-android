@@ -21,7 +21,7 @@ The following requirements must be set up before installing Chargebee’s Androi
 The `Chargebee-Android` SDK can be installed by adding below dependency to the `build.gradle` file:
 
 ```kotlin
-implementation 'com.chargebee:chargebee-android:1.0.22'
+implementation 'com.chargebee:chargebee-android:1.0.23'
 ```
 
 ## Example project
