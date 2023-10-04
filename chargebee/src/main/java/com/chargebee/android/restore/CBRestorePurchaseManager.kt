@@ -90,14 +90,7 @@ class CBRestorePurchaseManager {
         ) {
             if (storeTransactions.isEmpty()) {
                 if (restorePurchases.isEmpty()) {
-                    completionCallback.onError(
-                        CBException(
-                            ErrorDetail(
-                                message = GPErrorCode.InvalidPurchaseToken.errorMsg,
-                                httpStatusCode = 400
-                            )
-                        )
-                    )
+                    completionCallback.onSuccess(emptyList())
                 } else {
                     val activePurchases = restorePurchases.filter { subscription ->
                         subscription.storeStatus == StoreStatus.Active.value
