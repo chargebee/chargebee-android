@@ -27,7 +27,7 @@ object CBPurchase {
     @JvmStatic
     fun retrieveProductIdentifers(
         params: Array<String> = arrayOf(),
-        completion: (CBProductIDResult<MutableSet<String>>) -> Unit
+        completion: (CBProductIDResult<ArrayList<String>>) -> Unit
     ) {
         if (params.isNotEmpty()) {
             params[0] = params[0].ifEmpty { Chargebee.limit }
@@ -286,7 +286,7 @@ object CBPurchase {
   */
     internal fun retrieveProductIDList(
         params: Array<String>,
-        completion: (CBProductIDResult<MutableSet<String>>) -> Unit
+        completion: (CBProductIDResult<ArrayList<String>>) -> Unit
     ) {
         // The Plan will be fetched based on the user catalog versions in chargebee system.
         when (Chargebee.version) {
@@ -305,7 +305,7 @@ object CBPurchase {
 
                                 }
                             }
-                            completion(CBProductIDResult.ProductIds(productIdList))
+                            completion(CBProductIDResult.ProductIds(ArrayList(productIdList)))
                         }
                         is ChargebeeResult.Error -> {
                             Log.e(
@@ -329,7 +329,7 @@ object CBPurchase {
                                 val id = item.item.id.split("-")
                                 productIdList.add(id[0])
                             }
-                            completion(CBProductIDResult.ProductIds(productIdList))
+                            completion(CBProductIDResult.ProductIds(ArrayList(productIdList)))
                         }
                         is ChargebeeResult.Error -> {
                             Log.e(
