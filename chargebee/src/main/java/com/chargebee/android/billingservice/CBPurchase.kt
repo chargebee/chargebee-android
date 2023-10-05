@@ -16,7 +16,7 @@ import com.chargebee.android.resources.ReceiptResource
 object CBPurchase {
 
     private var billingClientManager: BillingClientManager? = null
-    val productIdList = arrayListOf<String>()
+    val productIdList = mutableSetOf<String>()
     private var customer: CBCustomer? = null
     internal var includeInActivePurchases = false
     internal var productType = OneTimeProductType.UNKNOWN
@@ -27,7 +27,7 @@ object CBPurchase {
     @JvmStatic
     fun retrieveProductIdentifers(
         params: Array<String> = arrayOf(),
-        completion: (CBProductIDResult<ArrayList<String>>) -> Unit
+        completion: (CBProductIDResult<MutableSet<String>>) -> Unit
     ) {
         if (params.isNotEmpty()) {
             params[0] = params[0].ifEmpty { Chargebee.limit }
@@ -286,7 +286,7 @@ object CBPurchase {
   */
     internal fun retrieveProductIDList(
         params: Array<String>,
-        completion: (CBProductIDResult<ArrayList<String>>) -> Unit
+        completion: (CBProductIDResult<MutableSet<String>>) -> Unit
     ) {
         // The Plan will be fetched based on the user catalog versions in chargebee system.
         when (Chargebee.version) {
@@ -326,7 +326,8 @@ object CBPurchase {
                             val productsList = (it.data as ItemsWrapper).list
                             productIdList.clear()
                             for (item in productsList) {
-                                productIdList.add(item.item.id)
+                                val id = item.item.id.split("-")
+                                productIdList.add(id[0])
                             }
                             completion(CBProductIDResult.ProductIds(productIdList))
                         }
