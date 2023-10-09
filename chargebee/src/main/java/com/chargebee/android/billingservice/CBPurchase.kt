@@ -16,7 +16,7 @@ import com.chargebee.android.resources.ReceiptResource
 object CBPurchase {
 
     private var billingClientManager: BillingClientManager? = null
-    val productIdList = arrayListOf<String>()
+    val productIdList = mutableSetOf<String>()
     private var customer: CBCustomer? = null
     internal var includeInActivePurchases = false
     internal var productType = OneTimeProductType.UNKNOWN
@@ -305,7 +305,7 @@ object CBPurchase {
 
                                 }
                             }
-                            completion(CBProductIDResult.ProductIds(productIdList))
+                            completion(CBProductIDResult.ProductIds(ArrayList(productIdList)))
                         }
                         is ChargebeeResult.Error -> {
                             Log.e(
@@ -326,9 +326,10 @@ object CBPurchase {
                             val productsList = (it.data as ItemsWrapper).list
                             productIdList.clear()
                             for (item in productsList) {
-                                productIdList.add(item.item.id)
+                                val id = item.item.id.split("-")
+                                productIdList.add(id[0])
                             }
-                            completion(CBProductIDResult.ProductIds(productIdList))
+                            completion(CBProductIDResult.ProductIds(ArrayList(productIdList)))
                         }
                         is ChargebeeResult.Error -> {
                             Log.e(
