@@ -25,7 +25,6 @@ class BillingClientManager(context: Context) : PurchasesUpdatedListener {
     var mContext: Context? = context
     private val handler = Handler(Looper.getMainLooper())
     private var purchaseCallBack: CBCallback.PurchaseCallback<String>? = null
-    private val skusWithSkuDetails = arrayListOf<CBProduct>()
     private val TAG = javaClass.simpleName
     lateinit var product: CBProduct
     private lateinit var restorePurchaseCallBack: CBCallback.RestorePurchaseCallback
@@ -36,12 +35,12 @@ class BillingClientManager(context: Context) : PurchasesUpdatedListener {
     }
 
     internal fun retrieveProducts(
-        skuList: ArrayList<String>, callBack: CBCallback.ListProductsCallback<ArrayList<CBProduct>>
+        products: ArrayList<String>, callBack: CBCallback.ListProductsCallback<ArrayList<CBProduct>>
     ) {
         val productsList = ArrayList<CBProduct>()
-        retrieveProducts(ProductType.SUBS.value, skuList, { subsProductsList ->
+        retrieveProducts(BillingClient.ProductType.SUBS, products, { subsProductsList ->
             productsList.addAll(subsProductsList)
-            retrieveProducts(ProductType.INAPP.value, skuList, { inAppProductsList ->
+            retrieveProducts(BillingClient.ProductType.INAPP, products, { inAppProductsList ->
                 productsList.addAll(inAppProductsList)
                 callBack.onSuccess(productsList)
             }, { error ->
@@ -53,13 +52,13 @@ class BillingClientManager(context: Context) : PurchasesUpdatedListener {
     }
 
     internal fun retrieveProducts(
-        @BillingClient.SkuType skuType: String,
-        skuList: ArrayList<String>, response: (ArrayList<CBProduct>) -> Unit,
+        @BillingClient.ProductType productType: String,
+        products: ArrayList<String>, response: (ArrayList<CBProduct>) -> Unit,
         errorDetail: (CBException) -> Unit
     ) {
         onConnected({ status ->
             if (status)
-                loadProductDetails(skuType, skuList, {
+                loadProductDetails(productType, products, {
                     response(it)
                 }, {
                     errorDetail(it)
@@ -72,39 +71,73 @@ class BillingClientManager(context: Context) : PurchasesUpdatedListener {
             errorDetail(error)
         })
     }
+
     /* Get the SKU/Products from Play Console */
     private fun loadProductDetails(
-        @BillingClient.SkuType skuType: String,
-        skuList: ArrayList<String>,
+        @BillingClient.ProductType productType: String,
+        products: ArrayList<String>,
         response: (ArrayList<CBProduct>) -> Unit,
         errorDetail: (CBException) -> Unit
     ) {
         try {
-            val params = SkuDetailsParams
-                .newBuilder()
-                .setSkusList(skuList)
-                .setType(skuType)
-                .build()
 
-            billingClient?.querySkuDetailsAsync(
-                params
-            ) { billingResult, skuDetailsList ->
-                if (billingResult.responseCode == OK && skuDetailsList != null) {
+            val queryProductDetails = products.map {
+                QueryProductDetailsParams.Product.newBuilder()
+                    .setProductId(it)
+                    .setProductType(productType)
+                    .build()
+            }
+
+            val productDetailsParams = QueryProductDetailsParams.newBuilder().setProductList(queryProductDetails).build()
+
+            billingClient?.queryProductDetailsAsync(
+                productDetailsParams
+            ) { billingResult, productsDetail ->
+                if (billingResult.responseCode == OK && productsDetail != null) {
                     try {
-                        skusWithSkuDetails.clear()
-                        for (skuProduct in skuDetailsList) {
-                            val product = CBProduct(
-                                skuProduct.sku,
-                                skuProduct.title,
-                                skuProduct.price,
-                                skuProduct,
-                                false,
-                                ProductType.getProductType(skuProduct.type)
-                            )
-                            skusWithSkuDetails.add(product)
+                        val cbProductDetails = arrayListOf<CBProduct>()
+                        for (productDetail in productsDetail) {
+                            val productId = productDetail.productId
+                            val productType = ProductType.getProductType(productDetail.productType)
+                            val productTitle = productDetail.title
+
+                            val subscriptionOfferDetails = productDetail.subscriptionOfferDetails
+                            subscriptionOfferDetails?.forEach {
+                                val price = it.pricingPhases?.pricingPhaseList?.first()?.formattedPrice ?: "0"
+                                val offerToken = it.offerToken
+                                val basePlanId = it.basePlanId
+
+                                val product = CBProduct(
+                                    productId,
+                                    productTitle,
+                                    basePlanId,
+                                    price,
+                                    productDetail,
+                                    offerToken,
+                                    false,
+                                    productType
+                                )
+                                cbProductDetails.add(product)
+                            }
+
+                            val oneTimePurchaseOfferDetails = productDetail.oneTimePurchaseOfferDetails
+                            oneTimePurchaseOfferDetails?.let {
+                                val price = it.formattedPrice
+                                val product = CBProduct(
+                                    productId,
+                                    productTitle,
+                                    null,
+                                    price,
+                                    productDetail,
+                                    null,
+                                    false,
+                                    productType
+                                )
+                                cbProductDetails.add(product)
+                            }
                         }
-                        Log.i(TAG, "Product details :$skusWithSkuDetails")
-                        response(skusWithSkuDetails)
+                        Log.i(TAG, "Product details :$cbProductDetails")
+                        response(cbProductDetails)
                     } catch (ex: CBException) {
                         errorDetail(
                             CBException(
@@ -135,9 +168,9 @@ class BillingClientManager(context: Context) : PurchasesUpdatedListener {
     ) {
         this.purchaseCallBack = purchaseCallBack
         onConnected({ status ->
-            if (status)
+            if (status) {
                 purchase(product)
-            else
+            } else
                 purchaseCallBack.onError(
                     connectionError
                 )
@@ -146,16 +179,29 @@ class BillingClientManager(context: Context) : PurchasesUpdatedListener {
         })
 
     }
+
     /* Purchase the product: Initiates the billing flow for an In-app-purchase  */
     private fun purchase(product: CBProduct) {
         this.product = product
-        val skuDetails = product.skuDetails
+        val productDetails = product.productDetails
+        val offerToken = product.offerToken
 
-        val params = BillingFlowParams.newBuilder()
-            .setSkuDetails(skuDetails)
-            .build()
+        val productDetailsParamsList =
+            listOf(
+                offerToken?.let {
+                    BillingFlowParams.ProductDetailsParams.newBuilder()
+                        .setProductDetails(productDetails)
+                        .setOfferToken(it)
+                        .build()
+                }
+            )
 
-        billingClient?.launchBillingFlow(mContext as Activity, params)
+        val billingFlowParams =
+            BillingFlowParams.newBuilder()
+                .setProductDetailsParamsList(productDetailsParamsList)
+                .build()
+
+        billingClient?.launchBillingFlow(mContext as Activity, billingFlowParams)
             .takeIf { billingResult ->
                 billingResult?.responseCode != OK
             }?.let { billingResult ->
@@ -166,7 +212,7 @@ class BillingClientManager(context: Context) : PurchasesUpdatedListener {
                         httpStatusCode = billingResult.responseCode
                     )
                 )
-                if (product.skuDetails.type == ProductType.SUBS.value) {
+                if (ProductType.SUBS == product.productType) {
                     purchaseCallBack?.onError(
                         billingError
                     )
@@ -202,6 +248,7 @@ class BillingClientManager(context: Context) : PurchasesUpdatedListener {
                 OK -> {
                     return true
                 }
+
                 FEATURE_NOT_SUPPORTED -> {
                     return false
                 }
@@ -229,6 +276,7 @@ class BillingClientManager(context: Context) : PurchasesUpdatedListener {
                         Purchase.PurchaseState.PURCHASED -> {
                             acknowledgePurchase(purchase)
                         }
+
                         Purchase.PurchaseState.PENDING -> {
                             purchaseCallBack?.onError(
                                 CBException(
@@ -239,6 +287,7 @@ class BillingClientManager(context: Context) : PurchasesUpdatedListener {
                                 )
                             )
                         }
+
                         Purchase.PurchaseState.UNSPECIFIED_STATE -> {
                             purchaseCallBack?.onError(
                                 CBException(
@@ -252,29 +301,31 @@ class BillingClientManager(context: Context) : PurchasesUpdatedListener {
                     }
                 }
             }
-           else -> {
-               if (product.skuDetails.type == ProductType.SUBS.value)
-                   purchaseCallBack?.onError(
-                       throwCBException(billingResult)
-                   )
-               else
-                   oneTimePurchaseCallback?.onError(
-                       throwCBException(billingResult)
-                   )
-           }
+
+            else -> {
+                if (product.productType == ProductType.SUBS)
+                    purchaseCallBack?.onError(
+                        throwCBException(billingResult)
+                    )
+                else
+                    oneTimePurchaseCallback?.onError(
+                        throwCBException(billingResult)
+                    )
+            }
         }
     }
 
     /* Acknowledge the Purchases */
     private fun acknowledgePurchase(purchase: Purchase) {
-        when(product.productType){
-            ProductType.SUBS ->  {
-                isAcknowledgedPurchase(purchase,{
+        when (product.productType) {
+            ProductType.SUBS -> {
+                isAcknowledgedPurchase(purchase, {
                     validateReceipt(purchase.purchaseToken, product)
                 }, {
                     purchaseCallBack?.onError(it)
                 })
             }
+
             ProductType.INAPP -> {
                 if (CBPurchase.productType == OneTimeProductType.CONSUMABLE) {
                     consumeAsyncPurchase(purchase.purchaseToken)
@@ -289,7 +340,11 @@ class BillingClientManager(context: Context) : PurchasesUpdatedListener {
         }
     }
 
-    private fun isAcknowledgedPurchase(purchase: Purchase, success: () -> Unit, error: (CBException) -> Unit){
+    private fun isAcknowledgedPurchase(
+        purchase: Purchase,
+        success: () -> Unit,
+        error: (CBException) -> Unit
+    ) {
         if (!purchase.isAcknowledged) {
             val params = AcknowledgePurchaseParams.newBuilder()
                 .setPurchaseToken(purchase.purchaseToken)
@@ -312,6 +367,7 @@ class BillingClientManager(context: Context) : PurchasesUpdatedListener {
                             )
                         }
                     }
+
                     else -> {
                         error(
                             throwCBException(billingResult)
@@ -325,10 +381,11 @@ class BillingClientManager(context: Context) : PurchasesUpdatedListener {
     /* Consume the Purchases */
     private fun consumeAsyncPurchase(token: String) {
         consumePurchase(token) { billingResult, purchaseToken ->
-            when(billingResult.responseCode){
+            when (billingResult.responseCode) {
                 OK -> {
                     validateNonSubscriptionReceipt(purchaseToken, product)
                 }
+
                 else -> {
                     oneTimePurchaseCallback?.onError(
                         throwCBException(billingResult)
@@ -379,6 +436,7 @@ class BillingClientManager(context: Context) : PurchasesUpdatedListener {
                             purchaseCallBack?.onError(CBException(ErrorDetail(message = GPErrorCode.PurchaseInvalid.errorMsg)))
                         }
                     }
+
                     is ChargebeeResult.Error -> {
                         Log.e(TAG, "Exception from Server - validateReceipt() :  ${it.exp.message}")
                         purchaseCallBack?.onError(it.exp)
@@ -459,7 +517,8 @@ class BillingClientManager(context: Context) : PurchasesUpdatedListener {
     private fun queryPurchaseHistoryAsync(
         productType: String, purchaseTransactionList: (List<PurchaseTransaction>?) -> Unit
     ) {
-        billingClient?.queryPurchaseHistoryAsync(productType) { billingResult, subsHistoryList ->
+        val queryPurchaseHistoryParams = QueryPurchaseHistoryParams.newBuilder().setProductType(productType).build()
+        billingClient?.queryPurchaseHistoryAsync(queryPurchaseHistoryParams) { billingResult, subsHistoryList ->
             if (billingResult.responseCode == OK) {
                 val purchaseHistoryList = subsHistoryList?.map {
                     it.toPurchaseTransaction(productType)
@@ -517,6 +576,7 @@ class BillingClientManager(context: Context) : PurchasesUpdatedListener {
                     Log.i(TAG, "Google Billing Setup Done!")
                     status(true)
                 }
+
                 else -> {
                     connectionError(throwCBException(billingResult))
                 }
@@ -590,8 +650,12 @@ class BillingClientManager(context: Context) : PurchasesUpdatedListener {
                         oneTimePurchaseCallback?.onError(CBException(ErrorDetail(message = GPErrorCode.PurchaseInvalid.errorMsg)))
                     }
                 }
+
                 is ChargebeeResult.Error -> {
-                    Log.e(TAG, "Exception from Server - validateNonSubscriptionReceipt() :  ${it.exp.message}")
+                    Log.e(
+                        TAG,
+                        "Exception from Server - validateNonSubscriptionReceipt() :  ${it.exp.message}"
+                    )
                     oneTimePurchaseCallback?.onError(it.exp)
                 }
             }
