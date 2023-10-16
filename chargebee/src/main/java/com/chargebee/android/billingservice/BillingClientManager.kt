@@ -9,14 +9,13 @@ import com.android.billingclient.api.*
 import com.android.billingclient.api.BillingClient.BillingResponseCode.*
 import com.chargebee.android.ErrorDetail
 import com.chargebee.android.billingservice.BillingErrorCode.Companion.throwCBException
-import com.chargebee.android.models.PurchaseTransaction
 import com.chargebee.android.exceptions.CBException
 import com.chargebee.android.exceptions.ChargebeeResult
 import com.chargebee.android.models.CBNonSubscriptionResponse
 import com.chargebee.android.models.CBProduct
+import com.chargebee.android.models.PurchaseTransaction
 import com.chargebee.android.network.CBReceiptResponse
 import com.chargebee.android.restore.CBRestorePurchaseManager
-import kotlin.collections.ArrayList
 
 class BillingClientManager(context: Context) : PurchasesUpdatedListener {
 
@@ -97,42 +96,16 @@ class BillingClientManager(context: Context) : PurchasesUpdatedListener {
                     try {
                         val cbProductDetails = arrayListOf<CBProduct>()
                         for (productDetail in productsDetail) {
-                            val productId = productDetail.productId
-                            val productType = ProductType.getProductType(productDetail.productType)
-                            val productTitle = productDetail.title
 
                             val subscriptionOfferDetails = productDetail.subscriptionOfferDetails
                             subscriptionOfferDetails?.forEach {
-                                val price = it.pricingPhases?.pricingPhaseList?.first()?.formattedPrice ?: "0"
-                                val offerToken = it.offerToken
-                                val basePlanId = it.basePlanId
-
-                                val product = CBProduct(
-                                    productId,
-                                    productTitle,
-                                    basePlanId,
-                                    price,
-                                    productDetail,
-                                    offerToken,
-                                    false,
-                                    productType
-                                )
+                                val product = subscriptionCbProduct(productDetail, it)
                                 cbProductDetails.add(product)
                             }
 
                             val oneTimePurchaseOfferDetails = productDetail.oneTimePurchaseOfferDetails
                             oneTimePurchaseOfferDetails?.let {
-                                val price = it.formattedPrice
-                                val product = CBProduct(
-                                    productId,
-                                    productTitle,
-                                    null,
-                                    price,
-                                    productDetail,
-                                    null,
-                                    false,
-                                    productType
-                                )
+                                val product = oneTimeCbProduct(productDetail, it)
                                 cbProductDetails.add(product)
                             }
                         }
@@ -160,6 +133,49 @@ class BillingClientManager(context: Context) : PurchasesUpdatedListener {
             Log.e(TAG, "exception :$exp.message")
             errorDetail(CBException(ErrorDetail(message = "${exp.message}")))
         }
+    }
+
+    private fun oneTimeCbProduct(
+        productDetail: ProductDetails,
+        it: ProductDetails.OneTimePurchaseOfferDetails
+    ): CBProduct {
+        val productId = productDetail.productId
+        val productType = ProductType.getProductType(productDetail.productType)
+        val productTitle = productDetail.title
+        val price = it.formattedPrice
+        return CBProduct(
+            productId,
+            productTitle,
+            null,
+            price,
+            productDetail,
+            null,
+            false,
+            productType
+        )
+    }
+
+    private fun subscriptionCbProduct(
+        productDetail: ProductDetails,
+        it: ProductDetails.SubscriptionOfferDetails
+    ): CBProduct {
+        val productId = productDetail.productId
+        val productType = ProductType.getProductType(productDetail.productType)
+        val productTitle = productDetail.title
+        val price = it.pricingPhases?.pricingPhaseList?.first()?.formattedPrice ?: "0"
+        val offerToken = it.offerToken
+        val basePlanId = it.basePlanId
+
+        return CBProduct(
+            productId,
+            productTitle,
+            basePlanId,
+            price,
+            productDetail,
+            offerToken,
+            false,
+            productType
+        )
     }
 
     internal fun purchase(
@@ -679,7 +695,6 @@ class BillingClientManager(context: Context) : PurchasesUpdatedListener {
                     } ?: run {
                         completionCallback.onError(itemNotOwnedException())
                     }
-
                 } else
                 completionCallback.onError(
                     connectionError

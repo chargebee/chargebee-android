@@ -61,8 +61,9 @@ class BillingClientManagerTest {
     private val receiptDetail = ReceiptDetail("subscriptionId", "customerId", "planId")
     private var callBackOneTimePurchase: CBCallback.OneTimePurchaseCallback? = null
     private val nonSubscriptionDetail = NonSubscription("invoiceId", "customerId", "chargeId")
-    private val otpProducts = CBProduct("test.consumable","Example product","100.0", SkuDetails(""),true, productType = ProductType.INAPP)
-    private val subProducts = CBProduct("chargebee.premium.android","Premium Plan","", SkuDetails(""),true, ProductType.SUBS)
+    private val productDetails = ProductDetails::class.create()
+    private val otpProducts = CBProduct("test.consumable","Example product","basePlanId", "100.0", productDetails,"offerToken", true, productType = ProductType.INAPP)
+    private val subProducts = CBProduct("chargebee.premium.android","Premium Plan","basePlanId", "", productDetails,"offerToken", true, ProductType.SUBS)
 
     @Before
     fun setUp() {
