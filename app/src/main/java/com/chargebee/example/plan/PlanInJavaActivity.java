@@ -6,12 +6,8 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 
-import com.chargebee.android.ErrorDetail;
-import com.chargebee.android.models.Plan;
 import com.chargebee.example.BaseActivity;
 import com.chargebee.example.R;
-import com.google.gson.Gson;
-import com.google.gson.JsonObject;
 
 public class PlanInJavaActivity extends BaseActivity {
 

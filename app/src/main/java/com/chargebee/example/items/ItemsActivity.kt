@@ -1,7 +1,6 @@
 package com.chargebee.example.items
 
 import android.os.Bundle
-import android.util.Log
 import android.view.View
 import android.widget.TextView
 import androidx.lifecycle.Observer
@@ -9,11 +8,9 @@ import androidx.recyclerview.widget.DefaultItemAnimator
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.chargebee.android.Chargebee
-import com.chargebee.android.ErrorDetail
 import com.chargebee.example.BaseActivity
 import com.chargebee.example.R
 import com.chargebee.example.adapter.ItemsAdapter
-import com.google.gson.Gson
 
 class ItemsActivity : BaseActivity(), ItemsAdapter.ItemClickListener {
 

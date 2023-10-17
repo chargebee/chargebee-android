@@ -16,7 +16,6 @@ import androidx.recyclerview.widget.RecyclerView
 import com.chargebee.android.Chargebee
 import com.chargebee.android.billingservice.CBCallback
 import com.chargebee.android.billingservice.CBPurchase
-import com.chargebee.android.models.CBRestoreSubscription
 import com.chargebee.android.exceptions.CBException
 import com.chargebee.android.models.CBProduct
 import com.chargebee.example.adapter.ListItemsAdapter
