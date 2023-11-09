@@ -39,7 +39,7 @@ class SubscriptionActivity : BaseActivity() {
             Log.i(javaClass.simpleName, "Subscriptions by using queryParams:  $it")
             if(it?.size!! >0) {
                 val subscriptionStatus =
-                    it?.get(0).cb_subscription.status + "\nPlan Price : " + it?.get(0)?.cb_subscription?.plan_amount;
+                    it?.get(0)?.cb_subscription?.status + "\nPlan Price : " + it?.get(0)?.cb_subscription?.plan_amount;
                 alertSuccess(subscriptionStatus)
             }else{
                 alertSuccess("Subscriptions not found in Chargebee System")
