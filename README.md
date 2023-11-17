@@ -11,8 +11,8 @@ Post-installation, initialization, and authentication with the Chargebee site, t
 ## Requirements
 The following requirements must be set up before installing Chargebee’s Android SDK.
 
-* Android 5.0 (API level 21) and above
-* [Android Gradle Plugin](https://developer.android.com/studio/releases/gradle-plugin) 4.0.0
+* Android Target API Level 31 and above
+* [Android Gradle Plugin](https://developer.android.com/studio/releases/gradle-plugin) 4.2.2
 * [Gradle](https://gradle.org/releases/) 6.1.1+
 * [AndroidX](https://developer.android.com/jetpack/androidx/)
 * Java 8+ and Kotlin
@@ -21,7 +21,7 @@ The following requirements must be set up before installing Chargebee’s Androi
 The `Chargebee-Android` SDK can be installed by adding below dependency to the `build.gradle` file:
 
 ```kotlin
-implementation 'com.chargebee:chargebee-android:1.0.25'
+implementation 'com.chargebee:chargebee-android:1.2.0'
 ```
 
 ## Example project
