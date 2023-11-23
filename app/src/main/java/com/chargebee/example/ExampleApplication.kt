@@ -55,7 +55,7 @@ class ExampleApplication : Application(), NetworkUtil.NetworkListener {
             productIdList,
             object : CBCallback.ListProductsCallback<ArrayList<CBProduct>> {
                 override fun onSuccess(productIDs: ArrayList<CBProduct>) {
-                    if (productIDs.first().productType == ProductType.SUBS)
+                    if (productIDs.first().type == ProductType.SUBS)
                         validateReceipt(mContext, productIDs.first())
                     else
                         validateNonSubscriptionReceipt(mContext, productIDs.first())

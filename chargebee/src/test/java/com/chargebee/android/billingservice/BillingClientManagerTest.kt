@@ -151,7 +151,7 @@ class BillingClientManagerTest {
         val IDs =  java.util.ArrayList<String>()
         IDs.add("")
         CoroutineScope(Dispatchers.IO).launch {
-            Mockito.`when`(CBPurchase.retrieveProductIdentifers(queryParam) {
+            Mockito.`when`(CBPurchase.retrieveProductIdentifiers(queryParam) {
                 when (it) {
                     is CBProductIDResult.ProductIds -> {
                         assertThat(it,instanceOf(CBProductIDResult::class.java))
@@ -235,7 +235,7 @@ class BillingClientManagerTest {
         val productsIds =  java.util.ArrayList<String>()
         productsIds.add("")
         CoroutineScope(Dispatchers.IO).launch {
-            Mockito.`when`(CBPurchase.retrieveProductIdentifers(queryParam) {
+            Mockito.`when`(CBPurchase.retrieveProductIdentifiers(queryParam) {
                 when (it) {
                     is CBProductIDResult.ProductIds -> {
                         assertThat(it,instanceOf(CBProductIDResult::class.java))

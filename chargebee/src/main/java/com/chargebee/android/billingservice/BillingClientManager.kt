@@ -13,7 +13,10 @@ import com.chargebee.android.exceptions.CBException
 import com.chargebee.android.exceptions.ChargebeeResult
 import com.chargebee.android.models.CBNonSubscriptionResponse
 import com.chargebee.android.models.CBProduct
+import com.chargebee.android.models.PricingPhase
+import com.chargebee.android.models.PurchaseProductParams
 import com.chargebee.android.models.PurchaseTransaction
+import com.chargebee.android.models.SubscriptionOffer
 import com.chargebee.android.network.CBReceiptResponse
 import com.chargebee.android.restore.CBRestorePurchaseManager
 
@@ -25,7 +28,7 @@ class BillingClientManager(context: Context) : PurchasesUpdatedListener {
     private val handler = Handler(Looper.getMainLooper())
     private var purchaseCallBack: CBCallback.PurchaseCallback<String>? = null
     private val TAG = javaClass.simpleName
-    lateinit var product: CBProduct
+    private lateinit var purchaseProductParams: PurchaseProductParams
     private lateinit var restorePurchaseCallBack: CBCallback.RestorePurchaseCallback
     private var oneTimePurchaseCallback: CBCallback.OneTimePurchaseCallback? = null
 
@@ -96,18 +99,8 @@ class BillingClientManager(context: Context) : PurchasesUpdatedListener {
                     try {
                         val cbProductDetails = arrayListOf<CBProduct>()
                         for (productDetail in productsDetail) {
-
-                            val subscriptionOfferDetails = productDetail.subscriptionOfferDetails
-                            subscriptionOfferDetails?.forEach {
-                                val product = subscriptionCbProduct(productDetail, it)
-                                cbProductDetails.add(product)
-                            }
-
-                            val oneTimePurchaseOfferDetails = productDetail.oneTimePurchaseOfferDetails
-                            oneTimePurchaseOfferDetails?.let {
-                                val product = oneTimeCbProduct(productDetail, it)
-                                cbProductDetails.add(product)
-                            }
+                            val cbProduct = convertToCbProduct(productDetail)
+                            cbProductDetails.add(cbProduct)
                         }
                         Log.i(TAG, "Product details :$cbProductDetails")
                         response(cbProductDetails)
@@ -134,58 +127,61 @@ class BillingClientManager(context: Context) : PurchasesUpdatedListener {
             errorDetail(CBException(ErrorDetail(message = "${exp.message}")))
         }
     }
-
-    private fun oneTimeCbProduct(
-        productDetail: ProductDetails,
-        it: ProductDetails.OneTimePurchaseOfferDetails
-    ): CBProduct {
-        val productId = productDetail.productId
-        val productType = ProductType.getProductType(productDetail.productType)
-        val productTitle = productDetail.title
-        val price = it.formattedPrice
+    private fun convertToCbProduct(productDetail: ProductDetails): CBProduct {
+        val subscriptionOffers = subscriptionOffers(productDetail.subscriptionOfferDetails)
+        val oneTimePurchaseOffer = oneTimePurchaseOffer(productDetail.oneTimePurchaseOfferDetails)
         return CBProduct(
-            productId,
-            productTitle,
-            null,
-            price,
-            productDetail,
-            null,
-            false,
-            productType
+            productDetail.productId,
+            productDetail.title,
+            productDetail.description,
+            ProductType.getProductType(productDetail.productType),
+            subscriptionOffers,
+            oneTimePurchaseOffer
         )
     }
 
-    private fun subscriptionCbProduct(
-        productDetail: ProductDetails,
-        it: ProductDetails.SubscriptionOfferDetails
-    ): CBProduct {
-        val productId = productDetail.productId
-        val productType = ProductType.getProductType(productDetail.productType)
-        val productTitle = productDetail.title
-        val price = it.pricingPhases?.pricingPhaseList?.first()?.formattedPrice ?: "0"
-        val offerToken = it.offerToken
-        val basePlanId = it.basePlanId
+    private fun oneTimePurchaseOffer(oneTimePurchaseOfferDetails: ProductDetails.OneTimePurchaseOfferDetails?): PricingPhase? {
+        return oneTimePurchaseOfferDetails?.let {
+            return PricingPhase(oneTimePurchaseOfferDetails.formattedPrice,
+                oneTimePurchaseOfferDetails.priceAmountMicros,
+                oneTimePurchaseOfferDetails.priceCurrencyCode)
+        }
+    }
 
-        return CBProduct(
-            productId,
-            productTitle,
-            basePlanId,
-            price,
-            productDetail,
-            offerToken,
-            false,
-            productType
+    private fun subscriptionOffers(subscriptionOfferDetails: List<ProductDetails.SubscriptionOfferDetails>?): List<SubscriptionOffer>? {
+        return subscriptionOfferDetails?.let { it.map { i -> subscriptionOffer(i) } }
+    }
+
+    private fun subscriptionOffer(subscriptionOfferDetail: ProductDetails.SubscriptionOfferDetails): SubscriptionOffer {
+        val pricingPhases = pricingPhases(subscriptionOfferDetail.pricingPhases)
+        return SubscriptionOffer(
+            subscriptionOfferDetail.basePlanId,
+            subscriptionOfferDetail.offerId,
+            subscriptionOfferDetail.offerToken,
+            pricingPhases
         )
+    }
+
+    private fun pricingPhases(pricingPhases: ProductDetails.PricingPhases): List<PricingPhase> {
+        return pricingPhases.pricingPhaseList.map {
+            PricingPhase(
+                it.formattedPrice,
+                it.priceAmountMicros,
+                it.priceCurrencyCode,
+                it.billingPeriod,
+                it.billingCycleCount
+            )
+        }
     }
 
     internal fun purchase(
-        product: CBProduct,
+        purchaseProductParams: PurchaseProductParams,
         purchaseCallBack: CBCallback.PurchaseCallback<String>
     ) {
         this.purchaseCallBack = purchaseCallBack
         onConnected({ status ->
             if (status) {
-                purchase(product)
+                purchase(purchaseProductParams)
             } else
                 purchaseCallBack.onError(
                     connectionError
@@ -197,47 +193,58 @@ class BillingClientManager(context: Context) : PurchasesUpdatedListener {
     }
 
     /* Purchase the product: Initiates the billing flow for an In-app-purchase  */
-    private fun purchase(product: CBProduct) {
-        this.product = product
-        val productDetails = product.productDetails
-        val offerToken = product.offerToken
+    private fun purchase(purchaseProductParams: PurchaseProductParams) {
+        this.purchaseProductParams = purchaseProductParams
+        val offerToken = purchaseProductParams.offerToken
 
-        val productDetailsParamsList =
-            listOf(
-                offerToken?.let {
-                    BillingFlowParams.ProductDetailsParams.newBuilder()
-                        .setProductDetails(productDetails)
-                        .setOfferToken(it)
+        val queryProductDetails = arrayListOf(QueryProductDetailsParams.Product.newBuilder()
+                .setProductId(purchaseProductParams.product.id)
+                .setProductType(purchaseProductParams.product.type.value)
+                .build())
+
+        val productDetailsParams = QueryProductDetailsParams.newBuilder().setProductList(queryProductDetails).build()
+
+        billingClient?.queryProductDetailsAsync(
+            productDetailsParams
+        ) { billingResult, productsDetail ->
+            if (billingResult.responseCode == OK && productsDetail != null) {
+                val productDetailsBuilder = BillingFlowParams.ProductDetailsParams.newBuilder()
+                    .setProductDetails(productsDetail.first())
+                offerToken?.let { productDetailsBuilder.setOfferToken(it) }
+                val productDetailsParamsList =
+                    listOf(productDetailsBuilder.build())
+
+                val billingFlowParams =
+                    BillingFlowParams.newBuilder()
+                        .setProductDetailsParamsList(productDetailsParamsList)
                         .build()
-                }
-            )
 
-        val billingFlowParams =
-            BillingFlowParams.newBuilder()
-                .setProductDetailsParamsList(productDetailsParamsList)
-                .build()
-
-        billingClient?.launchBillingFlow(mContext as Activity, billingFlowParams)
-            .takeIf { billingResult ->
-                billingResult?.responseCode != OK
-            }?.let { billingResult ->
-                Log.e(TAG, "Failed to launch billing flow $billingResult")
-                val billingError = CBException(
-                    ErrorDetail(
-                        message = GPErrorCode.LaunchBillingFlowError.errorMsg,
-                        httpStatusCode = billingResult.responseCode
-                    )
-                )
-                if (ProductType.SUBS == product.productType) {
-                    purchaseCallBack?.onError(
-                        billingError
-                    )
-                } else {
-                    oneTimePurchaseCallback?.onError(
-                        billingError
-                    )
-                }
+                billingClient?.launchBillingFlow(mContext as Activity, billingFlowParams)
+                    .takeIf { billingResult ->
+                        billingResult?.responseCode != OK
+                    }?.let { billingResult ->
+                        Log.e(TAG, "Failed to launch billing flow $billingResult")
+                        val billingError = CBException(
+                            ErrorDetail(
+                                message = GPErrorCode.LaunchBillingFlowError.errorMsg,
+                                httpStatusCode = billingResult.responseCode
+                            )
+                        )
+                        if (ProductType.SUBS == purchaseProductParams.product.type) {
+                            purchaseCallBack?.onError(
+                                billingError
+                            )
+                        } else {
+                            oneTimePurchaseCallback?.onError(
+                                billingError
+                            )
+                        }
+                    }
+            } else {
+                // TODO: Handle error
             }
+        }
+
     }
 
     /**
@@ -319,7 +326,7 @@ class BillingClientManager(context: Context) : PurchasesUpdatedListener {
             }
 
             else -> {
-                if (product.productType == ProductType.SUBS)
+                if (purchaseProductParams.product.type == ProductType.SUBS)
                     purchaseCallBack?.onError(
                         throwCBException(billingResult)
                     )
@@ -333,10 +340,10 @@ class BillingClientManager(context: Context) : PurchasesUpdatedListener {
 
     /* Acknowledge the Purchases */
     private fun acknowledgePurchase(purchase: Purchase) {
-        when (product.productType) {
+        when (purchaseProductParams.product.type) {
             ProductType.SUBS -> {
                 isAcknowledgedPurchase(purchase, {
-                    validateReceipt(purchase.purchaseToken, product)
+                    validateReceipt(purchase.purchaseToken, purchaseProductParams.product)
                 }, {
                     purchaseCallBack?.onError(it)
                 })
@@ -347,7 +354,7 @@ class BillingClientManager(context: Context) : PurchasesUpdatedListener {
                     consumeAsyncPurchase(purchase.purchaseToken)
                 } else {
                     isAcknowledgedPurchase(purchase, {
-                        validateNonSubscriptionReceipt(purchase.purchaseToken, product)
+                        validateNonSubscriptionReceipt(purchase.purchaseToken, purchaseProductParams.product)
                     }, {
                         oneTimePurchaseCallback?.onError(it)
                     })
@@ -399,7 +406,7 @@ class BillingClientManager(context: Context) : PurchasesUpdatedListener {
         consumePurchase(token) { billingResult, purchaseToken ->
             when (billingResult.responseCode) {
                 OK -> {
-                    validateNonSubscriptionReceipt(purchaseToken, product)
+                    validateNonSubscriptionReceipt(purchaseToken, purchaseProductParams.product)
                 }
 
                 else -> {
@@ -609,7 +616,7 @@ class BillingClientManager(context: Context) : PurchasesUpdatedListener {
             if (status)
                 queryPurchaseHistory { purchaseHistoryList ->
                     val purchaseTransaction = purchaseHistoryList.filter {
-                        it.productId.first() == product.productId
+                        it.productId.first() == product.id
                     }
                     val transaction = purchaseTransaction.firstOrNull()
                     transaction?.let {
@@ -633,12 +640,12 @@ class BillingClientManager(context: Context) : PurchasesUpdatedListener {
     ) {
         this.oneTimePurchaseCallback = oneTimePurchaseCallback
         onConnected({ status ->
-            if (status)
-                purchase(product)
-            else
-                oneTimePurchaseCallback.onError(
-                    connectionError
-                )
+            if (status) {
+                val purchaseParams = PurchaseProductParams(product)
+                purchase(purchaseParams)
+            } else {
+                oneTimePurchaseCallback.onError(connectionError)
+            }
         }, { error ->
             oneTimePurchaseCallback.onError(error)
         })
@@ -687,7 +694,7 @@ class BillingClientManager(context: Context) : PurchasesUpdatedListener {
             if (status)
                 queryPurchaseHistory { purchaseHistoryList ->
                     val purchaseTransaction = purchaseHistoryList.filter {
-                        it.productId.first() == product.productId
+                        it.productId.first() == product.id
                     }
                     val transaction = purchaseTransaction.firstOrNull()
                     transaction?.let {

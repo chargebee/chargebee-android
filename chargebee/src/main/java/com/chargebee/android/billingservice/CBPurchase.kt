@@ -25,7 +25,7 @@ object CBPurchase {
     * Get the product ID's from chargebee system
     */
     @JvmStatic
-    fun retrieveProductIdentifers(
+    fun retrieveProductIdentifiers(
         params: Array<String> = arrayOf(),
         completion: (CBProductIDResult<ArrayList<String>>) -> Unit
     ) {
@@ -54,41 +54,24 @@ object CBPurchase {
     }
 
     /**
-     * Buy the product with/without customer id
-     * @param [product] The product that wish to purchase
-     * @param [callback] listener will be called when product purchase completes.
-     */
-    @Deprecated(
-        message = "This will be removed in upcoming release, Please use API fun - purchaseProduct(product: CBProduct, customer : CBCustomer? = null, callback)",
-        level = DeprecationLevel.WARNING
-    )
-    @JvmStatic
-    fun purchaseProduct(
-        product: CBProduct, customerID: String,
-        callback: CBCallback.PurchaseCallback<String>
-    ) {
-        customer = CBCustomer(customerID, "", "", "")
-        purchaseProduct(product, callback)
-    }
-
-    /**
-     * Buy the product with/without customer data
-     * @param [product] The product that wish to purchase
+     * Buy Subscription product with/without customer data
+     * @param [purchaseParams] The purchase parameters of the product to be purchased.
+     * @param [customer] Optional. Customer Object.
      * @param [callback] listener will be called when product purchase completes.
      */
     @JvmStatic
     fun purchaseProduct(
-        product: CBProduct, customer: CBCustomer? = null,
+        purchaseProductParams: PurchaseProductParams, customer: CBCustomer? = null,
         callback: CBCallback.PurchaseCallback<String>
     ) {
         this.customer = customer
-        purchaseProduct(product, callback)
+        purchaseProduct(purchaseProductParams, callback)
     }
 
-    private fun purchaseProduct(product: CBProduct, callback: CBCallback.PurchaseCallback<String>) {
+    private fun purchaseProduct(purchaseProductParams: PurchaseProductParams, callback: CBCallback.PurchaseCallback<String>) {
         isSDKKeyValid({
-            log(customer, product)
-            billingClientManager?.purchase(product, callback)
+            log(customer, purchaseProductParams.product.id)
+            billingClientManager?.purchase(purchaseProductParams, callback)
         }, {
             callback.onError(it)
         })
@@ -111,7 +94,7 @@ object CBPurchase {
         this.productType = productType
 
         isSDKKeyValid({
-            log(CBPurchase.customer, product, productType)
+            log(CBPurchase.customer, product.id, productType)
             billingClientManager?.purchaseNonSubscriptionProduct(product, callback)
         }, {
             callback.onError(it)
@@ -195,7 +178,7 @@ object CBPurchase {
         completion: (ChargebeeResult<Any>) -> Unit
     ) {
         try {
-            validateReceipt(purchaseToken, product.productId, completion)
+            validateReceipt(purchaseToken, product.id, completion)
         } catch (exp: Exception) {
             Log.e(javaClass.simpleName, "Exception in validateReceipt() :" + exp.message)
             ChargebeeResult.Error(
@@ -257,7 +240,7 @@ object CBPurchase {
         product: CBProduct,
         completion: (ChargebeeResult<Any>) -> Unit
     ) {
-        validateNonSubscriptionReceipt(purchaseToken, product.productId, completion)
+        validateNonSubscriptionReceipt(purchaseToken, product.id, completion)
     }
 
     internal fun validateNonSubscriptionReceipt(
@@ -384,8 +367,8 @@ object CBPurchase {
         return billingClientManager as BillingClientManager
     }
 
-    private fun log(customer: CBCustomer?, product: CBProduct, productType: OneTimeProductType? = null) {
-        val additionalInfo = additionalInfo(customer, product, productType)
+    private fun log(customer: CBCustomer?, productId: String, productType: OneTimeProductType? = null) {
+        val additionalInfo = additionalInfo(customer, productId, productType)
         val logger = CBLogger(
             name = "buy",
             action = "before_purchase_command",
@@ -393,8 +376,8 @@ object CBPurchase {
         )
         ResultHandler.safeExecute { logger.info() }
     }
-    private fun additionalInfo(customer: CBCustomer?, product: CBProduct, productType: OneTimeProductType? = null): Map<String, String> {
-        val map = mutableMapOf("product" to product.productId)
+    private fun additionalInfo(customer: CBCustomer?, productId: String, productType: OneTimeProductType? = null): Map<String, String> {
+        val map = mutableMapOf("product" to productId)
         customer?.let { map["customerId"] = (it.id ?: "") }
         productType?.let { map["productType"] = it.toString() }
         return map
