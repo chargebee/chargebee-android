@@ -48,41 +48,6 @@ object Chargebee {
         publishableApiKey: String,
         allowErrorLogging: Boolean = true,
         sdkKey: String = "",
-        packageName: String = ""
-    ) {
-        this.applicationId = packageName
-        this.publishableApiKey = publishableApiKey
-        this.site = site
-        this.encodedApiKey = Credentials.basic(publishableApiKey, "")
-        this.baseUrl = "https://${site}.chargebee.com/api/"
-        this.allowErrorLogging = allowErrorLogging
-        this.sdkKey = sdkKey
-        val auth = Auth(sdkKey, applicationId, appName, channel)
-
-        CBAuthentication.authenticate(auth) {
-            when (it) {
-                is ChargebeeResult.Success -> {
-                    Log.i(javaClass.simpleName, "Environment Setup Completed")
-                    Log.i(javaClass.simpleName, " Response :${it.data}")
-                    val response = it.data as CBAuthResponse
-                    this.version = response.in_app_detail.product_catalog_version
-                    this.applicationId = response.in_app_detail.app_id
-                    this.appName = response.in_app_detail.app_name
-                }
-                is ChargebeeResult.Error -> {
-                    Log.i(javaClass.simpleName, "Exception from server :${it.exp.message}")
-                    this.version = CatalogVersion.Unknown.value
-                }
-            }
-        }
-    }
-
-    /* Configure the app details with chargebee system */
-    fun configure(
-        site: String,
-        publishableApiKey: String,
-        allowErrorLogging: Boolean = true,
-        sdkKey: String = "",
         packageName: String = "",
         completion: (ChargebeeResult<Any>) -> Unit
     ) {

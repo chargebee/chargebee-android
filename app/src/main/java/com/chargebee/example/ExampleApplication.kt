@@ -18,7 +18,7 @@ import com.chargebee.example.util.NetworkUtil
 
 class ExampleApplication : Application(), NetworkUtil.NetworkListener {
     private lateinit var networkUtil: NetworkUtil
-    private lateinit var sharedPreference: SharedPreferences
+    private var sharedPreference: SharedPreferences? = null
     lateinit var mContext: Context
     private val customer = CBCustomer(
         id = "sync_receipt_android",
@@ -36,8 +36,7 @@ class ExampleApplication : Application(), NetworkUtil.NetworkListener {
     }
 
     override fun onNetworkConnectionAvailable() {
-        Chargebee.configure(site = "", publishableApiKey= "",sdkKey= "", packageName = this.packageName)
-        val productId = sharedPreference.getString("productId", "")
+        val productId = sharedPreference?.getString("productId", "")
         if (productId?.isNotEmpty() == true) {
             val productList = ArrayList<String>()
             productList.add(productId)
@@ -76,8 +75,8 @@ class ExampleApplication : Application(), NetworkUtil.NetworkListener {
             completionCallback = object : CBCallback.PurchaseCallback<String> {
                 override fun onSuccess(result: ReceiptDetail, status: Boolean) {
                     // Clear the local cache once receipt validation success
-                    val editor = sharedPreference.edit()
-                    editor.clear().apply()
+                    val editor = sharedPreference?.edit()
+                    editor?.clear()?.apply()
                     Log.i(javaClass.simpleName, "Subscription ID:  ${result.subscription_id}")
                     Log.i(javaClass.simpleName, "Plan ID:  ${result.plan_id}")
                     Log.i(javaClass.simpleName, "Customer ID:  ${result.customer_id}")
@@ -99,8 +98,8 @@ class ExampleApplication : Application(), NetworkUtil.NetworkListener {
             completionCallback = object : CBCallback.OneTimePurchaseCallback {
                 override fun onSuccess(result: NonSubscription, status: Boolean) {
                     // Clear the local cache once receipt validation success
-                    val editor = sharedPreference.edit()
-                    editor.clear().apply()
+                    val editor = sharedPreference?.edit()
+                    editor?.clear()?.apply()
                     Log.i(javaClass.simpleName, "Subscription ID:  ${result.invoiceId}")
                     Log.i(javaClass.simpleName, "Plan ID:  ${result.chargeId}")
                     Log.i(javaClass.simpleName, "Customer ID:  ${result.customerId}")
