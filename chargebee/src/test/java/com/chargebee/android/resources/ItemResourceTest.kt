@@ -32,7 +32,9 @@ class ItemResourceTest {
             site = "cb-imay-test",
             publishableApiKey = "test_EojsGoGFeHoc3VpGPQDOZGAxYy3d0FF3",
             sdkKey = "cb-j53yhbfmtfhfhkmhow3ramecom"
-        )
+        ) {
+
+        }
 
     }
     @After

@@ -241,7 +241,13 @@ class BillingClientManager(context: Context) : PurchasesUpdatedListener {
                         }
                     }
             } else {
-                // TODO: Handle error
+                Log.e(TAG, "Failed to fetch product :" + billingResult.responseCode)
+                if (ProductType.SUBS == purchaseProductParams.product.type) {
+                    purchaseCallBack?.onError(throwCBException(billingResult))
+                } else {
+                    oneTimePurchaseCallback?.onError(throwCBException(billingResult))
+                }
+
             }
         }
 
