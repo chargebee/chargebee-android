@@ -173,11 +173,10 @@ class MainActivity : BaseActivity(), ListItemsAdapter.ItemClickListener {
                 ) && !TextUtils.isEmpty(sdkKeyEditText.text.toString())
             )
                 Chargebee.configure(
-                    siteNameEditText.text.toString(),
-                    apiKeyEditText.text.toString(),
-                    true,
-                    sdkKeyEditText.text.toString(),
-                    this.packageName
+                    site = siteNameEditText.text.toString(),
+                    publishableApiKey = apiKeyEditText.text.toString(),
+                    sdkKey = sdkKeyEditText.text.toString(),
+                    packageName = this.packageName
                 ) {
                     when (it) {
                         is ChargebeeResult.Success -> {

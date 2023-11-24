@@ -31,7 +31,7 @@ class BillingViewModel : ViewModel() {
     fun purchaseProduct(context: Context, purchaseProductParams: PurchaseProductParams, customer: CBCustomer) {
         // Cache the product id in sharedPreferences and retry validating the receipt if in case server is not responding or no internet connection.
         sharedPreference =  context.getSharedPreferences("PREFERENCE_NAME",Context.MODE_PRIVATE)
-        CBPurchase.purchaseProduct(purchaseProductParams, customer,  object : CBCallback.PurchaseCallback<String>{
+        CBPurchase.purchaseProduct(purchaseProductParams = purchaseProductParams, customer = customer,  object : CBCallback.PurchaseCallback<String>{
             override fun onSuccess(result: ReceiptDetail, status:Boolean) {
                 Log.i(TAG, "Subscription ID:  ${result.subscription_id}")
                 Log.i(TAG, "Plan ID:  ${result.plan_id}")

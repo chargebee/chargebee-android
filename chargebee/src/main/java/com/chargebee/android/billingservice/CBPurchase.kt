@@ -55,7 +55,7 @@ object CBPurchase {
 
     /**
      * Buy Subscription product with/without customer data
-     * @param [purchaseParams] The purchase parameters of the product to be purchased.
+     * @param [purchaseProductParams] The purchase parameters of the product to be purchased.
      * @param [customer] Optional. Customer Object.
      * @param [callback] listener will be called when product purchase completes.
      */
