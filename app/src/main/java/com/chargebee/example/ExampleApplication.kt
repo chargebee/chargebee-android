@@ -2,7 +2,6 @@ package com.chargebee.example
 
 import android.app.Application
 import android.content.Context
-import com.chargebee.android.Chargebee
 import android.content.SharedPreferences
 import android.util.Log
 import com.chargebee.android.billingservice.CBCallback

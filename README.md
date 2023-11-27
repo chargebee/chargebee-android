@@ -1,9 +1,11 @@
 # Chargebee Android
 
 > #### Updates for Billing Library 5
-> ***Note**: If you want to simply update your app to use Google Billing Library 5, without having to make related changes, you can use the [1.x version](https://github.com/chargebee/chargebee-android/tree/1.x.x). You can upgrade to the latest version once you are ready.
->
-> If you are getting started with the integration or ready to leverage Google Billing Library 5 changes, follow this [link](https://www.chargebee.com/docs/2.0/mobile-playstore-billing-library-5.html) for getting started.
+> ***Note**:
+> - SDK Version 2.0: This version uses Google Billing Library 5.2.1 APIs to fetch product information from the Google Play Console and make purchases. If you’re integrating Chargebee’s SDK for the first time, then use this version, and if you’re migrating from the older version of SDK to this version, follow the migration steps in this [document](https://www.chargebee.com/docs/2.0/mobile-playstore-billing-library-5.html).
+> - SDK Version 1.2.0: This version includes Billing Library 5.2.1 but still uses Billing Library 4.0 APIs to fetch product information from the Google Play Console and make purchases. This will enable you to list or update your Android app on the store without any warnings from Google and give you enough time to migrate to version 2.0.
+> - SDK Version 1.1.0: This and less than this version of SDKs use billing library 4.0 APIs that are deprecated by Google. Therefore, it is highly recommended that you upgrade your app and integrate it with SDK version 1.2.0 and above.
+
 
 This is Chargebee’s Android Software Development Kit (SDK). This SDK makes it efficient and comfortable to build a seamless subscription experience in your Android app. 
 

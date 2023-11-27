@@ -163,7 +163,7 @@ public class BillingActivity extends BaseActivity implements ProductListAdapter.
                     dialog.dismiss();
                 }
             } else {
-                purchaseProduct(customerId);
+                purchaseProduct();
                 dialog.dismiss();
             }
         });
@@ -182,7 +182,7 @@ public class BillingActivity extends BaseActivity implements ProductListAdapter.
         return purchaseProducts.get(position).getCbProduct().getType() == ProductType.INAPP;
     }
 
-    private void purchaseProduct(String customerId) {
+    private void purchaseProduct() {
         showProgressDialog();
         PurchaseProduct selectedPurchaseProduct = purchaseProducts.get(position);
         PurchaseProductParams purchaseParams = new PurchaseProductParams(selectedPurchaseProduct.getCbProduct(), selectedPurchaseProduct.getOfferToken());
