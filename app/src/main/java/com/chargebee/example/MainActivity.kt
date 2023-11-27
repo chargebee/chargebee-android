@@ -16,8 +16,8 @@ import androidx.recyclerview.widget.RecyclerView
 import com.chargebee.android.Chargebee
 import com.chargebee.android.billingservice.CBCallback
 import com.chargebee.android.billingservice.CBPurchase
-import com.chargebee.android.models.CBRestoreSubscription
 import com.chargebee.android.exceptions.CBException
+import com.chargebee.android.exceptions.ChargebeeResult
 import com.chargebee.android.models.CBProduct
 import com.chargebee.example.adapter.ListItemsAdapter
 import com.chargebee.example.addon.AddonActivity
@@ -173,11 +173,20 @@ class MainActivity : BaseActivity(), ListItemsAdapter.ItemClickListener {
                 ) && !TextUtils.isEmpty(sdkKeyEditText.text.toString())
             )
                 Chargebee.configure(
-                    siteNameEditText.text.toString(),
-                    apiKeyEditText.text.toString(),
-                    true,
-                    sdkKeyEditText.text.toString(), this.packageName
-                )
+                    site = siteNameEditText.text.toString(),
+                    publishableApiKey = apiKeyEditText.text.toString(),
+                    sdkKey = sdkKeyEditText.text.toString(),
+                    packageName = this.packageName
+                ) {
+                    when (it) {
+                        is ChargebeeResult.Success -> {
+                            Log.i(javaClass.simpleName, "Configured")
+                        }
+                        is ChargebeeResult.Error -> {
+                            Log.e(javaClass.simpleName, " Failed")
+                        }
+                    }
+                }
         }
         builder.show()
     }

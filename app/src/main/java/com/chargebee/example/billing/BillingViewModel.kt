@@ -28,10 +28,10 @@ class BillingViewModel : ViewModel() {
     private lateinit var sharedPreference : SharedPreferences
     var restorePurchaseResult: MutableLiveData<List<CBRestoreSubscription?>> = MutableLiveData()
 
-    fun purchaseProduct(context: Context,product: CBProduct, customer: CBCustomer) {
+    fun purchaseProduct(context: Context, purchaseProductParams: PurchaseProductParams, customer: CBCustomer) {
         // Cache the product id in sharedPreferences and retry validating the receipt if in case server is not responding or no internet connection.
         sharedPreference =  context.getSharedPreferences("PREFERENCE_NAME",Context.MODE_PRIVATE)
-        CBPurchase.purchaseProduct(product, customer,  object : CBCallback.PurchaseCallback<String>{
+        CBPurchase.purchaseProduct(purchaseProductParams = purchaseProductParams, customer = customer,  object : CBCallback.PurchaseCallback<String>{
             override fun onSuccess(result: ReceiptDetail, status:Boolean) {
                 Log.i(TAG, "Subscription ID:  ${result.subscription_id}")
                 Log.i(TAG, "Plan ID:  ${result.plan_id}")
@@ -41,30 +41,8 @@ class BillingViewModel : ViewModel() {
                 try {
                     // Handled server not responding and offline
                     if (error.httpStatusCode!! in 500..599) {
-                        storeInLocal(product.productId)
-                        validateReceipt(context = context, product = product)
-                    } else {
-                        cbException.postValue(error)
-                    }
-                } catch (exp: Exception) {
-                    Log.i(TAG, "Exception :${exp.message}")
-                }
-            }
-        })
-    }
-    fun purchaseProduct(context: Context, product: CBProduct, customerId: String) {
-        sharedPreference =  context.getSharedPreferences("PREFERENCE_NAME",Context.MODE_PRIVATE)
-        CBPurchase.purchaseProduct(product, customerId,  object : CBCallback.PurchaseCallback<String>{
-            override fun onSuccess(result: ReceiptDetail, status:Boolean) {
-                Log.i(TAG, "Subscription ID:  ${result.subscription_id}")
-                Log.i(TAG, "Plan ID:  ${result.plan_id}")
-                productPurchaseResult.postValue(status)
-            }
-            override fun onError(error: CBException) {
-                try {
-                    if (error.httpStatusCode!! in 500..599) {
-                        storeInLocal(product.productId)
-                        validateReceipt(context = context, product = product)
+                        storeInLocal(purchaseProductParams.product.id)
+                        validateReceipt(context = context, product = purchaseProductParams.product)
                     } else {
                         cbException.postValue(error)
                     }
@@ -107,7 +85,7 @@ class BillingViewModel : ViewModel() {
     }
 
     fun retrieveProductIdentifers(queryParam: Array<String>){
-        CBPurchase.retrieveProductIdentifers(queryParam) {
+        CBPurchase.retrieveProductIdentifiers(queryParam) {
             when (it) {
                 is CBProductIDResult.ProductIds -> {
                     Log.i(TAG, "List of Product Identifiers:  $it")
@@ -197,7 +175,7 @@ class BillingViewModel : ViewModel() {
                 try {
                     // Handled server not responding and offline
                     if (error.httpStatusCode!! in 500..599) {
-                        storeInLocal(product.productId)
+                        storeInLocal(product.id)
                         validateNonSubscriptionReceipt(context = context, product = product, productType = productType)
                     } else {
                         cbException.postValue(error)

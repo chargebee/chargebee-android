@@ -4,8 +4,6 @@ import com.android.billingclient.api.*
 import com.chargebee.android.Chargebee
 import com.chargebee.android.ErrorDetail
 import com.chargebee.android.billingservice.CBCallback.RestorePurchaseCallback
-import com.chargebee.android.billingservice.OneTimeProductType
-import com.chargebee.android.billingservice.ProductType
 import com.chargebee.android.exceptions.CBException
 import com.chargebee.android.exceptions.ChargebeeResult
 import com.chargebee.android.models.*
@@ -21,6 +19,7 @@ import org.junit.After
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mockito.ArgumentMatchers.any
 import org.mockito.Mockito
 import org.mockito.MockitoAnnotations
 import org.mockito.junit.MockitoJUnitRunner
@@ -72,6 +71,9 @@ class RestorePurchaseTest {
 
         CBRestorePurchaseManager.fetchStoreSubscriptionStatus(
             purchaseTransaction,
+            purchaseTransaction,
+            purchaseTransaction,
+            arrayListOf(),
             completionCallback = object : RestorePurchaseCallback {
                 override fun onSuccess(result: List<CBRestoreSubscription>) {
                     lock.countDown()
@@ -109,7 +111,7 @@ class RestorePurchaseTest {
                     Matchers.instanceOf(CBException::class.java)
                 )
                 Mockito.verify(CBRestorePurchaseManager, Mockito.times(1))
-                    .getRestorePurchases(purchaseTransaction)
+                    .getRestorePurchases(any(), any(), any(), any())
             })
         }
         lock.await()

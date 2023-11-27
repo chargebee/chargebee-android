@@ -10,9 +10,12 @@ import com.chargebee.android.billingservice.CBCallback.ListProductsCallback
 import com.chargebee.android.exceptions.CBException
 import com.chargebee.android.exceptions.CBProductIDResult
 import com.chargebee.android.exceptions.ChargebeeResult
+import com.chargebee.android.fixtures.otpProducts
+import com.chargebee.android.fixtures.subProducts
 import com.chargebee.android.models.CBNonSubscriptionResponse
 import com.chargebee.android.models.CBProduct
 import com.chargebee.android.models.NonSubscription
+import com.chargebee.android.models.PurchaseProductParams
 import com.chargebee.android.network.*
 import com.chargebee.android.resources.CatalogVersion
 import com.chargebee.android.resources.ReceiptResource
@@ -61,8 +64,8 @@ class BillingClientManagerTest {
     private val receiptDetail = ReceiptDetail("subscriptionId", "customerId", "planId")
     private var callBackOneTimePurchase: CBCallback.OneTimePurchaseCallback? = null
     private val nonSubscriptionDetail = NonSubscription("invoiceId", "customerId", "chargeId")
-    private val otpProducts = CBProduct("test.consumable","Example product","100.0", SkuDetails(""),true, productType = ProductType.INAPP)
-    private val subProducts = CBProduct("chargebee.premium.android","Premium Plan","", SkuDetails(""),true, ProductType.SUBS)
+    private val productDetails = ProductDetails::class.create()
+
 
     @Before
     fun setUp() {
@@ -150,7 +153,7 @@ class BillingClientManagerTest {
         val IDs =  java.util.ArrayList<String>()
         IDs.add("")
         CoroutineScope(Dispatchers.IO).launch {
-            Mockito.`when`(CBPurchase.retrieveProductIdentifers(queryParam) {
+            Mockito.`when`(CBPurchase.retrieveProductIdentifiers(queryParam) {
                 when (it) {
                     is CBProductIDResult.ProductIds -> {
                         assertThat(it,instanceOf(CBProductIDResult::class.java))
@@ -234,7 +237,7 @@ class BillingClientManagerTest {
         val productsIds =  java.util.ArrayList<String>()
         productsIds.add("")
         CoroutineScope(Dispatchers.IO).launch {
-            Mockito.`when`(CBPurchase.retrieveProductIdentifers(queryParam) {
+            Mockito.`when`(CBPurchase.retrieveProductIdentifiers(queryParam) {
                 when (it) {
                     is CBProductIDResult.ProductIds -> {
                         assertThat(it,instanceOf(CBProductIDResult::class.java))
@@ -255,8 +258,9 @@ class BillingClientManagerTest {
 
         val lock = CountDownLatch(1)
         CoroutineScope(Dispatchers.IO).launch {
+            val purchaseProductParams = PurchaseProductParams(subProducts)
             CBPurchase.purchaseProduct(
-                subProducts,"",
+                purchaseProductParams,null,
                 object : CBCallback.PurchaseCallback<String> {
                     override fun onError(error: CBException) {
                         lock.countDown()
@@ -270,10 +274,10 @@ class BillingClientManagerTest {
                 })
 
             Mockito.`when`(callBackPurchase?.let {
-                billingClientManager?.purchase(subProducts, it)
+                billingClientManager?.purchase(purchaseProductParams, it)
             }).thenReturn(Unit)
             callBackPurchase?.let {
-                verify(billingClientManager, times(1))?.purchase(subProducts,purchaseCallBack = it)
+                verify(billingClientManager, times(1))?.purchase(purchaseProductParams,purchaseCallBack = it)
             }
         }
         lock.await()
@@ -284,8 +288,9 @@ class BillingClientManagerTest {
 
         val skuDetails = SkuDetails(jsonDetails)
         CoroutineScope(Dispatchers.IO).launch {
+            val purchaseProductParams = PurchaseProductParams(subProducts)
             CBPurchase.purchaseProduct(
-                subProducts,"",
+                purchaseProductParams,null,
                 object : CBCallback.PurchaseCallback<String> {
 
                     override fun onSuccess(result: ReceiptDetail, status: Boolean) {
@@ -363,8 +368,9 @@ class BillingClientManagerTest {
         val skuDetails = SkuDetails(jsonDetails)
         val lock = CountDownLatch(1)
         CoroutineScope(Dispatchers.IO).launch {
+            val purchaseProductParams = PurchaseProductParams(subProducts)
             CBPurchase.purchaseProduct(
-                subProducts,customer,
+                purchaseProductParams,customer,
                 object : CBCallback.PurchaseCallback<String> {
                     override fun onError(error: CBException) {
                         lock.countDown()
@@ -378,10 +384,10 @@ class BillingClientManagerTest {
                 })
 
             Mockito.`when`(callBackPurchase?.let {
-                billingClientManager?.purchase(subProducts, it)
+                billingClientManager?.purchase(purchaseProductParams, it)
             }).thenReturn(Unit)
             callBackPurchase?.let {
-                verify(billingClientManager, times(1))?.purchase(subProducts,purchaseCallBack = it)
+                verify(billingClientManager, times(1))?.purchase(purchaseProductParams,purchaseCallBack = it)
             }
         }
         lock.await()
@@ -394,8 +400,9 @@ class BillingClientManagerTest {
         val skuDetails = SkuDetails(jsonDetails)
         val lock = CountDownLatch(1)
         CoroutineScope(Dispatchers.IO).launch {
+            val purchaseProductParams = PurchaseProductParams(subProducts)
             CBPurchase.purchaseProduct(
-                subProducts,customer,
+                purchaseProductParams,customer,
                 object : CBCallback.PurchaseCallback<String> {
                     override fun onError(error: CBException) {
                         lock.countDown()
@@ -409,10 +416,10 @@ class BillingClientManagerTest {
                 })
 
             Mockito.`when`(callBackPurchase?.let {
-                billingClientManager?.purchase(subProducts, it)
+                billingClientManager?.purchase(purchaseProductParams, it)
             }).thenReturn(Unit)
             callBackPurchase?.let {
-                verify(billingClientManager, times(1))?.purchase(subProducts,purchaseCallBack = it)
+                verify(billingClientManager, times(1))?.purchase(purchaseProductParams,purchaseCallBack = it)
             }
         }
         lock.await()
@@ -423,8 +430,9 @@ class BillingClientManagerTest {
 
         val skuDetails = SkuDetails(jsonDetails)
         CoroutineScope(Dispatchers.IO).launch {
+            val purchaseProductParams = PurchaseProductParams(subProducts)
             CBPurchase.purchaseProduct(
-                subProducts,customer,
+                purchaseProductParams,customer,
                 object : CBCallback.PurchaseCallback<String> {
 
                     override fun onSuccess(result: ReceiptDetail, status: Boolean) {

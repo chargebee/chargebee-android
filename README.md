@@ -1,4 +1,12 @@
 # Chargebee Android
+
+> #### Updates for Billing Library 5
+> ***Note**:
+> - SDK Version 2.0: This version uses Google Billing Library 5.2.1 APIs to fetch product information from the Google Play Console and make purchases. If you’re integrating Chargebee’s SDK for the first time, then use this version, and if you’re migrating from the older version of SDK to this version, follow the migration steps in this [document](https://www.chargebee.com/docs/2.0/mobile-playstore-billing-library-5.html).
+> - SDK Version 1.2.0: This [version](https://github.com/chargebee/chargebee-android/tree/1.x.x) includes Billing Library 5.2.1 but still uses Billing Library 4.0 APIs to fetch product information from the Google Play Console and make purchases. This will enable you to list or update your Android app on the store without any warnings from Google and give you enough time to migrate to version 2.0.
+> - SDK Version 1.1.0: This and less than this version of SDKs use billing library 4.0 APIs that are deprecated by Google. Therefore, it is highly recommended that you upgrade your app and integrate it with SDK version 1.2.0 and above.
+
+
 This is Chargebee’s Android Software Development Kit (SDK). This SDK makes it efficient and comfortable to build a seamless subscription experience in your Android app. 
 
 Post-installation, initialization, and authentication with the Chargebee site, this SDK will support the following process.
@@ -21,7 +29,7 @@ The following requirements must be set up before installing Chargebee’s Androi
 The `Chargebee-Android` SDK can be installed by adding below dependency to the `build.gradle` file:
 
 ```kotlin
-implementation 'com.chargebee:chargebee-android:1.2.0'
+implementation 'com.chargebee:chargebee-android:2.0.0-beta-1'
 ```
 
 ## Example project
@@ -55,9 +63,21 @@ To configure the Chargebee Android SDK for completing and managing In-App Purcha
 ```kotlin
 import com.chargebee.android.Chargebee
 
-Chargebee.configure(site= "your-site",
-                    publishableApiKey= "api_key",
-                    sdkKey= "sdk_key",packageName = "packageName")
+Chargebee.configure(
+  site = "your-site",
+  publishableApiKey = "api-key",
+  sdkKey = "sdk-key",
+  packageName = "your-package"
+) {
+  when (it) {
+    is ChargebeeResult.Success -> {
+      // Success
+    }
+    is ChargebeeResult.Error -> {
+      // Error
+    }
+  }
+}
 ```
 ### Configuration for credit card using tokenization
 To configure SDK only for tokenizing credit card details, follow these steps.
@@ -69,7 +89,7 @@ To configure SDK only for tokenizing credit card details, follow these steps.
 ```kotlin
 import com.chargebee.android.Chargebee
 
-Chargebee.configure(site = "your-site", publishableApiKey = "api_key")
+Chargebee.configure(site = "your-site", publishableApiKey = "api-key")
 
 ```
 ## Integration
@@ -86,7 +106,7 @@ The following section describes how to use the SDK to integrate In-App Purchase 
 Every In-App Purchase subscription product that you configure in your Play Store account, can be configured in Chargebee as a Plan. Start by retrieving the Google IAP Product IDs from your Chargebee account.
 
 ```kotlin
-CBPurchase.retrieveProductIdentifers(queryParam) {
+CBPurchase.retrieveProductIdentifiers(queryParam) {
     when (it) {
         is CBProductIDResult.ProductIds -> {
           Log.i(TAG, "List of Product Identifiers:  $it")
@@ -106,29 +126,29 @@ The above function will determine your product catalog version in Chargebee and 
 Retrieve the Google IAP Product using the following function.
 
 ```kotlin
-CBPurchase.retrieveProducts(this, productIdList= "[Product ID's from Google Play Console]",
-      object : CBCallback.ListProductsCallback<ArrayList<Products>> {
-               override fun onSuccess(productDetails: ArrayList<Products>) {
+CBPurchase.retrieveProducts(activity, productIdList= ["Product ID's from Google Play Console"],
+      object : CBCallback.ListProductsCallback<ArrayList<CBProduct>> {
+               override fun onSuccess(productDetails: ArrayList<CBProduct>) {
                      Log.i(TAG, "List of Products:  $productDetails")
                 }
                 override fun onError(error: CBException) {
                     Log.e(TAG, "Error:  ${error.message}")
-                   // Handle error here
                 }
             })
-            
 ```
 You can present any of the above products to your users for them to purchase.
 
 ### Buy or Subscribe Product
-Pass the `CBProduct` and  `CBCustomer` objects to the following function when the user chooses the product to purchase.
+Pass the `PurchaseProductParams`, `CBCustomer` and `OfferToken` to the following function when the user chooses the product to purchase.
 
 `CBCustomer` - **Optional object**. Although this is an optional object, we recommend passing the necessary customer details, such as `customerId`, `firstName`, `lastName`, and `email` if it is available before the user subscribes to your App. This ensures that the customer details in your database match the customer details in Chargebee. If the `customerId` is not passed in the customer's details, then the value of `customerId` will be the same as the `SubscriptionId` created in Chargebee.
 
 **Note**: The `customer` parameter in the below code snippet is an instance of `CBCustomer` class that contains the details of the customer who wants to subscribe or buy the product.
 
 ```kotlin
-CBPurchase.purchaseProduct(product=CBProduct, customer=CBCustomer, object : CBCallback.PurchaseCallback<PurchaseModel>{
+val purchaseParams = PurchaseProductParams(selectedCBProduct, "selectedOfferToken")
+val cbCustomer = CBCustomer("customerId","firstName","lastName","email")
+CBPurchase.purchaseProduct(purchaseProductParams = purchaseProductParams, customer = cbCustomer, object : CBCallback.PurchaseCallback<String>{
       override fun onSuccess(result: ReceiptDetail, status:Boolean) {
         Log.i(TAG, "$status")
         Log.i(TAG, "${result.subscription_id}")
@@ -162,7 +182,7 @@ CBPurchase.purchaseNonSubscriptionProduct(product = CBProduct, customer = CBCust
 
 The given code defines a function named `purchaseNonSubscriptionProduct` in the CBPurchase class, which takes four input parameters:
 
-- `product`: An instance of `CBProduct` class, initialized with a `SkuDetails` instance representing the product to be purchased from the Google Play Store.
+- `product`: An instance of `CBProduct` class,  representing the product to be purchased from the Google Play Store.
 - `customer`: Optional. An instance of `CBCustomer` class, initialized with the customer's details such as `customerId`, `firstName`, `lastName`, and `email`.
 - `productType`: An enum instance of `productType` type, indicating the type of product to be purchased. It can be either .`consumable`, or `non_consumable`.
 - `callback`:  The `OneTimePurchaseCallback` listener will be invoked when product purchase completes.

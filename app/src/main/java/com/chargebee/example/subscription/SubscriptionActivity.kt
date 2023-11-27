@@ -3,7 +3,6 @@ package com.chargebee.example.subscription
 import android.os.Bundle
 import android.util.Log
 import android.widget.Button
-import com.chargebee.android.Chargebee
 import com.chargebee.example.BaseActivity
 import com.chargebee.example.R
 import com.chargebee.example.billing.BillingViewModel
@@ -39,7 +38,7 @@ class SubscriptionActivity : BaseActivity() {
             Log.i(javaClass.simpleName, "Subscriptions by using queryParams:  $it")
             if(it?.size!! >0) {
                 val subscriptionStatus =
-                    it?.get(0)?.cb_subscription?.status + "\nPlan Price : " + it?.get(0)?.cb_subscription?.plan_amount;
+                    (it?.get(0)?.cb_subscription?.status ?: "") + "\nPlan Price : " + it?.get(0)?.cb_subscription?.plan_amount;
                 alertSuccess(subscriptionStatus)
             }else{
                 alertSuccess("Subscriptions not found in Chargebee System")
