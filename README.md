@@ -3,6 +3,8 @@ This is Chargebee’s Android Software Development Kit (SDK). This SDK makes it 
 
 Post-installation, initialization, and authentication with the Chargebee site, this SDK will support the following process.
 
+> Please use 2.0.0 for Billing lirary 5 changes
+
 1. **Sync In-App Subscriptions with Chargebee:** [Integrate](https://www.chargebee.com/docs/2.0/mobile-playstore-connect.html#chargebee-configuration) Chargebee with Google Play Store to process in-app purchase subscriptions, and track them on your Chargebee account for a single source of truth for subscriptions across the Web and Google Play Store. Use this if you are selling digital goods or services, or are REQUIRED to use Google Play's in-app purchases. 
 **For SDK methods to work, ensure that [prerequisites](https://www.chargebee.com/docs/2.0/mobile-playstore-connect.html#prerequisites-configuration) are configured in Chargebee.** 
 
