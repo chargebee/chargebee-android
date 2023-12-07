@@ -16,6 +16,7 @@ import com.chargebee.android.models.CBNonSubscriptionResponse
 import com.chargebee.android.models.CBProduct
 import com.chargebee.android.network.CBReceiptResponse
 import com.chargebee.android.restore.CBRestorePurchaseManager
+import java.util.concurrent.ConcurrentLinkedQueue
 import kotlin.collections.ArrayList
 
 class BillingClientManager(context: Context) : PurchasesUpdatedListener {
@@ -30,6 +31,8 @@ class BillingClientManager(context: Context) : PurchasesUpdatedListener {
     lateinit var product: CBProduct
     private lateinit var restorePurchaseCallBack: CBCallback.RestorePurchaseCallback
     private var oneTimePurchaseCallback: CBCallback.OneTimePurchaseCallback? = null
+
+    private val requests = ConcurrentLinkedQueue<Pair<(Boolean) -> Unit, (connectionError: CBException) -> Unit>>()
 
     init {
         this.mContext = context
@@ -252,16 +255,16 @@ class BillingClientManager(context: Context) : PurchasesUpdatedListener {
                     }
                 }
             }
-           else -> {
-               if (product.skuDetails.type == ProductType.SUBS.value)
-                   purchaseCallBack?.onError(
-                       throwCBException(billingResult)
-                   )
-               else
-                   oneTimePurchaseCallback?.onError(
-                       throwCBException(billingResult)
-                   )
-           }
+            else -> {
+                if (product.skuDetails.type == ProductType.SUBS.value)
+                    purchaseCallBack?.onError(
+                        throwCBException(billingResult)
+                    )
+                else
+                    oneTimePurchaseCallback?.onError(
+                        throwCBException(billingResult)
+                    )
+            }
         }
     }
 
@@ -492,34 +495,52 @@ class BillingClientManager(context: Context) : PurchasesUpdatedListener {
 
     private fun onConnected(status: (Boolean) -> Unit, connectionError: (CBException) -> Unit) {
         val billingClient = buildBillingClient(this)
+        requests.add(Pair(status, connectionError))
         if (billingClient?.isReady == false) {
-            handler.postDelayed({
-                billingClient.startConnection(
-                    createBillingClientStateListener(status, connectionError)
-                )
-            }, CONNECT_TIMER_START_MILLISECONDS)
-        } else status(true)
+            billingClient.startConnection(
+                createBillingClientStateListener()
+            )
+        } else {
+            executeRequestsInQueue()
+        }
     }
 
-    private fun createBillingClientStateListener(
-        status: (Boolean) -> Unit,
-        connectionError: (CBException) -> Unit
-    ) = object :
-        BillingClientStateListener {
+    @Synchronized
+    private fun executeRequestsInQueue() {
+        val head = requests.poll()
+        if (head != null) {
+            val successHandler = head.first
+            handler.post {
+                successHandler(true)
+            }
+        }
+    }
+
+    @Synchronized
+    private fun sendErrorToRequestsInQueue(exception: CBException) {
+        val head = requests.poll()
+        if(head != null) {
+            val exceptionHandler = head.second
+            handler.post {
+                exceptionHandler(exception)
+            }
+        }
+    }
+
+    private fun createBillingClientStateListener() = object : BillingClientStateListener {
+
         override fun onBillingServiceDisconnected() {
             Log.i(javaClass.simpleName, "onBillingServiceDisconnected")
-            status(false)
         }
 
         override fun onBillingSetupFinished(billingResult: BillingResult) {
             when (billingResult.responseCode) {
                 OK -> {
                     Log.i(TAG, "Google Billing Setup Done!")
-                    status(true)
-                }
-                else -> {
-                    connectionError(throwCBException(billingResult))
-                }
+                    executeRequestsInQueue()
+                } else -> {
+                sendErrorToRequestsInQueue(throwCBException(billingResult))
+            }
             }
         }
     }
@@ -624,4 +645,5 @@ class BillingClientManager(context: Context) : PurchasesUpdatedListener {
             completionCallback.onError(error)
         })
     }
+
 }
