@@ -126,26 +126,5 @@ With the introduction of Google Play Billing Library 5, Google has significantly
 
 ### Deprecations
 
-- <r>**fun purchaseProduct(product: CBProduct, customer: CBCustomer, callback: CBCallback.PurchaseCallback<String>)**</r> will be removed in upcoming release.
-- Please use this API instead <g>fun purchaseProduct(purchaseProductParams: PurchaseProductParams,customer: CBCustomer? = null, callback: CBCallback.PurchaseCallback<String>)<g>
-
-<style>
-r { 
-    color: #c7254e;
-    background: #f9f2f4;
-    border-radius: 4px;
-    padding: 3px; 
-}
-g { 
-    color: #0f9f0a;
-    background: #d7f4d5;
-    border-radius: 4px;
-    padding: 3px; 
-}
-tag { 
-    color: #000;
-    background: #f0f0f0;
-    border-radius: 4px;
-    padding: 2px 5px; 
-}
-</style>
+- ***fun purchaseProduct(product: CBProduct, customer: CBCustomer, callback: CBCallback.PurchaseCallback<String>)*** will be removed in upcoming release.
+- Please use this API instead ***fun purchaseProduct(purchaseProductParams: PurchaseProductParams,customer: CBCustomer? = null, callback: CBCallback.PurchaseCallback<String>)***
