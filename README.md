@@ -26,7 +26,7 @@ The following requirements must be set up before installing Chargebee’s Androi
 * Java 8+ and Kotlin
 
 ## Installation
-The `Chargebee-Android` SDK can be installed by adding below dependency to the `build.gradle` file:
+The `Chargebee-Android` SDK can be installed by adding the below dependency to the `build.gradle` file:
 
 ```kotlin
 implementation 'com.chargebee:chargebee-android:2.0.0-beta-1'
@@ -79,7 +79,7 @@ Chargebee.configure(
   }
 }
 ```
-### Configuration for credit card using tokenization
+### Configuration for a credit card using tokenization
 To configure SDK only for tokenizing credit card details, follow these steps.
 
 1. Initialize the SDK with your Chargebee Site and Publishable/Full Access Key.
@@ -126,7 +126,7 @@ The above function will determine your product catalog version in Chargebee and 
 Retrieve the Google IAP Product using the following function.
 
 ```kotlin
-CBPurchase.retrieveProducts(activity, productIdList= ["Product ID's from Google Play Console"],
+CBPurchase.retrieveProducts(activity, productIdList= ["Product IDs from Google Play Console"],
       object : CBCallback.ListProductsCallback<ArrayList<CBProduct>> {
                override fun onSuccess(productDetails: ArrayList<CBProduct>) {
                      Log.i(TAG, "List of Products:  $productDetails")
@@ -147,8 +147,8 @@ Pass the `PurchaseProductParams`, `CBCustomer` and `OfferToken` to the following
 
 ```kotlin
 val purchaseParams = PurchaseProductParams(selectedCBProduct, "selectedOfferToken")
-val cbCustomer = CBCustomer("customerId","firstName","lastName","email")
-CBPurchase.purchaseProduct(purchaseProductParams = purchaseProductParams, customer = cbCustomer, object : CBCallback.PurchaseCallback<String>{
+val cbCustomer = CBCustomer("customerId", "firstName", "lastName", "email")
+CBPurchase.purchaseProduct(purchaseProductParams = purchaseProductParams, customer = cbCustomer, object: CBCallback.PurchaseCallback<String>{
       override fun onSuccess(result: ReceiptDetail, status:Boolean) {
         Log.i(TAG, "$status")
         Log.i(TAG, "${result.subscription_id}")
@@ -185,7 +185,7 @@ The given code defines a function named `purchaseNonSubscriptionProduct` in the 
 - `product`: An instance of `CBProduct` class,  representing the product to be purchased from the Google Play Store.
 - `customer`: Optional. An instance of `CBCustomer` class, initialized with the customer's details such as `customerId`, `firstName`, `lastName`, and `email`.
 - `productType`: An enum instance of `productType` type, indicating the type of product to be purchased. It can be either .`consumable`, or `non_consumable`.
-- `callback`:  The `OneTimePurchaseCallback` listener will be invoked when product purchase completes.
+- `callback`:  The `OneTimePurchaseCallback` listener will be invoked when the product purchase completes.
 
 The function is called asynchronously, and it returns a `Result` object with a `success` or `failure` case, which can be handled in the listener.
 - If the purchase is successful, the listener will be called with the `success` case, it returns `NonSubscriptionResponse` object. which includes the `customerId`, `chargeId`, and `invoiceId` associated with the purchase.
@@ -197,7 +197,7 @@ The `restorePurchases()` function helps to recover your app user's previous purc
 
 To retrieve **inactive** purchases along with the **active** purchases for your app user, you can call the `restorePurchases()` function with the `includeInActiveProducts` parameter set to `true`. If you only want to restore active subscriptions, set the parameter to `false`. Here is an example of how to use the `restorePurchases()` function in your code with the `includeInActiveProducts` parameter set to `true`.
 
-`CBCustomer` - **Optional object**. Although this is an optional object, we recommend passing the necessary customer details, such as `customerId`, `firstName`, `lastName`, and `email` if it is available before the user subscribes to your App. This ensures that the customer details in your database match the customer details in Chargebee. If the `customerId` is not passed in the customer's details, then the value of `customerId` will be the same as the `subscriptionId` created in Chargebee. Also, the restored subscriptions will not be associate with existing customerId.
+`CBCustomer` - **Optional object**. Although this is an optional object, we recommend passing the necessary customer details, such as `customerId`, `firstName`, `lastName`, and `email` if it is available before the user subscribes to your App. This ensures that the customer details in your database match the customer details in Chargebee. If the `customerId` is not passed in the customer's details, then the value of `customerId` will be the same as the `subscriptionId` created in Chargebee. Also, the restored subscriptions will not be associated with existing customerId.
 
 ```kotlin
 CBPurchase.restorePurchases(context = current activity context, customer = CBCustomer, includeInActivePurchases = false, object : CBCallback.RestorePurchaseCallback{
@@ -230,11 +230,11 @@ These are the possible error codes and their descriptions:
 | `BillingErrorCode.UNKNOWN`         | Unknown error occurred.                             |
 
 ##### Synchronization of Google Play Store Purchases with Chargebee through Receipt Validation
-Receipt validation is crucial to ensure that the purchases made by your users are synced with Chargebee. In rare cases, when a purchase is made at the Google Play Store, and the network connection goes off or the server not responding, the purchase details may not be updated in Chargebee. In such cases, you can use a retry mechanism by following these steps:
+Receipt validation is crucial to ensure that the purchases made by your users are synced with Chargebee. In rare cases, when a purchase is made at the Google Play Store, and the network connection goes off or the server does not respond, the purchase details may not be updated in Chargebee. In such cases, you can use a retry mechanism by following these steps:
 
 * Add a network listener, as shown in the example project.
 * Save the product identifier in the cache once the purchase is initiated and clear the cache once the purchase is successful.
-* When the network connectivity is lost after the purchase is completed at Google Play Store but not synced with Chargebee, retrieve the product from the cache once the network connection is back and initiate `validateReceipt() / validateReceiptForNonSubscriptions()` by passing activity `Context`, `CBProduct` and `CBCustomer(optional)` as input. This will validate the receipt and sync the purchase in Chargebee as a subscription or one-time purchase. For subscriptions, use the function to `validateReceipt()`;for one-time purchases, use the function `validateReceiptForNonSubscriptions()`.
+* When the network connectivity is lost after the purchase is completed at Google Play Store but not synced with Chargebee, retrieve the product from the cache once the network connection is back and initiate `validateReceipt() / validateReceiptForNonSubscriptions()` by passing activity `Context`, `CBProduct` and `CBCustomer(optional)` as input. This will validate the receipt and sync the purchase in Chargebee as a subscription or one-time purchase. For subscriptions, use the function `validateReceipt()`;for one-time purchases, use the function `validateReceiptForNonSubscriptions()`.
 
 Use the function available for the retry mechanism.
 ##### Function for validating the Subscriptions receipt
@@ -581,7 +581,7 @@ The above function will determine your product catalog version in Chargebee and 
   Retrieve the Google IAP Product using the following function.
   
   ```kotlin
-  CBPurchase.retrieveProducts(this, productIdList= "[Product ID's from Google Play Console]",
+  CBPurchase.retrieveProducts(this, productIdList= "[Product IDs from Google Play Console]",
         object : CBCallback.ListProductsCallback<ArrayList<Products>> {
                  override fun onSuccess(productDetails: ArrayList<Products>) {
                        Log.i(TAG, "List of Products:  $productDetails")
