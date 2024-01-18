@@ -77,6 +77,23 @@ object CBPurchase {
         })
     }
 
+    fun changeProduct(
+        purchaseProductParams: PurchaseProductParams, customer: CBCustomer? = null, oldProductId: String,
+        callback: CBCallback.PurchaseCallback<String>
+    ) {
+        this.customer = customer
+        changeProduct(purchaseProductParams, oldProductId, callback)
+    }
+
+    private fun changeProduct(purchaseProductParams: PurchaseProductParams, oldProductId: String, callback: CBCallback.PurchaseCallback<String>) {
+        isSDKKeyValid({
+            log(customer, purchaseProductParams.product.id)
+            billingClientManager?.changeProduct(purchaseProductParams, oldProductId, callback)
+        }, {
+            callback.onError(it)
+        })
+    }
+
     /**
      * Buy the non-subscription product with/without customer data
      * @param [product] The product that wish to purchase

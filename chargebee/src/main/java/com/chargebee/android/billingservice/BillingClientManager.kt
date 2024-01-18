@@ -253,6 +253,99 @@ class BillingClientManager(context: Context) : PurchasesUpdatedListener {
 
     }
 
+    internal fun changeProduct(
+        purchaseProductParams: PurchaseProductParams,
+        oldProductId: String,
+        purchaseCallBack: CBCallback.PurchaseCallback<String>
+    ) {
+        this.purchaseCallBack = purchaseCallBack
+        onConnected({ status ->
+            if (status) {
+                changeProduct(purchaseProductParams, oldProductId)
+            } else
+                purchaseCallBack.onError(
+                    connectionError
+                )
+        }, { error ->
+            purchaseCallBack.onError(error)
+        })
+
+    }
+
+    private fun changeProduct(purchaseProductParams: PurchaseProductParams, oldProductId: String) {
+        this.purchaseProductParams = purchaseProductParams
+        val offerToken = purchaseProductParams.offerToken
+
+        val queryProductDetails = arrayListOf(QueryProductDetailsParams.Product.newBuilder()
+            .setProductId(purchaseProductParams.product.id)
+            .setProductType(purchaseProductParams.product.type.value)
+            .build())
+
+        val productDetailsParams = QueryProductDetailsParams.newBuilder().setProductList(queryProductDetails).build()
+
+        billingClient?.queryProductDetailsAsync(
+            productDetailsParams
+        ) { billingResult, productsDetail ->
+            if (billingResult.responseCode == OK && productsDetail != null) {
+                val productDetailsBuilder = BillingFlowParams.ProductDetailsParams.newBuilder()
+                    .setProductDetails(productsDetail.first())
+                offerToken?.let { productDetailsBuilder.setOfferToken(it) }
+                val productDetailsParamsList =
+                    listOf(productDetailsBuilder.build())
+
+                val purchaseTransactionHistory = mutableListOf<PurchaseTransaction>()
+                var oldPurchaseToken: String? = ""
+                queryAllSubsPurchaseHistory(ProductType.SUBS.value) { subscriptionHistory ->
+                    purchaseTransactionHistory.addAll(subscriptionHistory ?: emptyList())
+                    val prevProduct: PurchaseTransaction? = purchaseTransactionHistory.find { it.productId.first() == oldProductId }
+                    oldPurchaseToken = prevProduct?.purchaseToken
+
+                    val billingFlowParams =
+                        BillingFlowParams.newBuilder()
+                            .setProductDetailsParamsList(productDetailsParamsList)
+                            .setSubscriptionUpdateParams(
+                                BillingFlowParams.SubscriptionUpdateParams.newBuilder()
+                                    .setOldPurchaseToken(oldPurchaseToken.toString())
+                                    .setReplaceProrationMode(
+                                        BillingFlowParams.ProrationMode.IMMEDIATE_WITH_TIME_PRORATION
+                                    ).build()
+                            ).build()
+
+                    billingClient?.launchBillingFlow(mContext as Activity, billingFlowParams)
+                        .takeIf { billingResult ->
+                            billingResult?.responseCode != OK
+                        }?.let { billingResult ->
+                            Log.e(TAG, "Failed to launch billing flow $billingResult")
+                            val billingError = CBException(
+                                ErrorDetail(
+                                    message = GPErrorCode.LaunchBillingFlowError.errorMsg,
+                                    httpStatusCode = billingResult.responseCode
+                                )
+                            )
+                            if (ProductType.SUBS == purchaseProductParams.product.type) {
+                                purchaseCallBack?.onError(
+                                    billingError
+                                )
+                            } else {
+                                oneTimePurchaseCallback?.onError(
+                                    billingError
+                                )
+                            }
+                        }
+                }
+            } else {
+                Log.e(TAG, "Failed to fetch product :" + billingResult.responseCode)
+                if (ProductType.SUBS == purchaseProductParams.product.type) {
+                    purchaseCallBack?.onError(throwCBException(billingResult))
+                } else {
+                    oneTimePurchaseCallback?.onError(throwCBException(billingResult))
+                }
+
+            }
+        }
+
+    }
+
     /**
      * This method will provide all the purchases associated with the current account based on the [includeInActivePurchases] flag set.
      * And the associated purchases will be synced with Chargebee.
