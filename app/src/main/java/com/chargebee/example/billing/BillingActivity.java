@@ -1,5 +1,6 @@
 package com.chargebee.example.billing;
 
+import static com.chargebee.example.util.Constants.OLD_PRODUCT_ID;
 import static com.chargebee.example.util.Constants.PRODUCTS_LIST_KEY;
 
 import android.app.Dialog;
@@ -35,6 +36,7 @@ import java.util.stream.Collectors;
 public class BillingActivity extends BaseActivity implements ProductListAdapter.ProductClickListener, ProgressBarListener {
 
     private List<PurchaseProduct> purchaseProducts = null;
+    private String oldProductId = null;
     private ProductListAdapter productListAdapter = null;
     private LinearLayoutManager linearLayoutManager;
     private RecyclerView mItemsRecyclerView = null;
@@ -53,6 +55,7 @@ public class BillingActivity extends BaseActivity implements ProductListAdapter.
 
         mItemsRecyclerView = findViewById(R.id.rv_product_list);
         String productDetails = getIntent().getStringExtra(PRODUCTS_LIST_KEY);
+        this.oldProductId = getIntent().getStringExtra(OLD_PRODUCT_ID);
 
         if(productDetails != null) {
             Gson gson = new Gson();
@@ -163,7 +166,11 @@ public class BillingActivity extends BaseActivity implements ProductListAdapter.
                     dialog.dismiss();
                 }
             } else {
-                purchaseProduct();
+                if (this.oldProductId != null){
+                    changeProduct();
+                }else {
+                    purchaseProduct();
+                }
                 dialog.dismiss();
             }
         });
@@ -187,6 +194,13 @@ public class BillingActivity extends BaseActivity implements ProductListAdapter.
         PurchaseProduct selectedPurchaseProduct = purchaseProducts.get(position);
         PurchaseProductParams purchaseParams = new PurchaseProductParams(selectedPurchaseProduct.getCbProduct(), selectedPurchaseProduct.getOfferToken());
         this.billingViewModel.purchaseProduct(this, purchaseParams, cbCustomer);
+    }
+
+    private void changeProduct() {
+        showProgressDialog();
+        PurchaseProduct selectedPurchaseProduct = purchaseProducts.get(position);
+        PurchaseProductParams purchaseParams = new PurchaseProductParams(selectedPurchaseProduct.getCbProduct(), selectedPurchaseProduct.getOfferToken());
+        this.billingViewModel.changeProduct(this, purchaseParams, cbCustomer, oldProductId);
     }
 
     private void purchaseNonSubscriptionProduct(OneTimeProductType productType) {

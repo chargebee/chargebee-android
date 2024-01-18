@@ -30,6 +30,7 @@ import com.chargebee.example.plan.PlansActivity
 import com.chargebee.example.subscription.SubscriptionActivity
 import com.chargebee.example.token.TokenizeActivity
 import com.chargebee.example.util.CBMenu
+import com.chargebee.example.util.Constants.OLD_PRODUCT_ID
 import com.chargebee.example.util.Constants.PRODUCTS_LIST_KEY
 import com.google.gson.Gson
 import kotlinx.coroutines.CoroutineScope
@@ -133,6 +134,9 @@ class MainActivity : BaseActivity(), ListItemsAdapter.ItemClickListener {
             CBMenu.GetProducts.value -> {
                 getProductIdFromCustomer()
             }
+            CBMenu.ChangeProducts.value -> {
+                getOldAndNewProductIdFromCustomer()
+            }
             CBMenu.SubsStatus.value,
             CBMenu.SubsList.value -> {
                 val intent = Intent(this, SubscriptionActivity::class.java)
@@ -152,9 +156,10 @@ class MainActivity : BaseActivity(), ListItemsAdapter.ItemClickListener {
         }
     }
 
-    private fun launchProductDetailsScreen(productDetails: String) {
+    private fun launchProductDetailsScreen(productDetails: String, oldProductId: String? = null) {
         val intent = Intent(this, BillingActivity::class.java)
         intent.putExtra(PRODUCTS_LIST_KEY, productDetails)
+        intent.putExtra(OLD_PRODUCT_ID, oldProductId)
         this.startActivity(intent)
     }
 
@@ -206,7 +211,25 @@ class MainActivity : BaseActivity(), ListItemsAdapter.ItemClickListener {
         dialog.show()
     }
 
-    private fun getProductIdList(productIdList: ArrayList<String>) {
+    private fun getOldAndNewProductIdFromCustomer() {
+        val dialog = Dialog(this)
+        dialog.setContentView(R.layout.dialog_input_update_layout)
+        val productIds = dialog.findViewById<View>(R.id.productIdInput) as EditText
+        productIds.hint = "Please enter Product IDs(Comma separated)"
+        val oldProductId = dialog.findViewById<View>(R.id.oldProductIdInput) as EditText
+        oldProductId.hint = "Please enter old Product ID"
+        val dialogButton = dialog.findViewById<View>(R.id.btn_ok) as Button
+        dialogButton.text = "Submit"
+        dialogButton.setOnClickListener {
+            val productIdList = productIds.text.toString().trim().split(",")
+            val oldProductId = oldProductId.text.toString().trim()
+            getProductIdList(productIdList.toCollection(ArrayList()), oldProductId)
+            dialog.dismiss()
+        }
+        dialog.show()
+    }
+
+    private fun getProductIdList(productIdList: ArrayList<String>, oldProductId: String? = null) {
         CBPurchase.retrieveProducts(
             this,
             productIdList,
@@ -214,7 +237,7 @@ class MainActivity : BaseActivity(), ListItemsAdapter.ItemClickListener {
                 override fun onSuccess(productIDs: ArrayList<CBProduct>) {
                     CoroutineScope(Dispatchers.Main).launch {
                         if (productIDs.size > 0) {
-                            launchProductDetailsScreen(gson.toJson(productIDs))
+                            launchProductDetailsScreen(gson.toJson(productIDs), oldProductId)
                         } else {
                             alertSuccess("Items not available to buy")
                         }
