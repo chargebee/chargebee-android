@@ -18,6 +18,7 @@ import com.chargebee.android.ProgressBarListener;
 import com.chargebee.android.billingservice.OneTimeProductType;
 import com.chargebee.android.billingservice.ProductType;
 import com.chargebee.android.models.CBProduct;
+import com.chargebee.android.models.ChangeProductParams;
 import com.chargebee.android.models.PurchaseProductParams;
 import com.chargebee.android.network.CBCustomer;
 import com.chargebee.example.BaseActivity;
@@ -199,8 +200,9 @@ public class BillingActivity extends BaseActivity implements ProductListAdapter.
     private void changeProduct() {
         showProgressDialog();
         PurchaseProduct selectedPurchaseProduct = purchaseProducts.get(position);
-        PurchaseProductParams purchaseParams = new PurchaseProductParams(selectedPurchaseProduct.getCbProduct(), selectedPurchaseProduct.getOfferToken());
-        this.billingViewModel.changeProduct(this, purchaseParams, cbCustomer, oldProductId);
+        PurchaseProductParams productParams = new PurchaseProductParams(selectedPurchaseProduct.getCbProduct(), selectedPurchaseProduct.getOfferToken());
+        ChangeProductParams changeProductParams = new ChangeProductParams(productParams, oldProductId, null);
+        this.billingViewModel.changeProduct(this, changeProductParams, cbCustomer);
     }
 
     private void purchaseNonSubscriptionProduct(OneTimeProductType productType) {

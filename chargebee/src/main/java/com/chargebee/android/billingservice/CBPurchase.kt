@@ -78,17 +78,17 @@ object CBPurchase {
     }
 
     fun changeProduct(
-        purchaseProductParams: PurchaseProductParams, customer: CBCustomer? = null, oldProductId: String,
+        changeProductParams: ChangeProductParams, customer: CBCustomer? = null,
         callback: CBCallback.PurchaseCallback<String>
     ) {
         this.customer = customer
-        changeProduct(purchaseProductParams, oldProductId, callback)
+        changeProduct(changeProductParams, callback)
     }
 
-    private fun changeProduct(purchaseProductParams: PurchaseProductParams, oldProductId: String, callback: CBCallback.PurchaseCallback<String>) {
+    private fun changeProduct(changeProductParams: ChangeProductParams, callback: CBCallback.PurchaseCallback<String>) {
         isSDKKeyValid({
-            log(customer, purchaseProductParams.product.id)
-            billingClientManager?.changeProduct(purchaseProductParams, oldProductId, callback)
+            log(customer, changeProductParams.purchaseProductParams.product.id)
+            billingClientManager?.changeProduct(changeProductParams, callback)
         }, {
             callback.onError(it)
         })

@@ -13,6 +13,7 @@ import com.chargebee.android.exceptions.CBException
 import com.chargebee.android.exceptions.ChargebeeResult
 import com.chargebee.android.models.CBNonSubscriptionResponse
 import com.chargebee.android.models.CBProduct
+import com.chargebee.android.models.ChangeProductParams
 import com.chargebee.android.models.PricingPhase
 import com.chargebee.android.models.PurchaseProductParams
 import com.chargebee.android.models.PurchaseTransaction
@@ -29,6 +30,7 @@ class BillingClientManager(context: Context) : PurchasesUpdatedListener {
     private var purchaseCallBack: CBCallback.PurchaseCallback<String>? = null
     private val TAG = javaClass.simpleName
     private lateinit var purchaseProductParams: PurchaseProductParams
+    private lateinit var changeProductParams: ChangeProductParams
     private lateinit var restorePurchaseCallBack: CBCallback.RestorePurchaseCallback
     private var oneTimePurchaseCallback: CBCallback.OneTimePurchaseCallback? = null
 
@@ -254,14 +256,13 @@ class BillingClientManager(context: Context) : PurchasesUpdatedListener {
     }
 
     internal fun changeProduct(
-        purchaseProductParams: PurchaseProductParams,
-        oldProductId: String,
+        changeProductParams: ChangeProductParams,
         purchaseCallBack: CBCallback.PurchaseCallback<String>
     ) {
         this.purchaseCallBack = purchaseCallBack
         onConnected({ status ->
             if (status) {
-                changeProduct(purchaseProductParams, oldProductId)
+                changeProduct(changeProductParams)
             } else
                 purchaseCallBack.onError(
                     connectionError
@@ -272,13 +273,15 @@ class BillingClientManager(context: Context) : PurchasesUpdatedListener {
 
     }
 
-    private fun changeProduct(purchaseProductParams: PurchaseProductParams, oldProductId: String) {
-        this.purchaseProductParams = purchaseProductParams
-        val offerToken = purchaseProductParams.offerToken
+    private fun changeProduct(changeProductParams: ChangeProductParams) {
+        this.changeProductParams = changeProductParams
+        val offerToken = changeProductParams.purchaseProductParams.offerToken
+        val oldProductId = changeProductParams.oldProductId
+        val prorationMode = changeProductParams.prorationMode ?: BillingFlowParams.ProrationMode.IMMEDIATE_WITH_TIME_PRORATION
 
         val queryProductDetails = arrayListOf(QueryProductDetailsParams.Product.newBuilder()
-            .setProductId(purchaseProductParams.product.id)
-            .setProductType(purchaseProductParams.product.type.value)
+            .setProductId(changeProductParams.purchaseProductParams.product.id)
+            .setProductType(changeProductParams.purchaseProductParams.product.type.value)
             .build())
 
         val productDetailsParams = QueryProductDetailsParams.newBuilder().setProductList(queryProductDetails).build()
@@ -306,9 +309,7 @@ class BillingClientManager(context: Context) : PurchasesUpdatedListener {
                             .setSubscriptionUpdateParams(
                                 BillingFlowParams.SubscriptionUpdateParams.newBuilder()
                                     .setOldPurchaseToken(oldPurchaseToken.toString())
-                                    .setReplaceProrationMode(
-                                        BillingFlowParams.ProrationMode.IMMEDIATE_WITH_TIME_PRORATION
-                                    ).build()
+                                    .setReplaceProrationMode(prorationMode).build()
                             ).build()
 
                     billingClient?.launchBillingFlow(mContext as Activity, billingFlowParams)
@@ -322,7 +323,7 @@ class BillingClientManager(context: Context) : PurchasesUpdatedListener {
                                     httpStatusCode = billingResult.responseCode
                                 )
                             )
-                            if (ProductType.SUBS == purchaseProductParams.product.type) {
+                            if (ProductType.SUBS == changeProductParams.purchaseProductParams.product.type) {
                                 purchaseCallBack?.onError(
                                     billingError
                                 )
@@ -335,7 +336,7 @@ class BillingClientManager(context: Context) : PurchasesUpdatedListener {
                 }
             } else {
                 Log.e(TAG, "Failed to fetch product :" + billingResult.responseCode)
-                if (ProductType.SUBS == purchaseProductParams.product.type) {
+                if (ProductType.SUBS == changeProductParams.purchaseProductParams.product.type) {
                     purchaseCallBack?.onError(throwCBException(billingResult))
                 } else {
                     oneTimePurchaseCallback?.onError(throwCBException(billingResult))
