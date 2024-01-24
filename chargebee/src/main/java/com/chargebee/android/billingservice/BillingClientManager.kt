@@ -275,13 +275,14 @@ class BillingClientManager(context: Context) : PurchasesUpdatedListener {
 
     private fun changeProduct(changeProductParams: ChangeProductParams) {
         this.changeProductParams = changeProductParams
+        this.purchaseProductParams = changeProductParams.purchaseProductParams
         val offerToken = changeProductParams.purchaseProductParams.offerToken
         val oldProductId = changeProductParams.oldProductId
         val prorationMode = changeProductParams.prorationMode ?: BillingFlowParams.ProrationMode.IMMEDIATE_WITH_TIME_PRORATION
 
         val queryProductDetails = arrayListOf(QueryProductDetailsParams.Product.newBuilder()
-            .setProductId(changeProductParams.purchaseProductParams.product.id)
-            .setProductType(changeProductParams.purchaseProductParams.product.type.value)
+            .setProductId(this.purchaseProductParams.product.id)
+            .setProductType(this.purchaseProductParams.product.type.value)
             .build())
 
         val productDetailsParams = QueryProductDetailsParams.newBuilder().setProductList(queryProductDetails).build()
@@ -296,19 +297,15 @@ class BillingClientManager(context: Context) : PurchasesUpdatedListener {
                 val productDetailsParamsList =
                     listOf(productDetailsBuilder.build())
 
-                val purchaseTransactionHistory = mutableListOf<PurchaseTransaction>()
-                var oldPurchaseToken: String? = ""
                 queryAllSubsPurchaseHistory(ProductType.SUBS.value) { subscriptionHistory ->
-                    purchaseTransactionHistory.addAll(subscriptionHistory ?: emptyList())
-                    val prevProduct: PurchaseTransaction? = purchaseTransactionHistory.find { it.productId.first() == oldProductId }
-                    oldPurchaseToken = prevProduct?.purchaseToken
+                    val oldPurchaseToken: String = getOldPurchaseToken(subscriptionHistory, oldProductId)
 
                     val billingFlowParams =
                         BillingFlowParams.newBuilder()
                             .setProductDetailsParamsList(productDetailsParamsList)
                             .setSubscriptionUpdateParams(
                                 BillingFlowParams.SubscriptionUpdateParams.newBuilder()
-                                    .setOldPurchaseToken(oldPurchaseToken.toString())
+                                    .setOldPurchaseToken(oldPurchaseToken)
                                     .setReplaceProrationMode(prorationMode).build()
                             ).build()
 
@@ -323,7 +320,7 @@ class BillingClientManager(context: Context) : PurchasesUpdatedListener {
                                     httpStatusCode = billingResult.responseCode
                                 )
                             )
-                            if (ProductType.SUBS == changeProductParams.purchaseProductParams.product.type) {
+                            if (ProductType.SUBS == this.purchaseProductParams.product.type) {
                                 purchaseCallBack?.onError(
                                     billingError
                                 )
@@ -336,7 +333,7 @@ class BillingClientManager(context: Context) : PurchasesUpdatedListener {
                 }
             } else {
                 Log.e(TAG, "Failed to fetch product :" + billingResult.responseCode)
-                if (ProductType.SUBS == changeProductParams.purchaseProductParams.product.type) {
+                if (ProductType.SUBS == this.purchaseProductParams.product.type) {
                     purchaseCallBack?.onError(throwCBException(billingResult))
                 } else {
                     oneTimePurchaseCallback?.onError(throwCBException(billingResult))
@@ -345,6 +342,13 @@ class BillingClientManager(context: Context) : PurchasesUpdatedListener {
             }
         }
 
+    }
+
+    private fun getOldPurchaseToken(subscriptionHistory: List<PurchaseTransaction>?, oldProductId: String): String {
+        val purchaseTransactionHistory = mutableListOf<PurchaseTransaction>()
+        purchaseTransactionHistory.addAll(subscriptionHistory ?: emptyList())
+        val prevProduct: PurchaseTransaction? = purchaseTransactionHistory.find { it.productId.first() == oldProductId }
+        return prevProduct?.purchaseToken ?: ""
     }
 
     /**
