@@ -431,9 +431,21 @@ class BillingClientManager(context: Context) : PurchasesUpdatedListener {
 
             else -> {
                 if (purchaseProductParams.product.type == ProductType.SUBS)
-                    purchaseCallBack?.onError(
-                        throwCBException(billingResult)
-                    )
+                    if (this.changeProductParams.oldProductId.isNotEmpty() && billingResult.responseCode == ERROR) {
+                        purchaseCallBack?.onError(
+                            CBException(
+                                ErrorDetail(
+                                    message = GPErrorCode.InvalidProductIdError.errorMsg,
+                                    httpStatusCode = billingResult.responseCode
+                                )
+                            )
+                        )
+                    }
+                    else {
+                        purchaseCallBack?.onError(
+                            throwCBException(billingResult)
+                        )
+                    }
                 else
                     oneTimePurchaseCallback?.onError(
                         throwCBException(billingResult)
