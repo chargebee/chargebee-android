@@ -273,6 +273,7 @@ class BillingClientManager(context: Context) : PurchasesUpdatedListener {
 
     }
 
+    /* Update the product: Initiates the billing flow for an change subscription  */
     private fun changeProduct(changeProductParams: ChangeProductParams) {
         this.changeProductParams = changeProductParams
         this.purchaseProductParams = changeProductParams.purchaseProductParams
@@ -344,6 +345,12 @@ class BillingClientManager(context: Context) : PurchasesUpdatedListener {
 
     }
 
+    /**
+     * This method will return old/previous purchase token.
+     *
+     * @param [subscriptionHistory] The list of previous subscriptions.
+     * @param [oldProductId] The old/previous product id.
+     */
     private fun getOldPurchaseToken(subscriptionHistory: List<PurchaseTransaction>?, oldProductId: String): String {
         val purchaseTransactionHistory = mutableListOf<PurchaseTransaction>()
         purchaseTransactionHistory.addAll(subscriptionHistory ?: emptyList())

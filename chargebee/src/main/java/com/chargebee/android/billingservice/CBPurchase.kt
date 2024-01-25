@@ -77,6 +77,12 @@ object CBPurchase {
         })
     }
 
+    /**
+     * Update Subscription product
+     * @param [changeProductParams] The parameters of the product to be updated.
+     * @param [customer] Optional. Customer Object.
+     * @param [callback] listener will be called when product purchase completes.
+     */
     fun changeProduct(
         changeProductParams: ChangeProductParams, customer: CBCustomer? = null,
         callback: CBCallback.PurchaseCallback<String>
