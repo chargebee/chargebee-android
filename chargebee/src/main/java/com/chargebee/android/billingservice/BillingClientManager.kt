@@ -232,24 +232,13 @@ class BillingClientManager(context: Context) : PurchasesUpdatedListener {
                                 httpStatusCode = billingResult.responseCode
                             )
                         )
-                        if (ProductType.SUBS == purchaseProductParams.product.type) {
-                            purchaseCallBack?.onError(
-                                billingError
-                            )
-                        } else {
-                            oneTimePurchaseCallback?.onError(
-                                billingError
-                            )
-                        }
+                        purchaseCallBack?.onError(
+                            billingError
+                        )
                     }
             } else {
                 Log.e(TAG, "Failed to fetch product :" + billingResult.responseCode)
-                if (ProductType.SUBS == purchaseProductParams.product.type) {
-                    purchaseCallBack?.onError(throwCBException(billingResult))
-                } else {
-                    oneTimePurchaseCallback?.onError(throwCBException(billingResult))
-                }
-
+                purchaseCallBack?.onError(throwCBException(billingResult))
             }
         }
 
