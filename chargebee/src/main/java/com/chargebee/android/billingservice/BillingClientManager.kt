@@ -355,7 +355,7 @@ class BillingClientManager(context: Context) : PurchasesUpdatedListener {
         val purchaseTransactionHistory = mutableListOf<PurchaseTransaction>()
         purchaseTransactionHistory.addAll(subscriptionHistory ?: emptyList())
         val prevProduct: PurchaseTransaction? = purchaseTransactionHistory.find { it.productId.first() == oldProductId }
-        return prevProduct?.purchaseToken ?: ""
+        return prevProduct?.purchaseToken.orEmpty()
     }
 
     /**
