@@ -288,7 +288,17 @@ class BillingClientManager(context: Context) : PurchasesUpdatedListener {
                     listOf(productDetailsBuilder.build())
 
                 queryAllSubsPurchaseHistory(ProductType.SUBS.value) { subscriptionHistory ->
+
                     val oldPurchaseToken: String = getOldPurchaseToken(subscriptionHistory, oldProductId)
+                    if(oldPurchaseToken.isEmpty()){
+                        val oldPurchaseTokenEmptyError = CBException(
+                            ErrorDetail(
+                                message = GPErrorCode.OldPurchaseTokenEmpty.errorMsg,
+                                httpStatusCode = ERROR
+                            )
+                        )
+                        purchaseCallBack?.onError(oldPurchaseTokenEmptyError)
+                    }
 
                     val billingFlowParams =
                         BillingFlowParams.newBuilder()
@@ -431,7 +441,7 @@ class BillingClientManager(context: Context) : PurchasesUpdatedListener {
                         purchaseCallBack?.onError(
                             CBException(
                                 ErrorDetail(
-                                    message = GPErrorCode.InvalidProductIdError.errorMsg,
+                                    message = GPErrorCode.IrrelevantProductIdError.errorMsg,
                                     httpStatusCode = billingResult.responseCode
                                 )
                             )

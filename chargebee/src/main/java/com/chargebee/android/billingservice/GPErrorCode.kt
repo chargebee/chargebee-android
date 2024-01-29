@@ -24,7 +24,8 @@ enum class GPErrorCode(val errorMsg: String) {
     BillingClientNotReady("Play services not available"),
     SDKKeyNotAvailable("SDK key not available to proceed purchase"),
     InvalidPurchaseToken("The Token data sent is not correct or Google service is temporarily down"),
-    InvalidProductIdError("Invalid or wrong Product Id, Check product Id and try again"),
+    IrrelevantProductIdError("Wrong OldProductId, Check if relevant oldProductId is passed and try again"),
+    OldPurchaseTokenEmpty("Old purchase token is not present. Please check if valid oldProductId is passed"),
 }
 
 internal enum class BillingErrorCode(val code: Int, val message: String) {
