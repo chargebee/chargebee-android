@@ -268,7 +268,7 @@ class BillingClientManager(context: Context) : PurchasesUpdatedListener {
         this.purchaseProductParams = changeProductParams.purchaseProductParams
         val offerToken = changeProductParams.purchaseProductParams.offerToken
         val oldProductId = changeProductParams.oldProductId
-        val prorationMode = changeProductParams.prorationMode ?: BillingFlowParams.ProrationMode.IMMEDIATE_WITH_TIME_PRORATION
+        val prorationMode = BillingFlowParams.ProrationMode.IMMEDIATE_WITH_TIME_PRORATION
 
         val queryProductDetails = arrayListOf(QueryProductDetailsParams.Product.newBuilder()
             .setProductId(this.purchaseProductParams.product.id)

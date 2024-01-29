@@ -201,7 +201,7 @@ public class BillingActivity extends BaseActivity implements ProductListAdapter.
         showProgressDialog();
         PurchaseProduct selectedPurchaseProduct = purchaseProducts.get(position);
         PurchaseProductParams productParams = new PurchaseProductParams(selectedPurchaseProduct.getCbProduct(), selectedPurchaseProduct.getOfferToken());
-        ChangeProductParams changeProductParams = new ChangeProductParams(productParams, oldProductId, null);
+        ChangeProductParams changeProductParams = new ChangeProductParams(productParams, oldProductId);
         this.billingViewModel.changeProduct(this, changeProductParams, cbCustomer);
     }
 
