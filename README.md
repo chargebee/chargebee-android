@@ -161,6 +161,29 @@ CBPurchase.purchaseProduct(purchaseProductParams = purchaseProductParams, custom
  ```
 The above function will handle the purchase against Google Play Store and send the IAP token for server-side token verification to your Chargebee account. Use the Subscription ID returned by the above function, to check for Subscription status on Chargebee and confirm the access - granted or denied.
 
+### Upgrade or Downgrade Product
+Pass the `ChangeProductParams` and `CBCustomer` to the following function when the user chooses the product to purchase.
+
+`CBCustomer` - **Optional object**.
+
+**Note**: The `customer` parameter in the below code snippet is an instance of `CBCustomer` class that contains the details of the customer who wants to subscribe or buy the product.
+
+```kotlin
+val changeProductParams = ChangeProductParams(newProductParams, "currentProductId")
+val cbCustomer = CBCustomer("customerId","firstName","lastName","email")
+CBPurchase.changeProduct(changeProductParams = changeProductParams, customer = cbCustomer, object : CBCallback.PurchaseCallback<String>{
+      override fun onSuccess(result: ReceiptDetail, status:Boolean) {
+        Log.i(TAG, "$status")
+        Log.i(TAG, "${result.subscription_id}")
+        Log.i(TAG, "${result.plan_id}")   
+      }
+      override fun onError(error: CBException) {
+        Log.e(TAG, "Error:  ${error.message}")
+      }
+})
+ ```
+The above function will handle the subscription upgrade or downgrade.
+
 ### Invoke Manage Subscriptions in your App
 The `showManageSubscriptionsSettings()` function is designed to invoke the Manage Subscriptions in your app using Chargebee's Android SDKs. `Chargebee.showManageSubscriptionsSettings()`, opens the Play Store App subscriptions settings page.
 
