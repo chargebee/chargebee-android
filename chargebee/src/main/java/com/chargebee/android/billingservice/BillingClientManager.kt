@@ -441,7 +441,7 @@ class BillingClientManager(context: Context) : PurchasesUpdatedListener {
                         purchaseCallBack?.onError(
                             CBException(
                                 ErrorDetail(
-                                    message = GPErrorCode.IrrelevantProductIdError.errorMsg,
+                                    message = GPErrorCode.InactiveProductIdError.errorMsg,
                                     httpStatusCode = billingResult.responseCode
                                 )
                             )
