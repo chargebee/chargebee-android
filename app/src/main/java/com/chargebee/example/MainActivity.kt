@@ -156,10 +156,10 @@ class MainActivity : BaseActivity(), ListItemsAdapter.ItemClickListener {
         }
     }
 
-    private fun launchProductDetailsScreen(productDetails: String, oldProductId: String? = null) {
+    private fun launchProductDetailsScreen(productDetails: String, currentProductId: String? = null) {
         val intent = Intent(this, BillingActivity::class.java)
         intent.putExtra(PRODUCTS_LIST_KEY, productDetails)
-        intent.putExtra(OLD_PRODUCT_ID, oldProductId)
+        intent.putExtra(OLD_PRODUCT_ID, currentProductId)
         this.startActivity(intent)
     }
 
@@ -216,20 +216,20 @@ class MainActivity : BaseActivity(), ListItemsAdapter.ItemClickListener {
         dialog.setContentView(R.layout.dialog_input_update_layout)
         val productIds = dialog.findViewById<View>(R.id.productIdInput) as EditText
         productIds.hint = "Please enter Product IDs(Comma separated)"
-        val oldProductId = dialog.findViewById<View>(R.id.oldProductIdInput) as EditText
-        oldProductId.hint = "Please enter old Product ID"
+        val currentProductId = dialog.findViewById<View>(R.id.currentProductIdInput) as EditText
+        currentProductId.hint = "Please enter old Product ID"
         val dialogButton = dialog.findViewById<View>(R.id.btn_ok) as Button
         dialogButton.text = "Submit"
         dialogButton.setOnClickListener {
             val productIdList = productIds.text.toString().trim().split(",")
-            val oldProductId = oldProductId.text.toString().trim()
-            getProductIdList(productIdList.toCollection(ArrayList()), oldProductId)
+            val currentProductId = currentProductId.text.toString().trim()
+            getProductIdList(productIdList.toCollection(ArrayList()), currentProductId)
             dialog.dismiss()
         }
         dialog.show()
     }
 
-    private fun getProductIdList(productIdList: ArrayList<String>, oldProductId: String? = null) {
+    private fun getProductIdList(productIdList: ArrayList<String>, currentProductId: String? = null) {
         CBPurchase.retrieveProducts(
             this,
             productIdList,
@@ -237,7 +237,7 @@ class MainActivity : BaseActivity(), ListItemsAdapter.ItemClickListener {
                 override fun onSuccess(productIDs: ArrayList<CBProduct>) {
                     CoroutineScope(Dispatchers.Main).launch {
                         if (productIDs.size > 0) {
-                            launchProductDetailsScreen(gson.toJson(productIDs), oldProductId)
+                            launchProductDetailsScreen(gson.toJson(productIDs), currentProductId)
                         } else {
                             alertSuccess("Items not available to buy")
                         }

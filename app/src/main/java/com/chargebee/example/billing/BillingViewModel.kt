@@ -66,8 +66,8 @@ class BillingViewModel : ViewModel() {
                 try {
                     // Handled server not responding and offline
                     if (error.httpStatusCode!! in 500..599) {
-                        storeInLocal(changeProductParams.purchaseProductParams.product.id)
-                        validateReceipt(context = context, product = changeProductParams.purchaseProductParams.product)
+                        storeInLocal(changeProductParams.newProductParams.product.id)
+                        validateReceipt(context = context, product = changeProductParams.newProductParams.product)
                     } else {
                         cbException.postValue(error)
                     }

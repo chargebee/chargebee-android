@@ -93,7 +93,7 @@ object CBPurchase {
 
     private fun changeProduct(changeProductParams: ChangeProductParams, callback: CBCallback.PurchaseCallback<String>) {
         isSDKKeyValid({
-            log(customer,"update", changeProductParams.purchaseProductParams.product.id, changeProductParams.oldProductId, "before_change_product_command")
+            log(customer,"update", changeProductParams.newProductParams.product.id, changeProductParams.currentProductId, "before_change_product_command")
             billingClientManager?.changeProduct(changeProductParams, callback)
         }, {
             callback.onError(it)
@@ -390,8 +390,8 @@ object CBPurchase {
         return billingClientManager as BillingClientManager
     }
 
-    private fun log(customer: CBCustomer?,name: String, productId: String, oldProductId: String? = null, action:String, productType: OneTimeProductType? = null) {
-        val additionalInfo = additionalInfo(customer, productId, oldProductId, productType)
+    private fun log(customer: CBCustomer?,name: String, productId: String, currentProductId: String? = null, action:String, productType: OneTimeProductType? = null) {
+        val additionalInfo = additionalInfo(customer, productId, currentProductId, productType)
         val logger = CBLogger(
             name = name,
             action = action,
@@ -399,9 +399,9 @@ object CBPurchase {
         )
         ResultHandler.safeExecute { logger.info() }
     }
-    private fun additionalInfo(customer: CBCustomer?, productId: String, oldProductId: String?, productType: OneTimeProductType? = null): Map<String, String> {
+    private fun additionalInfo(customer: CBCustomer?, productId: String, currentProductId: String?, productType: OneTimeProductType? = null): Map<String, String> {
         val map = mutableMapOf("product" to productId)
-        oldProductId?.let { map["oldProductId"] = (it) }
+        currentProductId?.let { map["currentProductId"] = (it) }
         customer?.let { map["customerId"] = (it.id ?: "") }
         productType?.let { map["productType"] = it.toString() }
         return map

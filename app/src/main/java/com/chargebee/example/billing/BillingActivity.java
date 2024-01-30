@@ -37,7 +37,7 @@ import java.util.stream.Collectors;
 public class BillingActivity extends BaseActivity implements ProductListAdapter.ProductClickListener, ProgressBarListener {
 
     private List<PurchaseProduct> purchaseProducts = null;
-    private String oldProductId = null;
+    private String currentProductId = null;
     private ProductListAdapter productListAdapter = null;
     private LinearLayoutManager linearLayoutManager;
     private RecyclerView mItemsRecyclerView = null;
@@ -56,7 +56,7 @@ public class BillingActivity extends BaseActivity implements ProductListAdapter.
 
         mItemsRecyclerView = findViewById(R.id.rv_product_list);
         String productDetails = getIntent().getStringExtra(PRODUCTS_LIST_KEY);
-        this.oldProductId = getIntent().getStringExtra(OLD_PRODUCT_ID);
+        this.currentProductId = getIntent().getStringExtra(OLD_PRODUCT_ID);
 
         if(productDetails != null) {
             Gson gson = new Gson();
@@ -167,7 +167,7 @@ public class BillingActivity extends BaseActivity implements ProductListAdapter.
                     dialog.dismiss();
                 }
             } else {
-                if (this.oldProductId != null){
+                if (this.currentProductId != null){
                     changeProduct();
                 }else {
                     purchaseProduct();
@@ -200,8 +200,8 @@ public class BillingActivity extends BaseActivity implements ProductListAdapter.
     private void changeProduct() {
         showProgressDialog();
         PurchaseProduct selectedPurchaseProduct = purchaseProducts.get(position);
-        PurchaseProductParams productParams = new PurchaseProductParams(selectedPurchaseProduct.getCbProduct(), selectedPurchaseProduct.getOfferToken());
-        ChangeProductParams changeProductParams = new ChangeProductParams(productParams, oldProductId);
+        PurchaseProductParams newProductParams = new PurchaseProductParams(selectedPurchaseProduct.getCbProduct(), selectedPurchaseProduct.getOfferToken());
+        ChangeProductParams changeProductParams = new ChangeProductParams(newProductParams, currentProductId);
         this.billingViewModel.changeProduct(this, changeProductParams, cbCustomer);
     }
 
