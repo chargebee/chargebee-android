@@ -217,7 +217,7 @@ class MainActivity : BaseActivity(), ListItemsAdapter.ItemClickListener {
         val productIds = dialog.findViewById<View>(R.id.productIdInput) as EditText
         productIds.hint = "Please enter Product IDs(Comma separated)"
         val currentProductId = dialog.findViewById<View>(R.id.currentProductIdInput) as EditText
-        currentProductId.hint = "Please enter old Product ID"
+        currentProductId.hint = "Please enter Current Product ID"
         val dialogButton = dialog.findViewById<View>(R.id.btn_ok) as Button
         dialogButton.text = "Submit"
         dialogButton.setOnClickListener {
