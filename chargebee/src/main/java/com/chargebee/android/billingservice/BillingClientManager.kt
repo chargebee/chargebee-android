@@ -458,6 +458,11 @@ class BillingClientManager(context: Context) : PurchasesUpdatedListener {
                     )
             }
         }
+        resetCurrentProductId()
+    }
+
+    private fun resetCurrentProductId(){
+        this.changeProductParams.currentProductId = ""
     }
 
     /* Acknowledge the Purchases */
