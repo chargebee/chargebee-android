@@ -289,27 +289,32 @@ class BillingClientManager(context: Context) : PurchasesUpdatedListener {
 
                 queryAllSubsPurchaseHistory(ProductType.SUBS.value) { subscriptionHistory ->
 
-                    val oldPurchaseToken: String = getOldPurchaseToken(subscriptionHistory, currentProductId)
-                    if(oldPurchaseToken.isEmpty()){
-                        val oldPurchaseTokenEmptyError = CBException(
-                            ErrorDetail(
-                                message = GPErrorCode.OldPurchaseTokenEmpty.errorMsg,
-                                httpStatusCode = ERROR
-                            )
-                        )
-                        purchaseCallBack?.onError(oldPurchaseTokenEmptyError)
-                    }
-
                     val billingFlowParams =
                         BillingFlowParams.newBuilder()
                             .setProductDetailsParamsList(productDetailsParamsList)
-                            .setSubscriptionUpdateParams(
-                                BillingFlowParams.SubscriptionUpdateParams.newBuilder()
-                                    .setOldPurchaseToken(oldPurchaseToken)
-                                    .setReplaceProrationMode(prorationMode).build()
-                            ).build()
 
-                    billingClient?.launchBillingFlow(mContext as Activity, billingFlowParams)
+                    if(!isWithinSubscriptionChange(currentProductId)) {
+
+                        val oldPurchaseToken: String = getOldPurchaseToken(subscriptionHistory, currentProductId)
+                        if(oldPurchaseToken.isEmpty()){
+                            val oldPurchaseTokenEmptyError = CBException(
+                                ErrorDetail(
+                                    message = GPErrorCode.OldPurchaseTokenEmpty.errorMsg,
+                                    httpStatusCode = ERROR
+                                )
+                            )
+                            purchaseCallBack?.onError(oldPurchaseTokenEmptyError)
+                        }
+
+                        billingFlowParams.setSubscriptionUpdateParams(
+                            BillingFlowParams.SubscriptionUpdateParams.newBuilder()
+                                .setOldPurchaseToken(oldPurchaseToken)
+                                .setReplaceProrationMode(prorationMode).build()
+                        )
+                    }
+
+
+                    billingClient?.launchBillingFlow(mContext as Activity, billingFlowParams.build())
                         .takeIf { billingResult ->
                             billingResult?.responseCode != OK
                         }?.let { billingResult ->
@@ -342,6 +347,15 @@ class BillingClientManager(context: Context) : PurchasesUpdatedListener {
             }
         }
 
+    }
+
+    /**
+     * This method determines whether the change is within subscription or not.
+     *
+     * @param [currentProductId] The old/previous product id.
+     */
+    private fun isWithinSubscriptionChange(currentProductId: String): Boolean {
+        return this.purchaseProductParams.product.id == currentProductId
     }
 
     /**
@@ -437,7 +451,7 @@ class BillingClientManager(context: Context) : PurchasesUpdatedListener {
 
             else -> {
                 if (purchaseProductParams.product.type == ProductType.SUBS)
-                    if (this.changeProductParams.currentProductId.isNotEmpty() && billingResult.responseCode == ERROR) {
+                    if (this::changeProductParams.isInitialized && this.changeProductParams.currentProductId.isNotEmpty() && billingResult.responseCode == ERROR) {
                         purchaseCallBack?.onError(
                             CBException(
                                 ErrorDetail(
@@ -458,7 +472,9 @@ class BillingClientManager(context: Context) : PurchasesUpdatedListener {
                     )
             }
         }
-        resetCurrentProductId()
+        if(this::changeProductParams.isInitialized && this.changeProductParams.currentProductId.isNotEmpty()){
+            resetCurrentProductId()
+        }
     }
 
     private fun resetCurrentProductId(){
