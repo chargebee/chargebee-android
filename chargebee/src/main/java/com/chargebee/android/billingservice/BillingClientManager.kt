@@ -232,13 +232,23 @@ class BillingClientManager(context: Context) : PurchasesUpdatedListener {
                                 httpStatusCode = billingResult.responseCode
                             )
                         )
-                        purchaseCallBack?.onError(
-                            billingError
-                        )
+                        if (ProductType.SUBS == this.purchaseProductParams.product.type) {
+                            purchaseCallBack?.onError(
+                                billingError
+                            )
+                        } else {
+                            oneTimePurchaseCallback?.onError(
+                                billingError
+                            )
+                        }
                     }
             } else {
                 Log.e(TAG, "Failed to fetch product :" + billingResult.responseCode)
-                purchaseCallBack?.onError(throwCBException(billingResult))
+                if (ProductType.SUBS == this.purchaseProductParams.product.type) {
+                    purchaseCallBack?.onError(throwCBException(billingResult))
+                } else {
+                    oneTimePurchaseCallback?.onError(throwCBException(billingResult))
+                }
             }
         }
 
@@ -313,7 +323,6 @@ class BillingClientManager(context: Context) : PurchasesUpdatedListener {
                         )
                     }
 
-
                     billingClient?.launchBillingFlow(mContext as Activity, billingFlowParams.build())
                         .takeIf { billingResult ->
                             billingResult?.responseCode != OK
@@ -325,25 +334,12 @@ class BillingClientManager(context: Context) : PurchasesUpdatedListener {
                                     httpStatusCode = billingResult.responseCode
                                 )
                             )
-                            if (ProductType.SUBS == this.purchaseProductParams.product.type) {
-                                purchaseCallBack?.onError(
-                                    billingError
-                                )
-                            } else {
-                                oneTimePurchaseCallback?.onError(
-                                    billingError
-                                )
-                            }
+                            purchaseCallBack?.onError(billingError)
                         }
                 }
             } else {
                 Log.e(TAG, "Failed to fetch product :" + billingResult.responseCode)
-                if (ProductType.SUBS == this.purchaseProductParams.product.type) {
-                    purchaseCallBack?.onError(throwCBException(billingResult))
-                } else {
-                    oneTimePurchaseCallback?.onError(throwCBException(billingResult))
-                }
-
+                purchaseCallBack?.onError(throwCBException(billingResult))
             }
         }
 
