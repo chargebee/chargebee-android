@@ -164,7 +164,7 @@ The above function will handle the purchase against Google Play Store and send t
 ### Upgrade or Downgrade Product
 Pass the `ChangeProductParams` and `CBCustomer` to the following function when the user chooses the product to purchase.
 
-`CBCustomer` - **Optional object**.
+`CBCustomer` - **Optional object**. Although this is an optional object, we recommend passing the necessary customer details, such as `customerId`, `firstName`, `lastName`, and `email`. This ensures that the customer details in your database match the customer details in Chargebee. If the `customerId` is not passed in the customer's details, then the value of `customerId` will be the same as the `SubscriptionId` created in Chargebee.
 
 **Note**: The `customer` parameter in the below code snippet is an instance of `CBCustomer` class that contains the details of the customer who wants to subscribe or buy the product.
 
@@ -182,7 +182,7 @@ CBPurchase.changeProduct(changeProductParams = changeProductParams, customer = c
       }
 })
  ```
-The above function will handle the subscription upgrade or downgrade.
+The above function is designed to manage subscription upgrades or downgrades between base plans within a single subscription or across multiple subscriptions.
 
 ### Invoke Manage Subscriptions in your App
 The `showManageSubscriptionsSettings()` function is designed to invoke the Manage Subscriptions in your app using Chargebee's Android SDKs. `Chargebee.showManageSubscriptionsSettings()`, opens the Play Store App subscriptions settings page.
