@@ -182,7 +182,7 @@ CBPurchase.changeProduct(changeProductParams = changeProductParams, customer = c
       }
 })
  ```
-The above function is designed to manage subscription upgrades or downgrades between base plans within a single subscription or across multiple subscriptions.
+The above function is designed to manage subscription upgrades or downgrades between base plans within a single subscription or across different subscriptions.
 
 ### Invoke Manage Subscriptions in your App
 The `showManageSubscriptionsSettings()` function is designed to invoke the Manage Subscriptions in your app using Chargebee's Android SDKs. `Chargebee.showManageSubscriptionsSettings()`, opens the Play Store App subscriptions settings page.
