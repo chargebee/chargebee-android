@@ -135,7 +135,7 @@ class MainActivity : BaseActivity(), ListItemsAdapter.ItemClickListener {
                 getProductIdFromCustomer()
             }
             CBMenu.ChangeProducts.value -> {
-                getOldAndNewProductIdFromCustomer()
+                getCurrentAndNewProductIdFromCustomer()
             }
             CBMenu.SubsStatus.value,
             CBMenu.SubsList.value -> {
@@ -211,7 +211,7 @@ class MainActivity : BaseActivity(), ListItemsAdapter.ItemClickListener {
         dialog.show()
     }
 
-    private fun getOldAndNewProductIdFromCustomer() {
+    private fun getCurrentAndNewProductIdFromCustomer() {
         val dialog = Dialog(this)
         dialog.setContentView(R.layout.dialog_input_update_layout)
         val productIds = dialog.findViewById<View>(R.id.productIdInput) as EditText
