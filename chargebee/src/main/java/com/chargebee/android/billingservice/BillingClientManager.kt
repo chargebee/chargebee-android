@@ -280,6 +280,17 @@ class BillingClientManager(context: Context) : PurchasesUpdatedListener {
         val currentProductId = changeProductParams.currentProductId
         val prorationMode = BillingFlowParams.ProrationMode.IMMEDIATE_WITH_TIME_PRORATION
 
+        if(currentProductId.isEmpty()){
+            val currentProductIdEmptyError = CBException(
+                ErrorDetail(
+                    message = GPErrorCode.CurrentProductIdEmpty.errorMsg,
+                    httpStatusCode = ERROR
+                )
+            )
+            purchaseCallBack?.onError(currentProductIdEmptyError)
+            return
+        }
+
         val queryProductDetails = arrayListOf(QueryProductDetailsParams.Product.newBuilder()
             .setProductId(this.purchaseProductParams.product.id)
             .setProductType(this.purchaseProductParams.product.type.value)
