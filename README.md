@@ -162,7 +162,7 @@ CBPurchase.purchaseProduct(purchaseProductParams = purchaseProductParams, custom
 The above function will handle the purchase against Google Play Store and send the IAP token for server-side token verification to your Chargebee account. Use the Subscription ID returned by the above function, to check for Subscription status on Chargebee and confirm the access - granted or denied.
 
 ### Upgrade or Downgrade Product
-Pass the `ChangeProductParams` and `CBCustomer` to the following function when the user chooses the product to purchase.
+Pass the `ChangeProductParams` and `CBCustomer` to the following `ChangeProduct` function when the user chooses the product to purchase.
 
 `CBCustomer` - **Optional object**. Although this is an optional object, we recommend passing the necessary customer details, such as `customerId`, `firstName`, `lastName`, and `email`. This ensures that the customer details in your database match the customer details in Chargebee. If the `customerId` is not passed in the customer's details, then the value of `customerId` will be the same as the `SubscriptionId` created in Chargebee.
 
