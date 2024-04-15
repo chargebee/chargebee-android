@@ -13,7 +13,7 @@ internal class ReceiptResource : BaseResource(baseUrl = Chargebee.baseUrl){
 
     internal suspend fun validateReceipt(params: Params): ChargebeeResult<Any> {
         val paramDetail = CBReceiptRequestBody.fromCBReceiptReqBody(params)
-        val dataMap = if (params.customer != null && !(TextUtils.isEmpty(params.customer.id))) {
+        val dataMap = if (params.customer != null) {
             paramDetail.toCBReceiptReqCustomerBody()
         } else{
             paramDetail.toMap()
@@ -29,7 +29,7 @@ internal class ReceiptResource : BaseResource(baseUrl = Chargebee.baseUrl){
 
     internal suspend fun validateReceiptForNonSubscription(params: Params): ChargebeeResult<Any> {
         val paramDetail = CBReceiptRequestBody.fromCBReceiptReqBody(params)
-        val dataMap = if (params.customer != null && !(TextUtils.isEmpty(params.customer.id))) {
+        val dataMap = if (params.customer != null) {
             paramDetail.toCBNonSubscriptionReqCustomerBody()
         } else{
             paramDetail.toMapNonSubscription()
