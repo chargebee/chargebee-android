@@ -1,5 +1,6 @@
 package com.chargebee.android.network
 
+import android.text.TextUtils
 import com.chargebee.android.billingservice.OneTimeProductType
 
 internal class CBReceiptRequestBody(
@@ -31,15 +32,18 @@ internal class CBReceiptRequestBody(
     }
 
     fun toCBReceiptReqCustomerBody(): Map<String, String?> {
-        return mapOf(
+        val params = mutableMapOf(
             "receipt" to this.receipt,
             "product[id]" to this.productId,
-            "customer[id]" to this.customer?.id,
             "customer[first_name]" to this.customer?.firstName,
             "customer[last_name]" to this.customer?.lastName,
             "customer[email]" to this.customer?.email,
             "channel" to this.channel
         )
+        if(!TextUtils.isEmpty(this.customer?.id)) {
+            params["customer[id]"] = this.customer?.id
+        }
+        return params
     }
 
     fun toMap(): Map<String, String> {
@@ -51,16 +55,19 @@ internal class CBReceiptRequestBody(
     }
 
     fun toCBNonSubscriptionReqCustomerBody(): Map<String, String?> {
-        return mapOf(
+        val params = mutableMapOf(
             "receipt" to this.receipt,
             "product[id]" to this.productId,
-            "customer[id]" to this.customer?.id,
             "customer[first_name]" to this.customer?.firstName,
             "customer[last_name]" to this.customer?.lastName,
             "customer[email]" to this.customer?.email,
             "channel" to this.channel,
             "product[type]" to this.productType?.value
         )
+        if(!TextUtils.isEmpty(this.customer?.id)) {
+            params["customer[id]"] = this.customer?.id
+        }
+        return params
     }
 
     fun toMapNonSubscription(): Map<String, String?> {
