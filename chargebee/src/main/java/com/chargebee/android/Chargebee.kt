@@ -35,7 +35,7 @@ object Chargebee {
     var appName: String = "Chargebee"
     var environment: String = "cb_android_sdk"
     const val platform: String = "Android"
-    const val sdkVersion: String = "2.0.0-beta-2"
+    const val sdkVersion: String = "2.0.0-beta-3"
     const val limit: String = "100"
     private const val PLAY_STORE_SUBSCRIPTION_URL =
         "https://play.google.com/store/account/subscriptions"
