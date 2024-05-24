@@ -13,6 +13,7 @@ import com.chargebee.android.exceptions.CBException
 import com.chargebee.android.exceptions.ChargebeeResult
 import com.chargebee.android.models.CBNonSubscriptionResponse
 import com.chargebee.android.models.CBProduct
+import com.chargebee.android.models.ChangeProductParams
 import com.chargebee.android.models.PricingPhase
 import com.chargebee.android.models.PurchaseProductParams
 import com.chargebee.android.models.PurchaseTransaction
@@ -30,6 +31,7 @@ class BillingClientManager(context: Context) : PurchasesUpdatedListener {
     private var purchaseCallBack: CBCallback.PurchaseCallback<String>? = null
     private val TAG = javaClass.simpleName
     private lateinit var purchaseProductParams: PurchaseProductParams
+    private lateinit var changeProductParams: ChangeProductParams
     private lateinit var restorePurchaseCallBack: CBCallback.RestorePurchaseCallback
     private var oneTimePurchaseCallback: CBCallback.OneTimePurchaseCallback? = null
     private val requests = ConcurrentLinkedQueue<Pair<(Boolean) -> Unit, (connectionError: CBException) -> Unit>>()
@@ -248,10 +250,133 @@ class BillingClientManager(context: Context) : PurchasesUpdatedListener {
                 } else {
                     oneTimePurchaseCallback?.onError(throwCBException(billingResult))
                 }
-
             }
         }
 
+    }
+
+    internal fun changeProduct(
+        changeProductParams: ChangeProductParams,
+        purchaseCallBack: CBCallback.PurchaseCallback<String>
+    ) {
+        this.purchaseCallBack = purchaseCallBack
+        onConnected({ status ->
+            if (status) {
+                changeProduct(changeProductParams)
+            } else
+                purchaseCallBack.onError(
+                    connectionError
+                )
+        }, { error ->
+            purchaseCallBack.onError(error)
+        })
+
+    }
+
+    /* Update the product: Initiates the billing flow for an change subscription  */
+    private fun changeProduct(changeProductParams: ChangeProductParams) {
+        this.changeProductParams = changeProductParams
+        this.purchaseProductParams = changeProductParams.newProductParams
+        val offerToken = changeProductParams.newProductParams.offerToken
+        val currentProductId = changeProductParams.currentProductId
+        val prorationMode = BillingFlowParams.ProrationMode.IMMEDIATE_WITH_TIME_PRORATION
+
+        if(currentProductId.isEmpty()){
+            val currentProductIdEmptyError = CBException(
+                ErrorDetail(
+                    message = GPErrorCode.CurrentProductIdEmpty.errorMsg,
+                    httpStatusCode = ERROR
+                )
+            )
+            purchaseCallBack?.onError(currentProductIdEmptyError)
+            return
+        }
+
+        val queryProductDetails = arrayListOf(QueryProductDetailsParams.Product.newBuilder()
+            .setProductId(this.purchaseProductParams.product.id)
+            .setProductType(this.purchaseProductParams.product.type.value)
+            .build())
+
+        val productDetailsParams = QueryProductDetailsParams.newBuilder().setProductList(queryProductDetails).build()
+
+        billingClient?.queryProductDetailsAsync(
+            productDetailsParams
+        ) { billingResult, productsDetail ->
+            if (billingResult.responseCode == OK && productsDetail != null) {
+                val productDetailsBuilder = BillingFlowParams.ProductDetailsParams.newBuilder()
+                    .setProductDetails(productsDetail.first())
+                offerToken?.let { productDetailsBuilder.setOfferToken(it) }
+                val productDetailsParamsList =
+                    listOf(productDetailsBuilder.build())
+
+                queryAllSubsPurchaseHistory(ProductType.SUBS.value) { subscriptionHistory ->
+
+                    val billingFlowParams =
+                        BillingFlowParams.newBuilder()
+                            .setProductDetailsParamsList(productDetailsParamsList)
+
+                    if(!isWithinSubscriptionChange(currentProductId)) {
+
+                        val oldPurchaseToken: String = getOldPurchaseToken(subscriptionHistory, currentProductId)
+                        if(oldPurchaseToken.isEmpty()){
+                            val oldPurchaseTokenEmptyError = CBException(
+                                ErrorDetail(
+                                    message = GPErrorCode.OldPurchaseTokenEmpty.errorMsg,
+                                    httpStatusCode = ERROR
+                                )
+                            )
+                            purchaseCallBack?.onError(oldPurchaseTokenEmptyError)
+                        }
+
+                        billingFlowParams.setSubscriptionUpdateParams(
+                            BillingFlowParams.SubscriptionUpdateParams.newBuilder()
+                                .setOldPurchaseToken(oldPurchaseToken)
+                                .setReplaceProrationMode(prorationMode).build()
+                        )
+                    }
+
+                    billingClient?.launchBillingFlow(mContext as Activity, billingFlowParams.build())
+                        .takeIf { billingResult ->
+                            billingResult?.responseCode != OK
+                        }?.let { billingResult ->
+                            Log.e(TAG, "Failed to launch billing flow $billingResult")
+                            val billingError = CBException(
+                                ErrorDetail(
+                                    message = GPErrorCode.LaunchBillingFlowError.errorMsg,
+                                    httpStatusCode = billingResult.responseCode
+                                )
+                            )
+                            purchaseCallBack?.onError(billingError)
+                        }
+                }
+            } else {
+                Log.e(TAG, "Failed to fetch product :" + billingResult.responseCode)
+                purchaseCallBack?.onError(throwCBException(billingResult))
+            }
+        }
+
+    }
+
+    /**
+     * This method determines whether the change is within subscription or not.
+     *
+     * @param [currentProductId] The old/previous product id.
+     */
+    private fun isWithinSubscriptionChange(currentProductId: String): Boolean {
+        return this.purchaseProductParams.product.id == currentProductId
+    }
+
+    /**
+     * This method will return old/previous purchase token.
+     *
+     * @param [subscriptionHistory] The list of previous subscriptions.
+     * @param [currentProductId] The old/previous product id.
+     */
+    private fun getOldPurchaseToken(subscriptionHistory: List<PurchaseTransaction>?, currentProductId: String): String {
+        val purchaseTransactionHistory = mutableListOf<PurchaseTransaction>()
+        purchaseTransactionHistory.addAll(subscriptionHistory ?: emptyList())
+        val prevProduct: PurchaseTransaction? = purchaseTransactionHistory.find { it.productId.first() == currentProductId }
+        return prevProduct?.purchaseToken.orEmpty()
     }
 
     /**
@@ -334,15 +459,34 @@ class BillingClientManager(context: Context) : PurchasesUpdatedListener {
 
             else -> {
                 if (purchaseProductParams.product.type == ProductType.SUBS)
-                    purchaseCallBack?.onError(
-                        throwCBException(billingResult)
-                    )
+                    if (this::changeProductParams.isInitialized && this.changeProductParams.currentProductId.isNotEmpty() && billingResult.responseCode == ERROR) {
+                        purchaseCallBack?.onError(
+                            CBException(
+                                ErrorDetail(
+                                    message = GPErrorCode.InactiveProductIdError.errorMsg,
+                                    httpStatusCode = billingResult.responseCode
+                                )
+                            )
+                        )
+                    }
+                    else {
+                        purchaseCallBack?.onError(
+                            throwCBException(billingResult)
+                        )
+                    }
                 else
                     oneTimePurchaseCallback?.onError(
                         throwCBException(billingResult)
                     )
             }
         }
+        if(this::changeProductParams.isInitialized && this.changeProductParams.currentProductId.isNotEmpty()){
+            resetCurrentProductId()
+        }
+    }
+
+    private fun resetCurrentProductId(){
+        this.changeProductParams.currentProductId = ""
     }
 
     /* Acknowledge the Purchases */
