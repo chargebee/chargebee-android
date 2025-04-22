@@ -1,5 +1,6 @@
 package com.chargebee.example.billing;
 
+import static com.chargebee.example.util.Constants.OLD_PRODUCT_ID;
 import static com.chargebee.example.util.Constants.PRODUCTS_LIST_KEY;
 
 import android.app.Dialog;
@@ -17,6 +18,7 @@ import com.chargebee.android.ProgressBarListener;
 import com.chargebee.android.billingservice.OneTimeProductType;
 import com.chargebee.android.billingservice.ProductType;
 import com.chargebee.android.models.CBProduct;
+import com.chargebee.android.models.ChangeProductParams;
 import com.chargebee.android.models.PurchaseProductParams;
 import com.chargebee.android.network.CBCustomer;
 import com.chargebee.example.BaseActivity;
@@ -35,6 +37,7 @@ import java.util.stream.Collectors;
 public class BillingActivity extends BaseActivity implements ProductListAdapter.ProductClickListener, ProgressBarListener {
 
     private List<PurchaseProduct> purchaseProducts = null;
+    private String currentProductId = null;
     private ProductListAdapter productListAdapter = null;
     private LinearLayoutManager linearLayoutManager;
     private RecyclerView mItemsRecyclerView = null;
@@ -53,6 +56,7 @@ public class BillingActivity extends BaseActivity implements ProductListAdapter.
 
         mItemsRecyclerView = findViewById(R.id.rv_product_list);
         String productDetails = getIntent().getStringExtra(PRODUCTS_LIST_KEY);
+        this.currentProductId = getIntent().getStringExtra(OLD_PRODUCT_ID);
 
         if(productDetails != null) {
             Gson gson = new Gson();
@@ -163,7 +167,11 @@ public class BillingActivity extends BaseActivity implements ProductListAdapter.
                     dialog.dismiss();
                 }
             } else {
-                purchaseProduct();
+                if (this.currentProductId != null){
+                    changeProduct();
+                }else {
+                    purchaseProduct();
+                }
                 dialog.dismiss();
             }
         });
@@ -187,6 +195,14 @@ public class BillingActivity extends BaseActivity implements ProductListAdapter.
         PurchaseProduct selectedPurchaseProduct = purchaseProducts.get(position);
         PurchaseProductParams purchaseParams = new PurchaseProductParams(selectedPurchaseProduct.getCbProduct(), selectedPurchaseProduct.getOfferToken());
         this.billingViewModel.purchaseProduct(this, purchaseParams, cbCustomer);
+    }
+
+    private void changeProduct() {
+        showProgressDialog();
+        PurchaseProduct selectedPurchaseProduct = purchaseProducts.get(position);
+        PurchaseProductParams newProductParams = new PurchaseProductParams(selectedPurchaseProduct.getCbProduct(), selectedPurchaseProduct.getOfferToken());
+        ChangeProductParams changeProductParams = new ChangeProductParams(newProductParams, currentProductId);
+        this.billingViewModel.changeProduct(this, changeProductParams, cbCustomer);
     }
 
     private void purchaseNonSubscriptionProduct(OneTimeProductType productType) {
