@@ -17,12 +17,13 @@
         <activity android:name="com.chargebee.example.token.TokenizeActivity" />
         <activity android:name="com.chargebee.example.plan.PlanInJavaActivity">
         </activity>
-        <activity android:name=".billing.BillingActivity"/>
-        <activity android:name=".items.ItemsActivity"/>
-        <activity android:name=".items.ItemActivity"/>
-        <activity android:name=".plan.PlansActivity"/>
-        <activity android:name=".subscription.SubscriptionActivity"/>
-        <activity android:name="com.chargebee.example.MainActivity">
+        <activity android:name="com.chargebee.example.billing.BillingActivity"/>
+        <activity android:name="com.chargebee.example.items.ItemsActivity"/>
+        <activity android:name="com.chargebee.example.items.ItemActivity"/>
+        <activity android:name="com.chargebee.example.plan.PlansActivity"/>
+        <activity android:name="com.chargebee.example.subscription.SubscriptionActivity"/>
+        <activity android:name="com.chargebee.example.MainActivity"
+            android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 

@@ -1,10 +1,8 @@
 package com.chargebee.android.repository
 
 import com.chargebee.android.Chargebee
-import com.chargebee.android.models.CBEntitlements
-import com.chargebee.android.models.CBSubscription
+import com.chargebee.android.models.*
 import com.chargebee.android.models.KeyValidationWrapper
-import com.chargebee.android.models.SubscriptionDetailsWrapper
 import retrofit2.Response
 import retrofit2.http.*
 
@@ -40,4 +38,13 @@ internal interface PurchaseRepository {
         @Header("version") sdkVersion: String = Chargebee.sdkVersion,
         @Path("subscription_id") subscriptionId: String
     ): Response<CBEntitlements?>
+
+    @FormUrlEncoded
+    @POST("v2/in_app_subscriptions/{sdkKey}/retrieve")
+    suspend fun restoreSubscription(
+        @Header("Authorization") token: String = Chargebee.encodedApiKey,
+        @Header("platform") platform: String = Chargebee.platform,
+        @Header("version") sdkVersion: String = Chargebee.sdkVersion,
+        @Path("sdkKey") sdkKey: String = Chargebee.sdkKey,
+        @FieldMap data: Map<String, String?>): Response<CBRestorePurchases?>
 }

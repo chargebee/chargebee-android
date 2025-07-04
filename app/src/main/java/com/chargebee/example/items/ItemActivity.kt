@@ -6,10 +6,8 @@ import android.widget.Button
 import android.widget.EditText
 import android.widget.TextView
 import androidx.lifecycle.Observer
-import com.chargebee.android.ErrorDetail
 import com.chargebee.example.BaseActivity
 import com.chargebee.example.R
-import com.google.gson.Gson
 
 class ItemActivity: BaseActivity() {
 

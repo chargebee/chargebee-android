@@ -33,6 +33,7 @@ internal class ResultHandler {
                 completion(result)
             }
         }
+
         fun <T> safeExecuter(
             codeBlock: suspend () -> ChargebeeResult<T>,
             completion: (ChargebeeResult<T>) -> Unit,
@@ -48,21 +49,46 @@ internal class ResultHandler {
                         ChargebeeResult.Error(ex)
                     } catch (ex: UnknownHostException) {
                         print("failed: ${ex.message}")
-                        ChargebeeResult.Error(exp = CBException(ErrorDetail(ex.message)))
+                        ChargebeeResult.Error(
+                            exp = CBException(
+                                ErrorDetail(
+                                    ex.message,
+                                    httpStatusCode = 502
+                                )
+                            )
+                        )
                     } catch (ex: Exception) {
-                        logger?.error(ex.message ?: "failed")
-                        ChargebeeResult.Error(exp = CBException(ErrorDetail(ex.message)))
+                        try {
+                            logger?.error(ex.message ?: "failed")
+                        } catch (ex: Exception) {
+                            print("Exception : ${ex.message}")
+                        }
+                        ChargebeeResult.Error(
+                            exp = CBException(
+                                ErrorDetail(
+                                    ex.message,
+                                    httpStatusCode = 502
+                                )
+                            )
+                        )
                     }
                     completion(result)
                 }
-            }catch (exp: Exception){
+            } catch (exp: Exception) {
                 print("failed: ${exp.message}")
                 ChargebeeResult.Error(exp = CBException(ErrorDetail(exp.message)))
             }
 
         }
-        private fun coroutineExceptionHandler() : CoroutineExceptionHandler {
-            val coroutineExceptionHandler = CoroutineExceptionHandler{_, throwable ->
+
+        fun safeExecute(codeBlock: suspend () -> Any) {
+            CoroutineScope(Dispatchers.IO).launch {
+                codeBlock()
+            }
+        }
+
+        private fun coroutineExceptionHandler(): CoroutineExceptionHandler {
+            val coroutineExceptionHandler = CoroutineExceptionHandler { _, throwable ->
                 print("CoroutineExceptionHandler : ${throwable.message}")
             }
             return coroutineExceptionHandler

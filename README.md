@@ -1,4 +1,17 @@
-# Chargebee Android
+> [!WARNING]  
+> **Chargebee Android SDK** is part of Chargebee's legacy Mobile Subscription Solution and will not include the latest enhancements. We recommend using Chargebee's new [Omnichannel Subscriptions](https://www.chargebee.com/docs/billing/2.0/mobile-subscriptions/omnichannel-subscription-overview) solution for improved reliability and unified mobile subscriptions experience. 
+If you are a new customer, or considering to migrate new solution, please reach out to support@chargebee.com or contact your Technical Success Manager (TSM) for guidance.
+
+Chargebee Android (Legacy)
+=============
+
+> [!NOTE]  
+> #### Updates for Billing Library 5
+> - SDK Version 2.0: This version includes Google Billing Library 6.2.1 but still uses Google Billing Library 5.0 APIs to fetch product information from the Google Play Console and make purchases. If you’re integrating Chargebee’s SDK for the first time, then use this version, and if you’re migrating from the older version of SDK to this version, follow the migration steps in this [document](https://www.chargebee.com/docs/2.0/mobile-playstore-billing-library-5.html).
+> - SDK Version 1.2.2: This [version](https://github.com/chargebee/chargebee-android/tree/1.x.x) includes Billing Library 6.2.1 but still uses Billing Library 4.0 APIs to fetch product information from the Google Play Console and make purchases. This will enable you to list or update your Android app on the store without any warnings from Google and give you enough time to migrate to version 2.0.
+> - SDK Version 1.1.0: This and less than this version of SDKs use billing library 4.0 APIs that are deprecated by Google. Therefore, it is highly recommended that you upgrade your app and integrate it with SDK version 1.2.0 and above.
+
+
 This is Chargebee’s Android Software Development Kit (SDK). This SDK makes it efficient and comfortable to build a seamless subscription experience in your Android app. 
 
 Post-installation, initialization, and authentication with the Chargebee site, this SDK will support the following process.
@@ -11,8 +24,8 @@ Post-installation, initialization, and authentication with the Chargebee site, t
 ## Requirements
 The following requirements must be set up before installing Chargebee’s Android SDK.
 
-* Android 5.0 (API level 21) and above
-* [Android Gradle Plugin](https://developer.android.com/studio/releases/gradle-plugin) 4.0.0
+* Android Target API Level 31 and above
+* [Android Gradle Plugin](https://developer.android.com/studio/releases/gradle-plugin) 4.2.2
 * [Gradle](https://gradle.org/releases/) 6.1.1+
 * [AndroidX](https://developer.android.com/jetpack/androidx/)
 * Java 8+ and Kotlin
@@ -21,7 +34,7 @@ The following requirements must be set up before installing Chargebee’s Androi
 The `Chargebee-Android` SDK can be installed by adding below dependency to the `build.gradle` file:
 
 ```kotlin
-implementation 'com.chargebee:chargebee-android:1.0.16'
+implementation 'com.chargebee:chargebee-android:2.0.0-beta-4'
 ```
 
 ## Example project
@@ -55,9 +68,21 @@ To configure the Chargebee Android SDK for completing and managing In-App Purcha
 ```kotlin
 import com.chargebee.android.Chargebee
 
-Chargebee.configure(site= "your-site",
-                    publishableApiKey= "api_key",
-                    sdkKey= "sdk_key",packageName = "packageName")
+Chargebee.configure(
+  site = "your-site",
+  publishableApiKey = "api-key",
+  sdkKey = "sdk-key",
+  packageName = "your-package"
+) {
+  when (it) {
+    is ChargebeeResult.Success -> {
+      // Success
+    }
+    is ChargebeeResult.Error -> {
+      // Error
+    }
+  }
+}
 ```
 ### Configuration for credit card using tokenization
 To configure SDK only for tokenizing credit card details, follow these steps.
@@ -69,7 +94,7 @@ To configure SDK only for tokenizing credit card details, follow these steps.
 ```kotlin
 import com.chargebee.android.Chargebee
 
-Chargebee.configure(site = "your-site", publishableApiKey = "api_key")
+Chargebee.configure(site = "your-site", publishableApiKey = "api-key")
 
 ```
 ## Integration
@@ -86,7 +111,7 @@ The following section describes how to use the SDK to integrate In-App Purchase 
 Every In-App Purchase subscription product that you configure in your Play Store account, can be configured in Chargebee as a Plan. Start by retrieving the Google IAP Product IDs from your Chargebee account.
 
 ```kotlin
-CBPurchase.retrieveProductIdentifers(queryParam) {
+CBPurchase.retrieveProductIdentifiers(queryParam) {
     when (it) {
         is CBProductIDResult.ProductIds -> {
           Log.i(TAG, "List of Product Identifiers:  $it")
@@ -106,29 +131,29 @@ The above function will determine your product catalog version in Chargebee and 
 Retrieve the Google IAP Product using the following function.
 
 ```kotlin
-CBPurchase.retrieveProducts(this, productIdList= "[Product ID's from Google Play Console]",
-      object : CBCallback.ListProductsCallback<ArrayList<Products>> {
-               override fun onSuccess(productDetails: ArrayList<Products>) {
+CBPurchase.retrieveProducts(activity, productIdList= ["Product ID's from Google Play Console"],
+      object : CBCallback.ListProductsCallback<ArrayList<CBProduct>> {
+               override fun onSuccess(productDetails: ArrayList<CBProduct>) {
                      Log.i(TAG, "List of Products:  $productDetails")
                 }
                 override fun onError(error: CBException) {
                     Log.e(TAG, "Error:  ${error.message}")
-                   // Handle error here
                 }
             })
-            
 ```
 You can present any of the above products to your users for them to purchase.
 
 ### Buy or Subscribe Product
-Pass the `CBProduct` and  `CBCustomer` objects to the following function when the user chooses the product to purchase.
+Pass the `PurchaseProductParams`, `CBCustomer` and `OfferToken` to the following function when the user chooses the product to purchase.
 
 `CBCustomer` - **Optional object**. Although this is an optional object, we recommend passing the necessary customer details, such as `customerId`, `firstName`, `lastName`, and `email` if it is available before the user subscribes to your App. This ensures that the customer details in your database match the customer details in Chargebee. If the `customerId` is not passed in the customer's details, then the value of `customerId` will be the same as the `SubscriptionId` created in Chargebee.
 
 **Note**: The `customer` parameter in the below code snippet is an instance of `CBCustomer` class that contains the details of the customer who wants to subscribe or buy the product.
 
 ```kotlin
-CBPurchase.purchaseProduct(product=CBProduct, customer=CBCustomer, object : CBCallback.PurchaseCallback<PurchaseModel>{
+val purchaseParams = PurchaseProductParams(selectedCBProduct, "selectedOfferToken")
+val cbCustomer = CBCustomer("customerId","firstName","lastName","email")
+CBPurchase.purchaseProduct(purchaseProductParams = purchaseProductParams, customer = cbCustomer, object : CBCallback.PurchaseCallback<String>{
       override fun onSuccess(result: ReceiptDetail, status:Boolean) {
         Log.i(TAG, "$status")
         Log.i(TAG, "${result.subscription_id}")
@@ -140,6 +165,112 @@ CBPurchase.purchaseProduct(product=CBProduct, customer=CBCustomer, object : CBCa
 })
  ```
 The above function will handle the purchase against Google Play Store and send the IAP token for server-side token verification to your Chargebee account. Use the Subscription ID returned by the above function, to check for Subscription status on Chargebee and confirm the access - granted or denied.
+
+### Invoke Manage Subscriptions in your App
+The `showManageSubscriptionsSettings()` function is designed to invoke the Manage Subscriptions in your app using Chargebee's Android SDKs. `Chargebee.showManageSubscriptionsSettings()`, opens the Play Store App subscriptions settings page.
+
+### One-Time Purchases
+The `purchaseNonSubscriptionProduct` function handles the one-time purchase against Google Play Store and sends the IAP receipt for server-side receipt verification to your Chargebee account. Post verification a Charge corresponding to this one-time purchase will be created in Chargebee. There are two types of one-time purchases `consumable` and `non_consumable`.
+
+```kotlin
+CBPurchase.purchaseNonSubscriptionProduct(product = CBProduct, customer = CBCustomer, productType = OneTimeProductType.CONSUMABLE, callback = object : CBCallback.OneTimePurchaseCallback{
+      override fun onSuccess(result: NonSubscription, status:Boolean) {
+        Log.i(TAG, "invoice ID:  ${result.invoiceId}")
+        Log.i(TAG, "charge ID:  ${result.chargeId}")
+        Log.i(TAG, "customer ID:  ${result.customerId}")
+      }
+      override fun onError(error: CBException) {
+        Log.e(TAG, "Error:  ${error.message}")
+      }
+})
+ ```
+
+The given code defines a function named `purchaseNonSubscriptionProduct` in the CBPurchase class, which takes four input parameters:
+
+- `product`: An instance of `CBProduct` class,  representing the product to be purchased from the Google Play Store.
+- `customer`: Optional. An instance of `CBCustomer` class, initialized with the customer's details such as `customerId`, `firstName`, `lastName`, and `email`.
+- `productType`: An enum instance of `productType` type, indicating the type of product to be purchased. It can be either .`consumable`, or `non_consumable`.
+- `callback`:  The `OneTimePurchaseCallback` listener will be invoked when product purchase completes.
+
+The function is called asynchronously, and it returns a `Result` object with a `success` or `failure` case, which can be handled in the listener.
+- If the purchase is successful, the listener will be called with the `success` case, it returns `NonSubscriptionResponse` object. which includes the `customerId`, `chargeId`, and `invoiceId` associated with the purchase.
+- If there is any failure during the purchase, the listener will be called with the `error` case, it returns `CBException`. which includes an error object that can be used to handle the error.
+
+### Restore Purchase
+
+The `restorePurchases()` function helps to recover your app user's previous purchases without making them pay again. Sometimes, your app user may want to restore their previous purchases after switching to a new device or reinstalling your app. You can use the `restorePurchases()` function to allow your app user to easily restore their previous purchases.
+
+To retrieve **inactive** purchases along with the **active** purchases for your app user, you can call the `restorePurchases()` function with the `includeInActiveProducts` parameter set to `true`. If you only want to restore active subscriptions, set the parameter to `false`. Here is an example of how to use the `restorePurchases()` function in your code with the `includeInActiveProducts` parameter set to `true`.
+
+`CBCustomer` - **Optional object**. Although this is an optional object, we recommend passing the necessary customer details, such as `customerId`, `firstName`, `lastName`, and `email` if it is available before the user subscribes to your App. This ensures that the customer details in your database match the customer details in Chargebee. If the `customerId` is not passed in the customer's details, then the value of `customerId` will be the same as the `subscriptionId` created in Chargebee. Also, the restored subscriptions will not be associate with existing customerId.
+
+```kotlin
+CBPurchase.restorePurchases(context = current activity context, customer = CBCustomer, includeInActivePurchases = false, object : CBCallback.RestorePurchaseCallback{
+      override fun onSuccess(result: List<CBRestoreSubscription>) {
+        result.forEach {
+          Log.i(javaClass.simpleName, "Successfully restored purchases")
+        }  
+      }
+      override fun onError(error: CBException) {
+        Log.e(TAG, "Error:  ${error.message}")
+      }
+})
+ ```
+
+##### Return Subscriptions Object 
+The `restorePurchases()` function returns an array of subscription objects and each object holds three attributes `subscription_id`, `plan_id`, and `store_status`. The value of `store_status` can be used to verify the subscription status such as `Active`, `InTrial`, `Cancelled` and `Paused`.
+
+##### Error Handling 
+In the event of any failures while finding associated subscriptions for the restored items, The SDK will return an error, as mentioned in the following table.
+
+These are the possible error codes and their descriptions:
+| Error Code                        | Description                                                                                                                 |
+|-----------------------------------|-----------------------------------------------------------------------------------------------------------------------------|
+| `BillingErrorCode.SERVICE_TIMEOUT`            | The request has reached the maximum timeout before Google Play responds.       |
+| `BillingErrorCode.FEATURE_NOT_SUPPORTED` | The requested feature is not supported by the Play Store on the current device.                                             |
+| `BillingErrorCode.SERVICE_UNAVAILABLE`        | The service is currently unavailable.         |
+| `BillingErrorCode.DEVELOPER_ERROR`  | Error resulting from incorrect usage of the API.                                                          |
+| `BillingErrorCode.ERROR`         | Fatal error during the API action.                             |
+| `BillingErrorCode.SERVICE_DISCONNECTED`         | The app is not connected to the Play Store service via the Google Play Billing Library.                             |
+| `BillingErrorCode.UNKNOWN`         | Unknown error occurred.                             |
+
+##### Synchronization of Google Play Store Purchases with Chargebee through Receipt Validation
+Receipt validation is crucial to ensure that the purchases made by your users are synced with Chargebee. In rare cases, when a purchase is made at the Google Play Store, and the network connection goes off or the server not responding, the purchase details may not be updated in Chargebee. In such cases, you can use a retry mechanism by following these steps:
+
+* Add a network listener, as shown in the example project.
+* Save the product identifier in the cache once the purchase is initiated and clear the cache once the purchase is successful.
+* When the network connectivity is lost after the purchase is completed at Google Play Store but not synced with Chargebee, retrieve the product from the cache once the network connection is back and initiate `validateReceipt() / validateReceiptForNonSubscriptions()` by passing activity `Context`, `CBProduct` and `CBCustomer(optional)` as input. This will validate the receipt and sync the purchase in Chargebee as a subscription or one-time purchase. For subscriptions, use the function to `validateReceipt()`;for one-time purchases, use the function `validateReceiptForNonSubscriptions()`.
+
+Use the function available for the retry mechanism.
+##### Function for validating the Subscriptions receipt
+
+```kotlin
+CBPurchase.validateReceipt(context = current activity context, product = CBProduct, customer = CBCustomer, object : CBCallback.PurchaseCallback<String> {
+      override fun onSuccess(result: ReceiptDetail, status: Boolean) {
+        Log.i(TAG, "$status")
+        Log.i(TAG, "${result.subscription_id}")
+        Log.i(TAG, "${result.plan_id}")
+      }
+      override fun onError(error: CBException) {
+        Log.e(TAG, "Error:  ${error.message}")
+      }
+})
+ ```
+
+##### Function for validating the One-Time Purchases receipt
+
+```kotlin
+CBPurchase.validateReceiptForNonSubscriptions(context = current activity context, product = CBProduct, customer = CBCustomer, productType = OneTimeProductType.CONSUMABLE, object : CBCallback.OneTimePurchaseCallback {
+      override fun onSuccess(result: NonSubscription, status: Boolean) {
+        Log.i(TAG, "invoice ID:  ${result.invoiceId}")
+        Log.i(TAG, "charge ID:  ${result.chargeId}")
+        Log.i(TAG, "customer ID:  ${result.customerId}")
+      }
+      override fun onError(error: CBException) {
+        Log.e(TAG, "Error:  ${error.message}")
+      }
+})
+ ```
 
 ### Get Subscription Status for Existing Subscribers
 The following are methods for checking the subscription status of a subscriber who already purchased the product.
@@ -329,6 +460,7 @@ Once your customer’s card data is processed and stored, and a Chargebee token 
 
 Please refer to the [Chargebee API Docs](https://apidocs.chargebee.com/docs/api) for subsequent integration steps.
 
+
 ## License
 
 Chargebee is available under the [MIT license](https://opensource.org/licenses/MIT). See the LICENSE file for more info.
@@ -367,7 +499,7 @@ Chargebee is available under the [MIT license](https://opensource.org/licenses/M
   To install Chargebee's Android SDK, add the following dependency to the build.gradle file.
   
   ```
-  implementation 'com.chargebee:chargebee-android:1.0.16'
+  implementation 'com.chargebee:chargebee-android:1.0.25'
   ```
   Example project
   ---------------
@@ -492,9 +624,7 @@ The above function will determine your product catalog version in Chargebee and 
   
   The above function will handle the purchase against Google Play Store and send the IAP token for server-side token verification to your Chargebee account. Use the Subscription ID returned by the above function, to check for Subscription status on Chargebee and confirm the access - granted or denied.
 
-  ##### Returns Plan Object
-
-  This function returns the plan ID associated with a subscription. You can associate JSON metadata with the Google Play Store plans in Chargebee and retrieve the same by passing plan ID to the SDK method - [retrievePlan](https://github.com/chargebee/chargebee-android#get-plan-details)(PC 1.0) or [retrieveItem](https://github.com/chargebee/chargebee-android#get-item-details)(PC 2.0).
+  This function also returns the plan ID associated with a subscription. You can associate JSON metadata with the Google Play Store plans in Chargebee and retrieve the same by passing plan ID to the SDK method - [retrievePlan](https://github.com/chargebee/chargebee-android#get-plan-details)(PC 1.0) or [retrieveItem](https://github.com/chargebee/chargebee-android#get-item-details)(PC 2.0).
   
   #### Get Subscription Status for Existing Subscribers
   

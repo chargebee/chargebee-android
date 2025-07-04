@@ -74,14 +74,14 @@ internal fun <T> responseFromServer(response: Response<T?>): ChargebeeResult<T> 
                         )
                     )
                 }
-                401 -> {
+                in 400..499 -> {
                     return ChargebeeResult.Error(
                         exp = CBException(
                             error = ErrorDetail(response.errorBody()?.string(), httpStatusCode = response.code())
                         )
                     )
                 }
-                400, 500 -> {
+                in 500..599 -> {
                     return ChargebeeResult.Error(
                         exp = CBException(
                             error = ErrorDetail(response.errorBody()?.string(), httpStatusCode = response.code())

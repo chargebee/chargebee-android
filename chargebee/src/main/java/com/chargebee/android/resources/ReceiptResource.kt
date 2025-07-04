@@ -12,9 +12,8 @@ import com.chargebee.android.responseFromServer
 internal class ReceiptResource : BaseResource(baseUrl = Chargebee.baseUrl){
 
     internal suspend fun validateReceipt(params: Params): ChargebeeResult<Any> {
-        var dataMap = mapOf<String, String?>()
         val paramDetail = CBReceiptRequestBody.fromCBReceiptReqBody(params)
-        dataMap = if (params.customer != null && !(TextUtils.isEmpty(params.customer.id))) {
+        val dataMap = if (params.customer != null) {
             paramDetail.toCBReceiptReqCustomerBody()
         } else{
             paramDetail.toMap()
@@ -28,4 +27,19 @@ internal class ReceiptResource : BaseResource(baseUrl = Chargebee.baseUrl){
         )
     }
 
+    internal suspend fun validateReceiptForNonSubscription(params: Params): ChargebeeResult<Any> {
+        val paramDetail = CBReceiptRequestBody.fromCBReceiptReqBody(params)
+        val dataMap = if (params.customer != null) {
+            paramDetail.toCBNonSubscriptionReqCustomerBody()
+        } else{
+            paramDetail.toMapNonSubscription()
+        }
+        val response = apiClient.create(ReceiptRepository::class.java)
+            .validateReceiptForNonSubscription(data = dataMap)
+
+        Log.i(javaClass.simpleName, " validateReceiptForNonSubscription Response :$response")
+        return responseFromServer(
+            response
+        )
+    }
 }

@@ -1,30 +1,40 @@
 package com.chargebee.example.billing;
 
+import static com.chargebee.example.util.Constants.PRODUCTS_LIST_KEY;
+
 import android.app.Dialog;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+
 import androidx.recyclerview.widget.DefaultItemAnimator;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.chargebee.android.ProgressBarListener;
+import com.chargebee.android.billingservice.OneTimeProductType;
+import com.chargebee.android.billingservice.ProductType;
 import com.chargebee.android.models.CBProduct;
+import com.chargebee.android.models.PurchaseProductParams;
 import com.chargebee.android.network.CBCustomer;
 import com.chargebee.example.BaseActivity;
 import com.chargebee.example.R;
 import com.chargebee.example.adapter.ProductListAdapter;
+import com.chargebee.example.adapter.PurchaseProduct;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
+
 import java.lang.reflect.Type;
 import java.util.ArrayList;
-import static com.chargebee.example.util.Constants.PRODUCTS_LIST_KEY;
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
 
 public class BillingActivity extends BaseActivity implements ProductListAdapter.ProductClickListener, ProgressBarListener {
 
-    private ArrayList<CBProduct> productList = null;
+    private List<PurchaseProduct> purchaseProducts = null;
     private ProductListAdapter productListAdapter = null;
     private LinearLayoutManager linearLayoutManager;
     private RecyclerView mItemsRecyclerView = null;
@@ -32,6 +42,7 @@ public class BillingActivity extends BaseActivity implements ProductListAdapter.
     private static final String TAG = "BillingActivity";
     private int position = 0;
     CBCustomer cbCustomer;
+    private EditText inputProductType;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -46,10 +57,14 @@ public class BillingActivity extends BaseActivity implements ProductListAdapter.
         if(productDetails != null) {
             Gson gson = new Gson();
             Type listType = new TypeToken<ArrayList<CBProduct>>() {}.getType();
-            productList = gson.fromJson(productDetails, listType);
+            List<CBProduct> productList = gson.fromJson(productDetails, listType);
+            this.purchaseProducts = productList.stream()
+                    .map(x -> toList(x))
+                    .flatMap(List::stream)
+                    .collect(Collectors.toList());
         }
 
-        productListAdapter = new ProductListAdapter(this,productList, this);
+        productListAdapter = new ProductListAdapter(this, purchaseProducts, this);
         linearLayoutManager = new LinearLayoutManager(this);
         mItemsRecyclerView.setLayoutManager(linearLayoutManager);
         mItemsRecyclerView.setItemAnimator(new DefaultItemAnimator());
@@ -125,35 +140,62 @@ public class BillingActivity extends BaseActivity implements ProductListAdapter.
         EditText inputFirstName = dialog.findViewById(R.id.firstNameText);
         EditText inputLastName = dialog.findViewById(R.id.lastNameText);
         EditText inputEmail = dialog.findViewById(R.id.emailText);
+        inputProductType = dialog.findViewById(R.id.productTypeText);
+        if (isOneTimeProduct()) inputProductType.setVisibility(View.VISIBLE);
+        else inputProductType.setVisibility(View.GONE);
 
         Button dialogButton = dialog.findViewById(R.id.btn_ok);
         dialogButton.setText("Ok");
-        dialogButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                showProgressDialog();
-                String customerId = input.getText().toString();
-                String firstName = inputFirstName.getText().toString();
-                String lastName = inputLastName.getText().toString();
-                String email = inputEmail.getText().toString();
-                cbCustomer = new CBCustomer(customerId,firstName,lastName,email);
-                purchaseProduct(customerId);
-                //purchaseProduct();
+        dialogButton.setOnClickListener(view -> {
+            String customerId = input.getText().toString();
+            String firstName = inputFirstName.getText().toString();
+            String lastName = inputLastName.getText().toString();
+            String email = inputEmail.getText().toString();
+            String productType = inputProductType.getText().toString();
+            cbCustomer = new CBCustomer(customerId,firstName,lastName,email);
+            if (isOneTimeProduct()){
+                if (checkProductTypeFiled()) {
+                    if (productType.trim().equalsIgnoreCase(OneTimeProductType.CONSUMABLE.getValue())) {
+                        purchaseNonSubscriptionProduct(OneTimeProductType.CONSUMABLE);
+                    } else if (productType.trim().equalsIgnoreCase(OneTimeProductType.NON_CONSUMABLE.getValue())) {
+                        purchaseNonSubscriptionProduct(OneTimeProductType.NON_CONSUMABLE);
+                    }
+                    dialog.dismiss();
+                }
+            } else {
+                purchaseProduct();
                 dialog.dismiss();
             }
         });
         dialog.show();
     }
 
-    private void purchaseProduct(String customerId){
-        this.billingViewModel.purchaseProduct(productList.get(position), customerId);
+    private boolean checkProductTypeFiled(){
+        if (inputProductType.getText().toString().length() == 0) {
+            inputProductType.setError("This field is required");
+            return false;
+        }
+        return true;
     }
-    private void purchaseProduct(){
-        this.billingViewModel.purchaseProduct(productList.get(position), cbCustomer);
+
+    private boolean isOneTimeProduct(){
+        return purchaseProducts.get(position).getCbProduct().getType() == ProductType.INAPP;
+    }
+
+    private void purchaseProduct() {
+        showProgressDialog();
+        PurchaseProduct selectedPurchaseProduct = purchaseProducts.get(position);
+        PurchaseProductParams purchaseParams = new PurchaseProductParams(selectedPurchaseProduct.getCbProduct(), selectedPurchaseProduct.getOfferToken());
+        this.billingViewModel.purchaseProduct(this, purchaseParams, cbCustomer);
+    }
+
+    private void purchaseNonSubscriptionProduct(OneTimeProductType productType) {
+        showProgressDialog();
+        CBProduct selectedProduct = purchaseProducts.get(position).getCbProduct();
+        this.billingViewModel.purchaseNonSubscriptionProduct(this, selectedProduct, cbCustomer, productType);
     }
 
     private void updateSubscribeStatus(){
-        productList.get(position).setSubStatus(true);
         productListAdapter.notifyDataSetChanged();
     }
 
@@ -166,5 +208,13 @@ public class BillingActivity extends BaseActivity implements ProductListAdapter.
     @Override
     public void onHideProgressBar() {
         hideProgressDialog();
+    }
+    private List<PurchaseProduct> toList(CBProduct cbProduct) {
+        if(cbProduct.getType() == ProductType.SUBS) {
+            return cbProduct.getSubscriptionOffers().stream()
+                    .map(x -> new PurchaseProduct(cbProduct, x)).collect(Collectors.toList());
+        } else {
+            return Arrays.asList(new PurchaseProduct(cbProduct, cbProduct.getOneTimePurchaseOffer()));
+        }
     }
 }
