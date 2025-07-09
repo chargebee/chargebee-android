@@ -499,7 +499,7 @@ Chargebee is available under the [MIT license](https://opensource.org/licenses/M
   To install Chargebee's Android SDK, add the following dependency to the build.gradle file.
   
   ```
-  implementation 'com.chargebee:chargebee-android:1.0.25'
+  implementation 'com.chargebee:chargebee-android:1.2.4'
   ```
   Example project
   ---------------
