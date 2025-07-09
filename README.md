@@ -7,8 +7,8 @@ Chargebee Android (Legacy)
 
 > [!NOTE]  
 > #### Updates for Billing Library 5
-> - SDK Version 2.0: This version includes Google Billing Library 6.2.1 but still uses Google Billing Library 5.0 APIs to fetch product information from the Google Play Console and make purchases. If you’re integrating Chargebee’s SDK for the first time, then use this version, and if you’re migrating from the older version of SDK to this version, follow the migration steps in this [document](https://www.chargebee.com/docs/2.0/mobile-playstore-billing-library-5.html).
-> - SDK Version 1.2.2: This [version](https://github.com/chargebee/chargebee-android/tree/1.x.x) includes Billing Library 6.2.1 but still uses Billing Library 4.0 APIs to fetch product information from the Google Play Console and make purchases. This will enable you to list or update your Android app on the store without any warnings from Google and give you enough time to migrate to version 2.0.
+> - SDK Version 2.0: This version includes Google Billing Library 7.1.1 but still uses Google Billing Library 5.0 APIs to fetch product information from the Google Play Console and make purchases. If you’re integrating Chargebee’s SDK for the first time, then use this version, and if you’re migrating from the older version of SDK to this version, follow the migration steps in this [document](https://www.chargebee.com/docs/2.0/mobile-playstore-billing-library-5.html).
+> - SDK Version 1.2.4: This [version](https://github.com/chargebee/chargebee-android/tree/1.x.x) includes Billing Library 7.1.1 but still uses Billing Library 4.0 APIs to fetch product information from the Google Play Console and make purchases. This will enable you to list or update your Android app on the store without any warnings from Google and give you enough time to migrate to version 2.0.
 > - SDK Version 1.1.0: This and less than this version of SDKs use billing library 4.0 APIs that are deprecated by Google. Therefore, it is highly recommended that you upgrade your app and integrate it with SDK version 1.2.0 and above.
 
 
