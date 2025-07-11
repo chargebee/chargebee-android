@@ -8,7 +8,7 @@ android {
         minSdkVersion 21
         targetSdkVersion 31
         versionCode 1
-        versionName "1.2.3"
+        versionName "1.2.4"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles "consumer-rules.pro"
@@ -41,7 +41,7 @@ dependencies {
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.1'
 
     // Google play billing library
-    implementation 'com.android.billingclient:billing-ktx:6.2.1'
+    implementation 'com.android.billingclient:billing-ktx:7.1.1'
 
     // AssertJ
     testImplementation "org.assertj:assertj-core:$assertj_version"
