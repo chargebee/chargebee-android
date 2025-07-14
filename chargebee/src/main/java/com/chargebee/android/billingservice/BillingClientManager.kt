@@ -17,7 +17,6 @@ import com.chargebee.android.models.PricingPhase
 import com.chargebee.android.models.PurchaseProductParams
 import com.chargebee.android.models.PurchaseTransaction
 import com.chargebee.android.models.SubscriptionOffer
-import com.chargebee.android.models.PendingPurchasesParams
 import com.chargebee.android.network.CBReceiptResponse
 import com.chargebee.android.restore.CBRestorePurchaseManager
 import java.util.concurrent.ConcurrentLinkedQueue
@@ -573,7 +572,7 @@ class BillingClientManager(context: Context) : PurchasesUpdatedListener {
     private fun buildBillingClient(listener: PurchasesUpdatedListener): BillingClient? {
         if (billingClient == null) {
             billingClient = mContext?.let {
-                BillingClient.newBuilder(it).enablePendingPurchases(PendingPurchasesParams.newBuilder().enableOneTimeProducts().build()).setListener(listener)
+                BillingClient.newBuilder(it).enablePendingPurchases().setListener(listener)
                     .build()
             }
         }
