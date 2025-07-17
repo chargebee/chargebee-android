@@ -269,7 +269,7 @@ class BillingClientManager(context: Context) : PurchasesUpdatedListener {
         })
     }
 
-    /* Checks if the specified feature is supported by the Play Store */
+    /* Checks if the specified feature is supported by the Play Store. */
     fun isFeatureSupported(): Boolean {
         try {
             val featureSupportedResult =
