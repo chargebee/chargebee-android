@@ -30,8 +30,8 @@ class ItemResourceTest {
         MockitoAnnotations.initMocks(this)
         Chargebee.configure(
             site = "cb-imay-test",
-            publishableApiKey = "key_for_test",
-            sdkKey = "pubkey_for_test"
+            publishableApiKey = "key_for_test_1",
+            sdkKey = "pubkey_for_test_1_1"
         ) {
 
         }
