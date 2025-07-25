@@ -50,8 +50,8 @@ class RestorePurchaseTest {
         list.add("chargebee.pro.android")
         Chargebee.configure(
             site = "omni1-test.integrations.predev37.in",
-            publishableApiKey = "test_rpKneFyplowONFtdHgnlpxh6ccdcQXNUcu",
-            sdkKey = "cb-hmg6jlyvyrahvocyio57oqhoei",
+            publishableApiKey = "key_for_test",
+            sdkKey = "pub_key_for_test",
             packageName = "com.chargebee.example"
         )
     }

@@ -1,0 +1,8 @@
+title = "Gitleaks Omnichannel"
+[extend]
+useDefault = true
+
+[allowlist]
+paths = [
+  "chargebee/src/test/java/com/chargebee/android/restore/RestorePurchaseTest.kt"
+]

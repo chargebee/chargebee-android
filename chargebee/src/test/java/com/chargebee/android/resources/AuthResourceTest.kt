@@ -30,8 +30,8 @@ class AuthResourceTest {
         Chargebee.applicationId = "com.chargebee.example"
         Chargebee.configure(
             site = "cb-imay-test",
-            publishableApiKey = "test_EojsGoGFeHoc3VpGPQDOZGAxYy3d0FF3",
-            sdkKey = "cb-j53yhbfmtfhfhkmhow3ramecom"
+            publishableApiKey = "key_for_test",
+            sdkKey = "pubkey_for_test"
         )
 
     }
