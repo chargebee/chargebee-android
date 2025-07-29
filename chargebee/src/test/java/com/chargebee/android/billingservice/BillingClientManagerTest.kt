@@ -72,8 +72,8 @@ class BillingClientManagerTest {
         MockitoAnnotations.initMocks(this)
         Chargebee.configure(
             site = "site-name",
-            publishableApiKey = "key_for_test",
-            sdkKey = "pubkey_for_test"
+            publishableApiKey = "key_for_test_1",
+            sdkKey = "pubkey_for_test_1_1"
         )
 
         billingClientManager = callBack?.let {
