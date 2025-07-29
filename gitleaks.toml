@@ -4,5 +4,5 @@ useDefault = true
 
 [allowlist]
 paths = [
-  "chargebee/src/test/java/com/chargebee/android/restore/RestorePurchaseTest.kt"
+  "chargebee/src/test/java/com/chargebee/android/*"
 ]
