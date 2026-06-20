@@ -53,6 +53,31 @@ class BillingViewModel : ViewModel() {
         })
     }
 
+    fun changeProduct(context: Context, changeProductParams: ChangeProductParams, customer: CBCustomer) {
+        // Cache the product id in sharedPreferences and retry validating the receipt if in case server is not responding or no internet connection.
+        sharedPreference =  context.getSharedPreferences("PREFERENCE_NAME",Context.MODE_PRIVATE)
+        CBPurchase.changeProduct(changeProductParams = changeProductParams, customer = customer,  object : CBCallback.PurchaseCallback<String>{
+            override fun onSuccess(result: ReceiptDetail, status:Boolean) {
+                Log.i(TAG, "Subscription ID:  ${result.subscription_id}")
+                Log.i(TAG, "Plan ID:  ${result.plan_id}")
+                productPurchaseResult.postValue(status)
+            }
+            override fun onError(error: CBException) {
+                try {
+                    // Handled server not responding and offline
+                    if (error.httpStatusCode!! in 500..599) {
+                        storeInLocal(changeProductParams.newProductParams.product.id)
+                        validateReceipt(context = context, product = changeProductParams.newProductParams.product)
+                    } else {
+                        cbException.postValue(error)
+                    }
+                } catch (exp: Exception) {
+                    Log.i(TAG, "Exception :${exp.message}")
+                }
+            }
+        })
+    }
+
     private fun validateReceipt(context: Context, product: CBProduct) {
         val customer = CBCustomer(
             id = "sync_receipt_android",

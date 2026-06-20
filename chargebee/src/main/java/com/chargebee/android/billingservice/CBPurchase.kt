@@ -70,8 +70,31 @@ object CBPurchase {
 
     private fun purchaseProduct(purchaseProductParams: PurchaseProductParams, callback: CBCallback.PurchaseCallback<String>) {
         isSDKKeyValid({
-            log(customer, purchaseProductParams.product.id)
+            log(customer,"buy", purchaseProductParams.product.id, action = "before_purchase_command")
             billingClientManager?.purchase(purchaseProductParams, callback)
+        }, {
+            callback.onError(it)
+        })
+    }
+
+    /**
+     * Update Subscription product
+     * @param [changeProductParams] The parameters of the product to be updated.
+     * @param [customer] Optional. Customer Object.
+     * @param [callback] listener will be called when product purchase completes.
+     */
+    fun changeProduct(
+        changeProductParams: ChangeProductParams, customer: CBCustomer? = null,
+        callback: CBCallback.PurchaseCallback<String>
+    ) {
+        this.customer = customer
+        changeProduct(changeProductParams, callback)
+    }
+
+    private fun changeProduct(changeProductParams: ChangeProductParams, callback: CBCallback.PurchaseCallback<String>) {
+        isSDKKeyValid({
+            log(customer,"update", changeProductParams.newProductParams.product.id, changeProductParams.currentProductId, "before_change_product_command")
+            billingClientManager?.changeProduct(changeProductParams, callback)
         }, {
             callback.onError(it)
         })
@@ -94,7 +117,7 @@ object CBPurchase {
         this.productType = productType
 
         isSDKKeyValid({
-            log(CBPurchase.customer, product.id, productType)
+            log(CBPurchase.customer,"buy", product.id, action = "before_purchase_command", productType = productType)
             billingClientManager?.purchaseNonSubscriptionProduct(product, callback)
         }, {
             callback.onError(it)
@@ -367,17 +390,18 @@ object CBPurchase {
         return billingClientManager as BillingClientManager
     }
 
-    private fun log(customer: CBCustomer?, productId: String, productType: OneTimeProductType? = null) {
-        val additionalInfo = additionalInfo(customer, productId, productType)
+    private fun log(customer: CBCustomer?,name: String, productId: String, currentProductId: String? = null, action:String, productType: OneTimeProductType? = null) {
+        val additionalInfo = additionalInfo(customer, productId, currentProductId, productType)
         val logger = CBLogger(
-            name = "buy",
-            action = "before_purchase_command",
+            name = name,
+            action = action,
             additionalInfo = additionalInfo
         )
         ResultHandler.safeExecute { logger.info() }
     }
-    private fun additionalInfo(customer: CBCustomer?, productId: String, productType: OneTimeProductType? = null): Map<String, String> {
+    private fun additionalInfo(customer: CBCustomer?, productId: String, currentProductId: String?, productType: OneTimeProductType? = null): Map<String, String> {
         val map = mutableMapOf("product" to productId)
+        currentProductId?.let { map["currentProductId"] = (it) }
         customer?.let { map["customerId"] = (it.id ?: "") }
         productType?.let { map["productType"] = it.toString() }
         return map
