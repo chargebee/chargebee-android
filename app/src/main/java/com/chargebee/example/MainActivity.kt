@@ -191,6 +191,42 @@ class MainActivity : BaseActivity(), ListItemsAdapter.ItemClickListener {
         builder.show()
     }
 
+    /*
+     * Example: configure the SDK with a mobile token fetched from your backend instead of
+     * embedding a publishable API key in the app. The tokenProvider is invoked now and again
+     * whenever a request is rejected with a 401, so the SDK can refresh the token.
+     */
+    private fun configureWithMobileToken() {
+        Chargebee.configure(
+            site = "cb-abc-test",
+            sdkKey = "SDK-KEY",
+            packageName = this.packageName,
+            tokenProvider = { completion ->
+                // Ask your backend for a fresh mobile token (it mints one via
+                // `create_mobile_token`), then hand the raw token back to the SDK.
+                // Pass null if the token could not be obtained.
+                fetchMobileToken(completion)
+            }
+        ) {
+            when (it) {
+                is ChargebeeResult.Success -> {
+                    Log.i(javaClass.simpleName, "Configured with mobile token")
+                }
+                is ChargebeeResult.Error -> {
+                    Log.e(javaClass.simpleName, "Configuration failed: ${it.exp.message}")
+                }
+            }
+        }
+    }
+
+    /*
+     * Stand-in for the call to your own backend that returns a Chargebee mobile token.
+     * Replace the body with a real network request to your server.
+     */
+    private fun fetchMobileToken(completion: (String?) -> Unit) {
+        completion("cb_mob_replace_with_token_from_your_backend")
+    }
+
     private fun getProductIdFromCustomer() {
         val dialog = Dialog(this)
         dialog.setContentView(R.layout.dialog_input_layout)
