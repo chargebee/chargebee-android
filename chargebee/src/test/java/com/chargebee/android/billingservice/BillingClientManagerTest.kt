@@ -39,7 +39,7 @@ import java.util.concurrent.CountDownLatch
 import kotlin.collections.ArrayList
 
 @RunWith(MockitoJUnitRunner::class)
-@Config(sdk = [Build.VERSION_CODES.LOLLIPOP])
+@Config(sdk = [Build.VERSION_CODES.M])
 class BillingClientManagerTest {
 
     private var billingClientManager: BillingClientManager? = null
@@ -115,9 +115,12 @@ class BillingClientManagerTest {
                     })
             }).thenReturn(Unit)
 
-            Mockito.`when`(billingClient.queryPurchasesAsync(BillingClient.SkuType.SUBS))
+            val queryPurchasesParams = QueryPurchasesParams.newBuilder()
+                .setProductType(BillingClient.ProductType.SUBS)
+                .build()
+            Mockito.`when`(billingClient.queryPurchasesAsync(queryPurchasesParams))
             verify(billingClient, times(1))
-                ?.queryPurchasesAsync(BillingClient.SkuType.SUBS)
+                ?.queryPurchasesAsync(queryPurchasesParams)
         }
     }
 
@@ -252,10 +255,6 @@ class BillingClientManagerTest {
     }
     @Test
     fun test_purchaseProduct_success(){
-         val jsonDetails = "{\"productId\":\"merchant.premium.android\",\"type\":\"subs\",\"title\":\"Premium Plan (Chargebee Example)\",\"name\":\"Premium Plan\",\"price\":\"₹2,650.00\",\"price_amount_micros\":2650000000,\"price_currency_code\":\"INR\",\"description\":\"Every 6 Months\",\"subscriptionPeriod\":\"P6M\",\"skuDetailsToken\":\"AEuhp4J0KiD1Bsj3Yq2mHPBRNHUBdzs4nTJY3PWRR8neE-22MJNssuDzH2VLFKv35Ov8\"}"
-
-        val skuDetails = SkuDetails(jsonDetails)
-
         val lock = CountDownLatch(1)
         CoroutineScope(Dispatchers.IO).launch {
             val purchaseProductParams = PurchaseProductParams(subProducts)
@@ -284,9 +283,6 @@ class BillingClientManagerTest {
     }
     @Test
     fun test_purchaseProduct_error(){
-        val jsonDetails = "{\"productId\":\"merchant.premium.android\",\"type\":\"subs\",\"title\":\"Premium Plan (Chargebee Example)\",\"name\":\"Premium Plan\",\"price\":\"₹2,650.00\",\"price_amount_micros\":2650000000,\"price_currency_code\":\"INR\",\"description\":\"Every 6 Months\",\"subscriptionPeriod\":\"P6M\",\"skuDetailsToken\":\"AEuhp4J0KiD1Bsj3Yq2mHPBRNHUBdzs4nTJY3PWRR8neE-22MJNssuDzH2VLFKv35Ov8\"}"
-
-        val skuDetails = SkuDetails(jsonDetails)
         CoroutineScope(Dispatchers.IO).launch {
             val purchaseProductParams = PurchaseProductParams(subProducts)
             CBPurchase.purchaseProduct(
@@ -363,9 +359,6 @@ class BillingClientManagerTest {
     @Test
     fun test_purchaseProductWithEmptyCBCustomer_success(){
         val customer = CBCustomer("","","","")
-        val jsonDetails = "{\"productId\":\"merchant.premium.android\",\"type\":\"subs\",\"title\":\"Premium Plan (Chargebee Example)\",\"name\":\"Premium Plan\",\"price\":\"₹2,650.00\",\"price_amount_micros\":2650000000,\"price_currency_code\":\"INR\",\"description\":\"Every 6 Months\",\"subscriptionPeriod\":\"P6M\",\"skuDetailsToken\":\"AEuhp4J0KiD1Bsj3Yq2mHPBRNHUBdzs4nTJY3PWRR8neE-22MJNssuDzH2VLFKv35Ov8\"}"
-
-        val skuDetails = SkuDetails(jsonDetails)
         val lock = CountDownLatch(1)
         CoroutineScope(Dispatchers.IO).launch {
             val purchaseProductParams = PurchaseProductParams(subProducts)
@@ -395,9 +388,6 @@ class BillingClientManagerTest {
 
     @Test
     fun test_purchaseProductWithCBCustomer_success(){
-        val jsonDetails = "{\"productId\":\"merchant.premium.android\",\"type\":\"subs\",\"title\":\"Premium Plan (Chargebee Example)\",\"name\":\"Premium Plan\",\"price\":\"₹2,650.00\",\"price_amount_micros\":2650000000,\"price_currency_code\":\"INR\",\"description\":\"Every 6 Months\",\"subscriptionPeriod\":\"P6M\",\"skuDetailsToken\":\"AEuhp4J0KiD1Bsj3Yq2mHPBRNHUBdzs4nTJY3PWRR8neE-22MJNssuDzH2VLFKv35Ov8\"}"
-
-        val skuDetails = SkuDetails(jsonDetails)
         val lock = CountDownLatch(1)
         CoroutineScope(Dispatchers.IO).launch {
             val purchaseProductParams = PurchaseProductParams(subProducts)
@@ -426,9 +416,6 @@ class BillingClientManagerTest {
     }
     @Test
     fun test_purchaseProductWithCBCustomer_error(){
-        val jsonDetails = "{\"productId\":\"merchant.premium.android\",\"type\":\"subs\",\"title\":\"Premium Plan (Chargebee Example)\",\"name\":\"Premium Plan\",\"price\":\"₹2,650.00\",\"price_amount_micros\":2650000000,\"price_currency_code\":\"INR\",\"description\":\"Every 6 Months\",\"subscriptionPeriod\":\"P6M\",\"skuDetailsToken\":\"AEuhp4J0KiD1Bsj3Yq2mHPBRNHUBdzs4nTJY3PWRR8neE-22MJNssuDzH2VLFKv35Ov8\"}"
-
-        val skuDetails = SkuDetails(jsonDetails)
         CoroutineScope(Dispatchers.IO).launch {
             val purchaseProductParams = PurchaseProductParams(subProducts)
             CBPurchase.purchaseProduct(

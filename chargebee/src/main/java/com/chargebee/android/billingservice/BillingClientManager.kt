@@ -95,11 +95,14 @@ class BillingClientManager(context: Context) : PurchasesUpdatedListener {
 
             billingClient?.queryProductDetailsAsync(
                 productDetailsParams
-            ) { billingResult, productsDetail ->
-                if (billingResult.responseCode == OK && productsDetail != null) {
+            ) { billingResult, queryProductDetailsResult ->
+                if (billingResult.responseCode == OK) {
                     try {
+                        queryProductDetailsResult.unfetchedProductList.forEach {
+                            Log.w(TAG, "Unfetched product ${it.productId} :" + it.statusCode)
+                        }
                         val cbProductDetails = arrayListOf<CBProduct>()
-                        for (productDetail in productsDetail) {
+                        for (productDetail in queryProductDetailsResult.productDetailsList) {
                             val cbProduct = convertToCbProduct(productDetail)
                             cbProductDetails.add(cbProduct)
                         }
@@ -207,8 +210,9 @@ class BillingClientManager(context: Context) : PurchasesUpdatedListener {
 
         billingClient?.queryProductDetailsAsync(
             productDetailsParams
-        ) { billingResult, productsDetail ->
-            if (billingResult.responseCode == OK && productsDetail != null) {
+        ) { billingResult, queryProductDetailsResult ->
+            val productsDetail = queryProductDetailsResult.productDetailsList
+            if (billingResult.responseCode == OK && productsDetail.isNotEmpty()) {
                 val productDetailsBuilder = BillingFlowParams.ProductDetailsParams.newBuilder()
                     .setProductDetails(productsDetail.first())
                 offerToken?.let { productDetailsBuilder.setOfferToken(it) }
@@ -255,15 +259,17 @@ class BillingClientManager(context: Context) : PurchasesUpdatedListener {
     }
 
     /**
-     * This method will provide all the purchases associated with the current account based on the [includeInActivePurchases] flag set.
-     * And the associated purchases will be synced with Chargebee.
+     * This method will provide all the purchases associated with the current account based on the
+     * [CBPurchase.includeInActivePurchases] flag set, and the associated purchases will be synced
+     * with Chargebee. Only purchases Google Play still reports are available; see
+     * [CBPurchase.restorePurchases] for the limitation introduced by Play Billing 8.
      *
      * @param [completionCallback] The listener will be called when restore purchase completes.
      */
     internal fun restorePurchases(completionCallback: CBCallback.RestorePurchaseCallback) {
         this.restorePurchaseCallBack = completionCallback
         onConnected({ status ->
-            queryPurchaseHistoryFromStore(status)
+            queryPurchasesFromStore(status)
         }, { error ->
             completionCallback.onError(error)
         })
@@ -493,13 +499,13 @@ class BillingClientManager(context: Context) : PurchasesUpdatedListener {
         ))
     }
 
-    private fun queryPurchaseHistoryFromStore(
+    private fun queryPurchasesFromStore(
         connectionStatus: Boolean
     ) {
         if (connectionStatus) {
-            queryAllSubsPurchaseHistory(ProductType.SUBS.value) { purchaseHistoryList ->
+            queryPurchases(ProductType.SUBS.value) { subscriptions ->
                 val storeTransactions = arrayListOf<PurchaseTransaction>()
-                storeTransactions.addAll(purchaseHistoryList ?: emptyList())
+                storeTransactions.addAll(subscriptions ?: emptyList())
                 CBRestorePurchaseManager.fetchStoreSubscriptionStatus(
                     storeTransactions = storeTransactions,
                     allTransactions = arrayListOf(),
@@ -515,54 +521,45 @@ class BillingClientManager(context: Context) : PurchasesUpdatedListener {
         }
     }
 
-    private fun queryPurchaseHistory(
+    private fun queryAllPurchases(
         storeTransactions: (List<PurchaseTransaction>) -> Unit
     ) {
-        val purchaseTransactionHistory = mutableListOf<PurchaseTransaction>()
-        queryAllSubsPurchaseHistory(ProductType.SUBS.value) { subscriptionHistory ->
-            purchaseTransactionHistory.addAll(subscriptionHistory ?: emptyList())
-            queryAllInAppPurchaseHistory(ProductType.INAPP.value) { inAppHistory ->
-                purchaseTransactionHistory.addAll(inAppHistory ?: emptyList())
-                storeTransactions(purchaseTransactionHistory)
+        val purchaseTransactions = mutableListOf<PurchaseTransaction>()
+        queryPurchases(ProductType.SUBS.value) { subscriptions ->
+            purchaseTransactions.addAll(subscriptions ?: emptyList())
+            queryPurchases(ProductType.INAPP.value) { inAppPurchases ->
+                purchaseTransactions.addAll(inAppPurchases ?: emptyList())
+                storeTransactions(purchaseTransactions)
             }
         }
     }
 
-    private fun queryAllSubsPurchaseHistory(
+    /**
+     * Returns only what Google Play still associates with the account: active subscriptions and
+     * unconsumed one-time products. Play Billing 8 removed the purchase history API, so expired
+     * and consumed purchases are no longer retrievable from the client.
+     */
+    private fun queryPurchases(
         productType: String, purchaseTransactionList: (List<PurchaseTransaction>?) -> Unit
     ) {
-        queryPurchaseHistoryAsync(productType) {
-            purchaseTransactionList(it)
-        }
-    }
-
-    private fun queryAllInAppPurchaseHistory(
-        productType: String, purchaseTransactionList: (List<PurchaseTransaction>?) -> Unit
-    ) {
-        queryPurchaseHistoryAsync(productType) {
-            purchaseTransactionList(it)
-        }
-    }
-
-    private fun queryPurchaseHistoryAsync(
-        productType: String, purchaseTransactionList: (List<PurchaseTransaction>?) -> Unit
-    ) {
-        val queryPurchaseHistoryParams = QueryPurchaseHistoryParams.newBuilder().setProductType(productType).build()
-        billingClient?.queryPurchaseHistoryAsync(queryPurchaseHistoryParams) { billingResult, subsHistoryList ->
+        val queryPurchasesParams = QueryPurchasesParams.newBuilder()
+            .setProductType(productType)
+            .includeSuspendedSubscriptions(true)
+            .build()
+        billingClient?.queryPurchasesAsync(queryPurchasesParams) { billingResult, purchases ->
             if (billingResult.responseCode == OK) {
-                val purchaseHistoryList = subsHistoryList?.map {
+                purchaseTransactionList(purchases.map {
                     it.toPurchaseTransaction(productType)
-                }
-                purchaseTransactionList(purchaseHistoryList)
+                })
             } else {
                 restorePurchaseCallBack.onError(throwCBException(billingResult))
             }
         }
     }
 
-    private fun PurchaseHistoryRecord.toPurchaseTransaction(productType: String): PurchaseTransaction {
+    private fun Purchase.toPurchaseTransaction(productType: String): PurchaseTransaction {
         return PurchaseTransaction(
-            productId = this.skus,
+            productId = this.products,
             productType = productType,
             purchaseTime = this.purchaseTime,
             purchaseToken = this.purchaseToken
@@ -572,7 +569,12 @@ class BillingClientManager(context: Context) : PurchasesUpdatedListener {
     private fun buildBillingClient(listener: PurchasesUpdatedListener): BillingClient? {
         if (billingClient == null) {
             billingClient = mContext?.let {
-                BillingClient.newBuilder(it).enablePendingPurchases().setListener(listener)
+                BillingClient.newBuilder(it)
+                    .enablePendingPurchases(
+                        PendingPurchasesParams.newBuilder().enableOneTimeProducts().build()
+                    )
+                    .enableAutoServiceReconnection()
+                    .setListener(listener)
                     .build()
             }
         }
@@ -637,8 +639,8 @@ class BillingClientManager(context: Context) : PurchasesUpdatedListener {
         this.purchaseCallBack = completionCallback
         onConnected({ status ->
             if (status)
-                queryPurchaseHistory { purchaseHistoryList ->
-                    val purchaseTransaction = purchaseHistoryList.filter {
+                queryAllPurchases { purchaseList ->
+                    val purchaseTransaction = purchaseList.filter {
                         it.productId.first() == product.id
                     }
                     val transaction = purchaseTransaction.firstOrNull()
@@ -715,8 +717,8 @@ class BillingClientManager(context: Context) : PurchasesUpdatedListener {
         this.oneTimePurchaseCallback = completionCallback
         onConnected({ status ->
             if (status)
-                queryPurchaseHistory { purchaseHistoryList ->
-                    val purchaseTransaction = purchaseHistoryList.filter {
+                queryAllPurchases { purchaseList ->
+                    val purchaseTransaction = purchaseList.filter {
                         it.productId.first() == product.id
                     }
                     val transaction = purchaseTransaction.firstOrNull()

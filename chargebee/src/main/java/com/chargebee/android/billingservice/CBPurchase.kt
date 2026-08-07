@@ -133,9 +133,17 @@ object CBPurchase {
      * This method will provide all the purchases associated with the current account based on the [includeInActivePurchases] flag set.
      * And the associated purchases will be synced with Chargebee.
      *
+     * Google Play Billing 8 removed the purchase history API, so only purchases that Google Play
+     * still associates with the account can be restored: active subscriptions (including ones that
+     * are cancelled but not yet expired, paused, in trial, or suspended) and unconsumed one-time
+     * products. Subscriptions that have fully expired are no longer retrievable from the client and
+     * are not returned even when [includeInActivePurchases] is true.
+     *
      * @param [context] Current activity context
      * @param [customer] Optional. Customer Object.
-     * @param [includeInActivePurchases] False by default. if true, only active purchases restores and synced with Chargebee.
+     * @param [includeInActivePurchases] False by default. If false, only purchases that Chargebee
+     * reports as active are restored and synced. If true, non-active purchases are also included,
+     * subject to the Google Play limitation described above.
      * @param [completionCallback] The listener will be called when restore purchase completes.
      */
     @JvmStatic
