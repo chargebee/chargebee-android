@@ -503,7 +503,7 @@ class BillingClientManager(context: Context) : PurchasesUpdatedListener {
         connectionStatus: Boolean
     ) {
         if (connectionStatus) {
-            queryPurchases(ProductType.SUBS.value) { subscriptions ->
+            queryPurchases(ProductType.SUBS.value, restorePurchaseCallBack::onError) { subscriptions ->
                 val storeTransactions = arrayListOf<PurchaseTransaction>()
                 storeTransactions.addAll(subscriptions ?: emptyList())
                 CBRestorePurchaseManager.fetchStoreSubscriptionStatus(
@@ -522,12 +522,13 @@ class BillingClientManager(context: Context) : PurchasesUpdatedListener {
     }
 
     private fun queryAllPurchases(
+        onError: (CBException) -> Unit,
         storeTransactions: (List<PurchaseTransaction>) -> Unit
     ) {
         val purchaseTransactions = mutableListOf<PurchaseTransaction>()
-        queryPurchases(ProductType.SUBS.value) { subscriptions ->
+        queryPurchases(ProductType.SUBS.value, onError) { subscriptions ->
             purchaseTransactions.addAll(subscriptions ?: emptyList())
-            queryPurchases(ProductType.INAPP.value) { inAppPurchases ->
+            queryPurchases(ProductType.INAPP.value, onError) { inAppPurchases ->
                 purchaseTransactions.addAll(inAppPurchases ?: emptyList())
                 storeTransactions(purchaseTransactions)
             }
@@ -540,7 +541,9 @@ class BillingClientManager(context: Context) : PurchasesUpdatedListener {
      * and consumed purchases are no longer retrievable from the client.
      */
     private fun queryPurchases(
-        productType: String, purchaseTransactionList: (List<PurchaseTransaction>?) -> Unit
+        productType: String,
+        onError: (CBException) -> Unit,
+        purchaseTransactionList: (List<PurchaseTransaction>?) -> Unit
     ) {
         val queryPurchasesParams = QueryPurchasesParams.newBuilder()
             .setProductType(productType)
@@ -552,7 +555,7 @@ class BillingClientManager(context: Context) : PurchasesUpdatedListener {
                     it.toPurchaseTransaction(productType)
                 })
             } else {
-                restorePurchaseCallBack.onError(throwCBException(billingResult))
+                onError(throwCBException(billingResult))
             }
         }
     }
@@ -639,7 +642,7 @@ class BillingClientManager(context: Context) : PurchasesUpdatedListener {
         this.purchaseCallBack = completionCallback
         onConnected({ status ->
             if (status)
-                queryAllPurchases { purchaseList ->
+                queryAllPurchases(completionCallback::onError) { purchaseList ->
                     val purchaseTransaction = purchaseList.filter {
                         it.productId.first() == product.id
                     }
@@ -717,7 +720,7 @@ class BillingClientManager(context: Context) : PurchasesUpdatedListener {
         this.oneTimePurchaseCallback = completionCallback
         onConnected({ status ->
             if (status)
-                queryAllPurchases { purchaseList ->
+                queryAllPurchases(completionCallback::onError) { purchaseList ->
                     val purchaseTransaction = purchaseList.filter {
                         it.productId.first() == product.id
                     }
