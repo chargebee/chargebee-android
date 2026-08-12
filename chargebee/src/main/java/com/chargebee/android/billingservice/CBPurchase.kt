@@ -135,8 +135,8 @@ object CBPurchase {
      *
      * Google Play Billing 8 removed the purchase history API, so only purchases that Google Play
      * still associates with the account can be restored: active subscriptions (including ones that
-     * are cancelled but not yet expired, paused, in trial, or suspended) and unconsumed one-time
-     * products. Subscriptions that have fully expired are no longer retrievable from the client and
+     * are cancelled but not yet expired, paused, in trial, or suspended). One-time products are
+     * never restored. Subscriptions that have fully expired are no longer retrievable and
      * are not returned even when [includeInActivePurchases] is true.
      *
      * @param [context] Current activity context

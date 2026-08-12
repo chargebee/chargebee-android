@@ -19,6 +19,7 @@ import com.chargebee.android.models.PurchaseTransaction
 import com.chargebee.android.models.SubscriptionOffer
 import com.chargebee.android.network.CBReceiptResponse
 import com.chargebee.android.restore.CBRestorePurchaseManager
+import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ConcurrentLinkedQueue
 
 class BillingClientManager(context: Context) : PurchasesUpdatedListener {
@@ -33,6 +34,9 @@ class BillingClientManager(context: Context) : PurchasesUpdatedListener {
     private lateinit var restorePurchaseCallBack: CBCallback.RestorePurchaseCallback
     private var oneTimePurchaseCallback: CBCallback.OneTimePurchaseCallback? = null
     private val requests = ConcurrentLinkedQueue<Pair<(Boolean) -> Unit, (connectionError: CBException) -> Unit>>()
+    
+    private val purchaseTokens = ConcurrentHashMap<String, String>()
+
     init {
         this.mContext = context
     }
@@ -310,6 +314,9 @@ class BillingClientManager(context: Context) : PurchasesUpdatedListener {
                 purchases?.forEach { purchase ->
                     when (purchase.purchaseState) {
                         Purchase.PurchaseState.PURCHASED -> {
+                            purchase.products.forEach { productId ->
+                                purchaseTokens[productId] = purchase.purchaseToken
+                            }
                             acknowledgePurchase(purchase)
                         }
 
@@ -640,25 +647,38 @@ class BillingClientManager(context: Context) : PurchasesUpdatedListener {
         completionCallback: CBCallback.PurchaseCallback<String>
     ) {
         this.purchaseCallBack = completionCallback
+        purchaseToken(product, completionCallback::onError) { purchaseToken ->
+            validateReceipt(purchaseToken, product)
+        }
+    }
+
+    private fun purchaseToken(
+        product: CBProduct,
+        onError: (CBException) -> Unit,
+        onToken: (String) -> Unit
+    ) {
+        val cachedToken = purchaseTokens[product.id]
+        if (cachedToken != null) {
+            onToken(cachedToken)
+            return
+        }
         onConnected({ status ->
             if (status)
-                queryAllPurchases(completionCallback::onError) { purchaseList ->
-                    val purchaseTransaction = purchaseList.filter {
-                        it.productId.first() == product.id
+                queryAllPurchases(onError) { purchaseList ->
+                    val transaction = purchaseList.firstOrNull {
+                        it.productId.contains(product.id)
                     }
-                    val transaction = purchaseTransaction.firstOrNull()
                     transaction?.let {
-                        validateReceipt(transaction.purchaseToken, product)
+                        onToken(it.purchaseToken)
                     } ?: run {
-                        completionCallback.onError(itemNotOwnedException())
+                        onError(itemNotOwnedException())
                     }
-
                 } else
-                completionCallback.onError(
+                onError(
                     connectionError
                 )
         }, { error ->
-            completionCallback.onError(error)
+            onError(error)
         })
     }
 
@@ -718,24 +738,8 @@ class BillingClientManager(context: Context) : PurchasesUpdatedListener {
         completionCallback: CBCallback.OneTimePurchaseCallback
     ) {
         this.oneTimePurchaseCallback = completionCallback
-        onConnected({ status ->
-            if (status)
-                queryAllPurchases(completionCallback::onError) { purchaseList ->
-                    val purchaseTransaction = purchaseList.filter {
-                        it.productId.first() == product.id
-                    }
-                    val transaction = purchaseTransaction.firstOrNull()
-                    transaction?.let {
-                        validateNonSubscriptionReceipt(transaction.purchaseToken, product)
-                    } ?: run {
-                        completionCallback.onError(itemNotOwnedException())
-                    }
-                } else
-                completionCallback.onError(
-                    connectionError
-                )
-        }, { error ->
-            completionCallback.onError(error)
-        })
+        purchaseToken(product, completionCallback::onError) { purchaseToken ->
+            validateNonSubscriptionReceipt(purchaseToken, product)
+        }
     }
 }
