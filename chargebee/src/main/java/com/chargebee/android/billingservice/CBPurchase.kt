@@ -224,6 +224,13 @@ object CBPurchase {
      * This method will be used to validate the receipt with Chargebee,
      * when syncing with Chargebee fails after the successful purchase in Google Play Store.
      *
+     * A consumable product is consumed only once Chargebee has recorded the purchase, so a failed
+     * sync leaves the purchase owned in Google Play. That is what allows this method to recover the
+     * purchase even after the app process has been restarted, since Google Play Billing 8 removed
+     * the purchase history API and an unconsumed purchase is the only record the client can still
+     * retrieve. Until this method succeeds, purchasing the same consumable again fails with the
+     * ITEM_ALREADY_OWNED billing error, status code 7.
+     *
      * @param [context] Current activity context
      * @param [productId] Product Identifier.
      * @param [customer] Optional. Customer Object.

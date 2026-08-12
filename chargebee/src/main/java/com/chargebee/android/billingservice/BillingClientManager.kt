@@ -19,7 +19,6 @@ import com.chargebee.android.models.PurchaseTransaction
 import com.chargebee.android.models.SubscriptionOffer
 import com.chargebee.android.network.CBReceiptResponse
 import com.chargebee.android.restore.CBRestorePurchaseManager
-import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ConcurrentLinkedQueue
 
 class BillingClientManager(context: Context) : PurchasesUpdatedListener {
@@ -34,8 +33,6 @@ class BillingClientManager(context: Context) : PurchasesUpdatedListener {
     private lateinit var restorePurchaseCallBack: CBCallback.RestorePurchaseCallback
     private var oneTimePurchaseCallback: CBCallback.OneTimePurchaseCallback? = null
     private val requests = ConcurrentLinkedQueue<Pair<(Boolean) -> Unit, (connectionError: CBException) -> Unit>>()
-    
-    private val purchaseTokens = ConcurrentHashMap<String, String>()
 
     init {
         this.mContext = context
@@ -314,9 +311,6 @@ class BillingClientManager(context: Context) : PurchasesUpdatedListener {
                 purchases?.forEach { purchase ->
                     when (purchase.purchaseState) {
                         Purchase.PurchaseState.PURCHASED -> {
-                            purchase.products.forEach { productId ->
-                                purchaseTokens[productId] = purchase.purchaseToken
-                            }
                             acknowledgePurchase(purchase)
                         }
 
@@ -370,15 +364,11 @@ class BillingClientManager(context: Context) : PurchasesUpdatedListener {
             }
 
             ProductType.INAPP -> {
-                if (CBPurchase.productType == OneTimeProductType.CONSUMABLE) {
-                    consumeAsyncPurchase(purchase.purchaseToken)
-                } else {
-                    isAcknowledgedPurchase(purchase, {
-                        validateNonSubscriptionReceipt(purchase.purchaseToken, purchaseProductParams.product)
-                    }, {
-                        oneTimePurchaseCallback?.onError(it)
-                    })
-                }
+                isAcknowledgedPurchase(purchase, {
+                    validateNonSubscriptionReceipt(purchase.purchaseToken, purchaseProductParams.product)
+                }, {
+                    oneTimePurchaseCallback?.onError(it)
+                })
             }
         }
     }
@@ -421,20 +411,29 @@ class BillingClientManager(context: Context) : PurchasesUpdatedListener {
         }
     }
 
-    /* Consume the Purchases */
-    private fun consumeAsyncPurchase(token: String) {
-        consumePurchase(token) { billingResult, purchaseToken ->
-            when (billingResult.responseCode) {
-                OK -> {
-                    validateNonSubscriptionReceipt(purchaseToken, purchaseProductParams.product)
-                }
-
-                else -> {
-                    oneTimePurchaseCallback?.onError(
-                        throwCBException(billingResult)
-                    )
-                }
+    /**
+     * Consumes a consumable purchase once Chargebee has recorded it, and does nothing for any other
+     * product type.
+     *
+     * Consuming must stay the last step. Play Billing 8 removed the purchase history API, so an
+     * unconsumed purchase is the only record of the transaction the client can recover after the
+     * process dies; consuming before validation succeeds would leave a charged purchase that
+     * [validateNonSubscriptionReceiptWithChargebee] can no longer retry.
+     *
+     * A failed consumption still reports success, because Chargebee has already recorded the
+     * purchase by this point. The purchase stays owned and is consumed by the next successful
+     * validation.
+     */
+    private fun consumeIfConsumable(purchaseToken: String, onConsumed: () -> Unit) {
+        if (CBPurchase.productType != OneTimeProductType.CONSUMABLE) {
+            onConsumed()
+            return
+        }
+        consumePurchase(purchaseToken) { billingResult, _ ->
+            if (billingResult.responseCode != OK) {
+                Log.e(TAG, "Failed to consume validated purchase :" + billingResult.responseCode)
             }
+            onConsumed()
         }
     }
 
@@ -652,16 +651,16 @@ class BillingClientManager(context: Context) : PurchasesUpdatedListener {
         }
     }
 
+    /**
+     * Resolves the purchase token to validate from the purchases Play still reports as owned. This
+     * covers a retry after the process died, but only for purchases that have not been consumed;
+     * see [consumeIfConsumable].
+     */
     private fun purchaseToken(
         product: CBProduct,
         onError: (CBException) -> Unit,
         onToken: (String) -> Unit
     ) {
-        val cachedToken = purchaseTokens[product.id]
-        if (cachedToken != null) {
-            onToken(cachedToken)
-            return
-        }
         onConnected({ status ->
             if (status)
                 queryAllPurchases(onError) { purchaseList ->
@@ -712,10 +711,12 @@ class BillingClientManager(context: Context) : PurchasesUpdatedListener {
                         val invoiceId = (it.data).nonSubscription.invoiceId
                         Log.i(TAG, "Invoice ID:  $invoiceId")
                         val nonSubscriptionResult = (it.data).nonSubscription
-                        if (invoiceId.isEmpty()) {
-                            oneTimePurchaseCallback?.onSuccess(nonSubscriptionResult, false)
-                        } else {
-                            oneTimePurchaseCallback?.onSuccess(nonSubscriptionResult, true)
+                        consumeIfConsumable(purchaseToken) {
+                            if (invoiceId.isEmpty()) {
+                                oneTimePurchaseCallback?.onSuccess(nonSubscriptionResult, false)
+                            } else {
+                                oneTimePurchaseCallback?.onSuccess(nonSubscriptionResult, true)
+                            }
                         }
                     } else {
                         oneTimePurchaseCallback?.onError(CBException(ErrorDetail(message = GPErrorCode.PurchaseInvalid.errorMsg)))

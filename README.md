@@ -276,6 +276,9 @@ CBPurchase.validateReceiptForNonSubscriptions(context = current activity context
 })
  ```
 
+> [!IMPORTANT]  
+> Consumable products are consumed only after Chargebee has recorded the purchase. When the sync fails, the purchase therefore stays owned in Google Play, which is what makes this retry possible even after your app's process has been restarted — Google Play Billing Library 8 removed the purchase history API, so an unconsumed purchase is the only record of the transaction the client can recover. Until `validateReceiptForNonSubscriptions()` succeeds, purchasing that same consumable again fails with `BillingErrorCode.ITEM_ALREADY_OWNED`, so call this function to complete the pending purchase before starting a new purchase flow for it.
+
 ### Get Subscription Status for Existing Subscribers
 The following are methods for checking the subscription status of a subscriber who already purchased the product.
 
