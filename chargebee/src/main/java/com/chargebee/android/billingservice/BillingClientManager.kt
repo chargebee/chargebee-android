@@ -373,41 +373,62 @@ class BillingClientManager(context: Context) : PurchasesUpdatedListener {
         }
     }
 
+    /**
+     * Acknowledges [purchase] with Play if needed and then reports the outcome through exactly one
+     * of [success] or [error].
+     *
+     * A purchase that Play already reports as acknowledged is not re-acknowledged, but it still
+     * continues to [success]: Play redelivers such purchases when the previous attempt died before
+     * Chargebee recorded them, and dropping them here would leave the purchase owned with no way to
+     * retry.
+     */
     private fun isAcknowledgedPurchase(
         purchase: Purchase,
         success: () -> Unit,
         error: (CBException) -> Unit
     ) {
-        if (!purchase.isAcknowledged) {
-            val params = AcknowledgePurchaseParams.newBuilder()
-                .setPurchaseToken(purchase.purchaseToken)
-                .build()
-            billingClient?.acknowledgePurchase(params) { billingResult ->
-                when (billingResult.responseCode) {
-                    OK -> {
-                        if (purchase.purchaseToken.isNotEmpty()) {
-                            Log.i(TAG, "Google Purchase - success")
-                            success()
-                        } else {
-                            Log.e(TAG, "Receipt Not Found")
-                            error(
-                                CBException(
-                                    ErrorDetail(
-                                        message = GPErrorCode.PurchaseReceiptNotFound.errorMsg,
-                                        httpStatusCode = billingResult.responseCode
-                                    )
-                                )
-                            )
-                        }
-                    }
+        if (purchase.isAcknowledged) {
+            Log.i(TAG, "Google Purchase - already acknowledged")
+            onAcknowledged(purchase, OK, success, error)
+            return
+        }
+        val params = AcknowledgePurchaseParams.newBuilder()
+            .setPurchaseToken(purchase.purchaseToken)
+            .build()
+        billingClient?.acknowledgePurchase(params) { billingResult ->
+            when (billingResult.responseCode) {
+                OK -> {
+                    Log.i(TAG, "Google Purchase - success")
+                    onAcknowledged(purchase, billingResult.responseCode, success, error)
+                }
 
-                    else -> {
-                        error(
-                            throwCBException(billingResult)
-                        )
-                    }
+                else -> {
+                    error(
+                        throwCBException(billingResult)
+                    )
                 }
             }
+        }
+    }
+
+    private fun onAcknowledged(
+        purchase: Purchase,
+        responseCode: Int,
+        success: () -> Unit,
+        error: (CBException) -> Unit
+    ) {
+        if (purchase.purchaseToken.isNotEmpty()) {
+            success()
+        } else {
+            Log.e(TAG, "Receipt Not Found")
+            error(
+                CBException(
+                    ErrorDetail(
+                        message = GPErrorCode.PurchaseReceiptNotFound.errorMsg,
+                        httpStatusCode = responseCode
+                    )
+                )
+            )
         }
     }
 
@@ -422,14 +443,24 @@ class BillingClientManager(context: Context) : PurchasesUpdatedListener {
      *
      * A failed consumption still reports success, because Chargebee has already recorded the
      * purchase by this point. The purchase stays owned and is consumed by the next successful
-     * validation.
+     * validation. For the same reason this consumes with the current client instead of going through
+     * [consumePurchase], whose reconnection path reports a connection error and would leave
+     * [onConsumed] uncalled.
      */
     private fun consumeIfConsumable(purchaseToken: String, onConsumed: () -> Unit) {
         if (CBPurchase.productType != OneTimeProductType.CONSUMABLE) {
             onConsumed()
             return
         }
-        consumePurchase(purchaseToken) { billingResult, _ ->
+        val client = billingClient
+        if (client == null) {
+            Log.e(TAG, "Failed to consume validated purchase : billing client unavailable")
+            onConsumed()
+            return
+        }
+        client.consumeAsync(
+            ConsumeParams.newBuilder().setPurchaseToken(purchaseToken).build()
+        ) { billingResult, _ ->
             if (billingResult.responseCode != OK) {
                 Log.e(TAG, "Failed to consume validated purchase :" + billingResult.responseCode)
             }
@@ -651,11 +682,6 @@ class BillingClientManager(context: Context) : PurchasesUpdatedListener {
         }
     }
 
-    /**
-     * Resolves the purchase token to validate from the purchases Play still reports as owned. This
-     * covers a retry after the process died, but only for purchases that have not been consumed;
-     * see [consumeIfConsumable].
-     */
     private fun purchaseToken(
         product: CBProduct,
         onError: (CBException) -> Unit,
