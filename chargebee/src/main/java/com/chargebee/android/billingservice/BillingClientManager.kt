@@ -447,8 +447,12 @@ class BillingClientManager(context: Context) : PurchasesUpdatedListener {
      * [consumePurchase], whose reconnection path reports a connection error and would leave
      * [onConsumed] uncalled.
      */
-    private fun consumeIfConsumable(purchaseToken: String, onConsumed: () -> Unit) {
-        if (CBPurchase.productType != OneTimeProductType.CONSUMABLE) {
+    private fun consumeIfConsumable(
+        purchaseToken: String,
+        productType: OneTimeProductType,
+        onConsumed: () -> Unit
+    ) {
+        if (productType != OneTimeProductType.CONSUMABLE) {
             onConsumed()
             return
         }
@@ -726,6 +730,7 @@ class BillingClientManager(context: Context) : PurchasesUpdatedListener {
 
     /* Chargebee method called here to validate receipt */
     private fun validateNonSubscriptionReceipt(purchaseToken: String, product: CBProduct) {
+        val productType = CBPurchase.productType
         CBPurchase.validateNonSubscriptionReceipt(purchaseToken, product) {
             when (it) {
                 is ChargebeeResult.Success -> {
@@ -737,7 +742,7 @@ class BillingClientManager(context: Context) : PurchasesUpdatedListener {
                         val invoiceId = (it.data).nonSubscription.invoiceId
                         Log.i(TAG, "Invoice ID:  $invoiceId")
                         val nonSubscriptionResult = (it.data).nonSubscription
-                        consumeIfConsumable(purchaseToken) {
+                        consumeIfConsumable(purchaseToken, productType) {
                             if (invoiceId.isEmpty()) {
                                 oneTimePurchaseCallback?.onSuccess(nonSubscriptionResult, false)
                             } else {
