@@ -29,7 +29,7 @@ The following requirements must be set up before installing Chargebee’s Androi
 * [Android Gradle Plugin](https://developer.android.com/studio/releases/gradle-plugin) 7.4.2
 * [Gradle](https://gradle.org/releases/) 7.5+
 * [AndroidX](https://developer.android.com/jetpack/androidx/)
-* Java 8+ and Kotlin
+* JDK 17 and Kotlin 2.0+
 
 ## Installation
 The `Chargebee-Android` SDK can be installed by adding below dependency to the `build.gradle` file:
@@ -277,7 +277,7 @@ CBPurchase.validateReceiptForNonSubscriptions(context = current activity context
  ```
 
 > [!IMPORTANT]  
-> Consumable products are consumed only after Chargebee has recorded the purchase. When the sync fails, the purchase therefore stays owned in Google Play, which is what makes this retry possible even after your app's process has been restarted — Google Play Billing Library 8 removed the purchase history API, so an unconsumed purchase is the only record of the transaction the client can recover. Until `validateReceiptForNonSubscriptions()` succeeds, purchasing that same consumable again fails with `BillingErrorCode.ITEM_ALREADY_OWNED`, so call this function to complete the pending purchase before starting a new purchase flow for it.
+> Consumable products are consumed only after Chargebee has recorded the purchase. When the sync fails, the purchase therefore stays owned in Google Play, which is what makes this retry possible even after your app's process has been restarted — Google Play Billing Library 8 removed the purchase history API, so an unconsumed purchase is the only record of the transaction the client can recover. Until `validateReceiptForNonSubscriptions()` succeeds, purchasing that same consumable again fails with a `CBException` whose `httpStatusCode` is `7`, Google Play's `ITEM_ALREADY_OWNED` error. Handle that status code by calling this function to complete the pending purchase before starting a new purchase flow for it.
 
 ### Get Subscription Status for Existing Subscribers
 The following are methods for checking the subscription status of a subscriber who already purchased the product.
