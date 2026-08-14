@@ -30,6 +30,7 @@ The following requirements must be set up before installing Chargebee’s Androi
 * [Gradle](https://gradle.org/releases/) 7.5+
 * [AndroidX](https://developer.android.com/jetpack/androidx/)
 * JDK 17 and Kotlin 2.0+
+* Apps using Android Gradle Plugin 8+ with R8/`minifyEnabled`: Retrofit/Gson keep rules ship in the AAR (`consumer-rules.pro`). No extra ProGuard file is required.
 
 ## Installation
 The `Chargebee-Android` SDK can be installed by adding below dependency to the `build.gradle` file:
