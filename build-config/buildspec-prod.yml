@@ -1,7 +1,11 @@
 version: 0.2
 phases:
+  install:
+    runtime-versions:
+      java: corretto17
   build:
     commands:
+      - java -version
       - cd $CODEBUILD_SRC_DIR
       - VERSION=$(echo $CODEBUILD_WEBHOOK_TRIGGER | sed 's/branch\///g')
       - sh $CODEBUILD_SRC_DIR/build-config/sns_util.sh "START" "$VERSION"
