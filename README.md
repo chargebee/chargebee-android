@@ -7,7 +7,7 @@ Chargebee Android (Legacy)
 
 > [!NOTE]  
 > #### Updates for Billing Library 5 and above
-> - SDK Version 2.0: This version includes Google Billing Library 7.1.1 but still uses Google Billing Library 5.0 APIs to fetch product information from the Google Play Console and make purchases. If you’re integrating Chargebee’s SDK for the first time, then use this version, and if you’re migrating from the older version of SDK to this version, follow the migration steps in this [document](https://www.chargebee.com/docs/2.0/mobile-playstore-billing-library-5.html).
+> - SDK Version 2.0: This version includes Google Billing Library 8.3.0 but still uses Google Billing Library 5.0 APIs to fetch product information from the Google Play Console and make purchases. If you’re integrating Chargebee’s SDK for the first time, then use this version, and if you’re migrating from the older version of SDK to this version, follow the migration steps in this [document](https://www.chargebee.com/docs/2.0/mobile-playstore-billing-library-5.html).
 > - SDK Version 1.2.4: This [version](https://github.com/chargebee/chargebee-android/tree/1.x.x) includes Billing Library 7.1.1 but still uses Billing Library 4.0 APIs to fetch product information from the Google Play Console and make purchases. This will enable you to list or update your Android app on the store without any warnings from Google and give you enough time to migrate to version 2.0.
 > - SDK Version 1.1.0: This and less than this version of SDKs use billing library 4.0 APIs that are deprecated by Google. Therefore, it is highly recommended that you upgrade your app and integrate it with SDK version 1.2.0 and above.
 
@@ -24,17 +24,19 @@ Post-installation, initialization, and authentication with the Chargebee site, t
 ## Requirements
 The following requirements must be set up before installing Chargebee’s Android SDK.
 
-* Android Target API Level 31 and above
-* [Android Gradle Plugin](https://developer.android.com/studio/releases/gradle-plugin) 4.2.2
-* [Gradle](https://gradle.org/releases/) 6.1.1+
+* Android Minimum API Level 23 and above
+* Android Target API Level 34 and above
+* [Android Gradle Plugin](https://developer.android.com/studio/releases/gradle-plugin) 7.4.2
+* [Gradle](https://gradle.org/releases/) 7.5+
 * [AndroidX](https://developer.android.com/jetpack/androidx/)
-* Java 8+ and Kotlin
+* JDK 17 and Kotlin 2.0+
+* Apps using Android Gradle Plugin 8+ with R8/`minifyEnabled`: Retrofit/Gson keep rules ship in the AAR (`consumer-rules.pro`). No extra ProGuard file is required.
 
 ## Installation
 The `Chargebee-Android` SDK can be installed by adding below dependency to the `build.gradle` file:
 
 ```kotlin
-implementation 'com.chargebee:chargebee-android:2.0.0-beta-4'
+implementation 'com.chargebee:chargebee-android:2.0.0-beta-6'
 ```
 
 ## Example project
@@ -202,6 +204,9 @@ The `restorePurchases()` function helps to recover your app user's previous purc
 
 To retrieve **inactive** purchases along with the **active** purchases for your app user, you can call the `restorePurchases()` function with the `includeInActiveProducts` parameter set to `true`. If you only want to restore active subscriptions, set the parameter to `false`. Here is an example of how to use the `restorePurchases()` function in your code with the `includeInActiveProducts` parameter set to `true`.
 
+> [!IMPORTANT]  
+> `restorePurchases()` restores subscriptions only; one-time products are never restored. Google Play Billing Library 8 removed the purchase history API and provides no client-side replacement, so only subscriptions that Google Play still associates with the user's account can be restored: active ones, including those that are cancelled but not yet expired, paused, in trial, or suspended. Subscriptions that have fully expired are no longer returned, even when `includeInActivePurchases` is set to `true`.
+
 `CBCustomer` - **Optional object**. Although this is an optional object, we recommend passing the necessary customer details, such as `customerId`, `firstName`, `lastName`, and `email` if it is available before the user subscribes to your App. This ensures that the customer details in your database match the customer details in Chargebee. If the `customerId` is not passed in the customer's details, then the value of `customerId` will be the same as the `subscriptionId` created in Chargebee. Also, the restored subscriptions will not be associate with existing customerId.
 
 ```kotlin
@@ -271,6 +276,9 @@ CBPurchase.validateReceiptForNonSubscriptions(context = current activity context
       }
 })
  ```
+
+> [!IMPORTANT]  
+> Consumable products are consumed only after Chargebee has recorded the purchase. When the sync fails, the purchase therefore stays owned in Google Play, which is what makes this retry possible even after your app's process has been restarted — Google Play Billing Library 8 removed the purchase history API, so an unconsumed purchase is the only record of the transaction the client can recover. Until `validateReceiptForNonSubscriptions()` succeeds, purchasing that same consumable again fails with a `CBException` whose `httpStatusCode` is `7`, Google Play's `ITEM_ALREADY_OWNED` error. Handle that status code by calling this function to complete the pending purchase before starting a new purchase flow for it.
 
 ### Get Subscription Status for Existing Subscribers
 The following are methods for checking the subscription status of a subscriber who already purchased the product.

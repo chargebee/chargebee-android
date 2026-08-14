@@ -133,9 +133,17 @@ object CBPurchase {
      * This method will provide all the purchases associated with the current account based on the [includeInActivePurchases] flag set.
      * And the associated purchases will be synced with Chargebee.
      *
+     * Google Play Billing 8 removed the purchase history API, so only purchases that Google Play
+     * still associates with the account can be restored: active subscriptions (including ones that
+     * are cancelled but not yet expired, paused, in trial, or suspended). One-time products are
+     * never restored. Subscriptions that have fully expired are no longer retrievable and
+     * are not returned even when [includeInActivePurchases] is true.
+     *
      * @param [context] Current activity context
      * @param [customer] Optional. Customer Object.
-     * @param [includeInActivePurchases] False by default. if true, only active purchases restores and synced with Chargebee.
+     * @param [includeInActivePurchases] False by default. If false, only purchases that Chargebee
+     * reports as active are restored and synced. If true, non-active purchases are also included,
+     * subject to the Google Play limitation described above.
      * @param [completionCallback] The listener will be called when restore purchase completes.
      */
     @JvmStatic
@@ -215,6 +223,13 @@ object CBPurchase {
     /**
      * This method will be used to validate the receipt with Chargebee,
      * when syncing with Chargebee fails after the successful purchase in Google Play Store.
+     *
+     * A consumable product is consumed only once Chargebee has recorded the purchase, so a failed
+     * sync leaves the purchase owned in Google Play. That is what allows this method to recover the
+     * purchase even after the app process has been restarted, since Google Play Billing 8 removed
+     * the purchase history API and an unconsumed purchase is the only record the client can still
+     * retrieve. Until this method succeeds, purchasing the same consumable again fails with the
+     * ITEM_ALREADY_OWNED billing error, status code 7.
      *
      * @param [context] Current activity context
      * @param [productId] Product Identifier.

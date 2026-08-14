@@ -33,6 +33,7 @@ class BillingClientManager(context: Context) : PurchasesUpdatedListener {
     private lateinit var restorePurchaseCallBack: CBCallback.RestorePurchaseCallback
     private var oneTimePurchaseCallback: CBCallback.OneTimePurchaseCallback? = null
     private val requests = ConcurrentLinkedQueue<Pair<(Boolean) -> Unit, (connectionError: CBException) -> Unit>>()
+
     init {
         this.mContext = context
     }
@@ -95,11 +96,14 @@ class BillingClientManager(context: Context) : PurchasesUpdatedListener {
 
             billingClient?.queryProductDetailsAsync(
                 productDetailsParams
-            ) { billingResult, productsDetail ->
-                if (billingResult.responseCode == OK && productsDetail != null) {
+            ) { billingResult, queryProductDetailsResult ->
+                if (billingResult.responseCode == OK) {
                     try {
+                        queryProductDetailsResult.unfetchedProductList.forEach {
+                            Log.w(TAG, "Unfetched product ${it.productId} :" + it.statusCode)
+                        }
                         val cbProductDetails = arrayListOf<CBProduct>()
-                        for (productDetail in productsDetail) {
+                        for (productDetail in queryProductDetailsResult.productDetailsList) {
                             val cbProduct = convertToCbProduct(productDetail)
                             cbProductDetails.add(cbProduct)
                         }
@@ -207,8 +211,9 @@ class BillingClientManager(context: Context) : PurchasesUpdatedListener {
 
         billingClient?.queryProductDetailsAsync(
             productDetailsParams
-        ) { billingResult, productsDetail ->
-            if (billingResult.responseCode == OK && productsDetail != null) {
+        ) { billingResult, queryProductDetailsResult ->
+            val productsDetail = queryProductDetailsResult.productDetailsList
+            if (billingResult.responseCode == OK && productsDetail.isNotEmpty()) {
                 val productDetailsBuilder = BillingFlowParams.ProductDetailsParams.newBuilder()
                     .setProductDetails(productsDetail.first())
                 offerToken?.let { productDetailsBuilder.setOfferToken(it) }
@@ -255,15 +260,17 @@ class BillingClientManager(context: Context) : PurchasesUpdatedListener {
     }
 
     /**
-     * This method will provide all the purchases associated with the current account based on the [includeInActivePurchases] flag set.
-     * And the associated purchases will be synced with Chargebee.
+     * This method will provide all the purchases associated with the current account based on the
+     * [CBPurchase.includeInActivePurchases] flag set, and the associated purchases will be synced
+     * with Chargebee. Only purchases Google Play still reports are available; see
+     * [CBPurchase.restorePurchases] for the limitation introduced by Play Billing 8.
      *
      * @param [completionCallback] The listener will be called when restore purchase completes.
      */
     internal fun restorePurchases(completionCallback: CBCallback.RestorePurchaseCallback) {
         this.restorePurchaseCallBack = completionCallback
         onConnected({ status ->
-            queryPurchaseHistoryFromStore(status)
+            queryPurchasesFromStore(status)
         }, { error ->
             completionCallback.onError(error)
         })
@@ -308,7 +315,7 @@ class BillingClientManager(context: Context) : PurchasesUpdatedListener {
                         }
 
                         Purchase.PurchaseState.PENDING -> {
-                            purchaseCallBack?.onError(
+                            notifyPurchaseError(
                                 CBException(
                                     ErrorDetail(
                                         message = GPErrorCode.PurchasePending.errorMsg,
@@ -319,7 +326,7 @@ class BillingClientManager(context: Context) : PurchasesUpdatedListener {
                         }
 
                         Purchase.PurchaseState.UNSPECIFIED_STATE -> {
-                            purchaseCallBack?.onError(
+                            notifyPurchaseError(
                                 CBException(
                                     ErrorDetail(
                                         message = GPErrorCode.PurchaseUnspecified.errorMsg,
@@ -333,15 +340,16 @@ class BillingClientManager(context: Context) : PurchasesUpdatedListener {
             }
 
             else -> {
-                if (purchaseProductParams.product.type == ProductType.SUBS)
-                    purchaseCallBack?.onError(
-                        throwCBException(billingResult)
-                    )
-                else
-                    oneTimePurchaseCallback?.onError(
-                        throwCBException(billingResult)
-                    )
+                notifyPurchaseError(throwCBException(billingResult))
             }
+        }
+    }
+
+    private fun notifyPurchaseError(error: CBException) {
+        if (purchaseProductParams.product.type == ProductType.SUBS) {
+            purchaseCallBack?.onError(error)
+        } else {
+            oneTimePurchaseCallback?.onError(error)
         }
     }
 
@@ -357,71 +365,111 @@ class BillingClientManager(context: Context) : PurchasesUpdatedListener {
             }
 
             ProductType.INAPP -> {
-                if (CBPurchase.productType == OneTimeProductType.CONSUMABLE) {
-                    consumeAsyncPurchase(purchase.purchaseToken)
-                } else {
-                    isAcknowledgedPurchase(purchase, {
-                        validateNonSubscriptionReceipt(purchase.purchaseToken, purchaseProductParams.product)
-                    }, {
-                        oneTimePurchaseCallback?.onError(it)
-                    })
-                }
+                isAcknowledgedPurchase(purchase, {
+                    validateNonSubscriptionReceipt(purchase.purchaseToken, purchaseProductParams.product)
+                }, {
+                    oneTimePurchaseCallback?.onError(it)
+                })
             }
         }
     }
 
+    /**
+     * Acknowledges [purchase] with Play if needed and then reports the outcome through exactly one
+     * of [success] or [error].
+     *
+     * A purchase that Play already reports as acknowledged is not re-acknowledged, but it still
+     * continues to [success]: Play redelivers such purchases when the previous attempt died before
+     * Chargebee recorded them, and dropping them here would leave the purchase owned with no way to
+     * retry.
+     */
     private fun isAcknowledgedPurchase(
         purchase: Purchase,
         success: () -> Unit,
         error: (CBException) -> Unit
     ) {
-        if (!purchase.isAcknowledged) {
-            val params = AcknowledgePurchaseParams.newBuilder()
-                .setPurchaseToken(purchase.purchaseToken)
-                .build()
-            billingClient?.acknowledgePurchase(params) { billingResult ->
-                when (billingResult.responseCode) {
-                    OK -> {
-                        if (purchase.purchaseToken.isNotEmpty()) {
-                            Log.i(TAG, "Google Purchase - success")
-                            success()
-                        } else {
-                            Log.e(TAG, "Receipt Not Found")
-                            error(
-                                CBException(
-                                    ErrorDetail(
-                                        message = GPErrorCode.PurchaseReceiptNotFound.errorMsg,
-                                        httpStatusCode = billingResult.responseCode
-                                    )
-                                )
-                            )
-                        }
-                    }
+        if (purchase.isAcknowledged) {
+            Log.i(TAG, "Google Purchase - already acknowledged")
+            onAcknowledged(purchase, OK, success, error)
+            return
+        }
+        val params = AcknowledgePurchaseParams.newBuilder()
+            .setPurchaseToken(purchase.purchaseToken)
+            .build()
+        billingClient?.acknowledgePurchase(params) { billingResult ->
+            when (billingResult.responseCode) {
+                OK -> {
+                    Log.i(TAG, "Google Purchase - success")
+                    onAcknowledged(purchase, billingResult.responseCode, success, error)
+                }
 
-                    else -> {
-                        error(
-                            throwCBException(billingResult)
-                        )
-                    }
+                else -> {
+                    error(
+                        throwCBException(billingResult)
+                    )
                 }
             }
         }
     }
 
-    /* Consume the Purchases */
-    private fun consumeAsyncPurchase(token: String) {
-        consumePurchase(token) { billingResult, purchaseToken ->
-            when (billingResult.responseCode) {
-                OK -> {
-                    validateNonSubscriptionReceipt(purchaseToken, purchaseProductParams.product)
-                }
-
-                else -> {
-                    oneTimePurchaseCallback?.onError(
-                        throwCBException(billingResult)
+    private fun onAcknowledged(
+        purchase: Purchase,
+        responseCode: Int,
+        success: () -> Unit,
+        error: (CBException) -> Unit
+    ) {
+        if (purchase.purchaseToken.isNotEmpty()) {
+            success()
+        } else {
+            Log.e(TAG, "Receipt Not Found")
+            error(
+                CBException(
+                    ErrorDetail(
+                        message = GPErrorCode.PurchaseReceiptNotFound.errorMsg,
+                        httpStatusCode = responseCode
                     )
-                }
+                )
+            )
+        }
+    }
+
+    /**
+     * Consumes a consumable purchase once Chargebee has recorded it, and does nothing for any other
+     * product type.
+     *
+     * Consuming must stay the last step. Play Billing 8 removed the purchase history API, so an
+     * unconsumed purchase is the only record of the transaction the client can recover after the
+     * process dies; consuming before validation succeeds would leave a charged purchase that
+     * [validateNonSubscriptionReceiptWithChargebee] can no longer retry.
+     *
+     * A failed consumption still reports success, because Chargebee has already recorded the
+     * purchase by this point. The purchase stays owned and is consumed by the next successful
+     * validation. For the same reason this consumes with the current client instead of going through
+     * [consumePurchase], whose reconnection path reports a connection error and would leave
+     * [onConsumed] uncalled.
+     */
+    private fun consumeIfConsumable(
+        purchaseToken: String,
+        productType: OneTimeProductType,
+        onConsumed: () -> Unit
+    ) {
+        if (productType != OneTimeProductType.CONSUMABLE) {
+            onConsumed()
+            return
+        }
+        val client = billingClient
+        if (client == null) {
+            Log.e(TAG, "Failed to consume validated purchase : billing client unavailable")
+            onConsumed()
+            return
+        }
+        client.consumeAsync(
+            ConsumeParams.newBuilder().setPurchaseToken(purchaseToken).build()
+        ) { billingResult, _ ->
+            if (billingResult.responseCode != OK) {
+                Log.e(TAG, "Failed to consume validated purchase :" + billingResult.responseCode)
             }
+            onConsumed()
         }
     }
 
@@ -493,13 +541,13 @@ class BillingClientManager(context: Context) : PurchasesUpdatedListener {
         ))
     }
 
-    private fun queryPurchaseHistoryFromStore(
+    private fun queryPurchasesFromStore(
         connectionStatus: Boolean
     ) {
         if (connectionStatus) {
-            queryAllSubsPurchaseHistory(ProductType.SUBS.value) { purchaseHistoryList ->
+            queryPurchases(ProductType.SUBS.value, restorePurchaseCallBack::onError) { subscriptions ->
                 val storeTransactions = arrayListOf<PurchaseTransaction>()
-                storeTransactions.addAll(purchaseHistoryList ?: emptyList())
+                storeTransactions.addAll(subscriptions ?: emptyList())
                 CBRestorePurchaseManager.fetchStoreSubscriptionStatus(
                     storeTransactions = storeTransactions,
                     allTransactions = arrayListOf(),
@@ -515,54 +563,48 @@ class BillingClientManager(context: Context) : PurchasesUpdatedListener {
         }
     }
 
-    private fun queryPurchaseHistory(
+    private fun queryAllPurchases(
+        onError: (CBException) -> Unit,
         storeTransactions: (List<PurchaseTransaction>) -> Unit
     ) {
-        val purchaseTransactionHistory = mutableListOf<PurchaseTransaction>()
-        queryAllSubsPurchaseHistory(ProductType.SUBS.value) { subscriptionHistory ->
-            purchaseTransactionHistory.addAll(subscriptionHistory ?: emptyList())
-            queryAllInAppPurchaseHistory(ProductType.INAPP.value) { inAppHistory ->
-                purchaseTransactionHistory.addAll(inAppHistory ?: emptyList())
-                storeTransactions(purchaseTransactionHistory)
+        val purchaseTransactions = mutableListOf<PurchaseTransaction>()
+        queryPurchases(ProductType.SUBS.value, onError) { subscriptions ->
+            purchaseTransactions.addAll(subscriptions ?: emptyList())
+            queryPurchases(ProductType.INAPP.value, onError) { inAppPurchases ->
+                purchaseTransactions.addAll(inAppPurchases ?: emptyList())
+                storeTransactions(purchaseTransactions)
             }
         }
     }
 
-    private fun queryAllSubsPurchaseHistory(
-        productType: String, purchaseTransactionList: (List<PurchaseTransaction>?) -> Unit
+    /**
+     * Returns only what Google Play still associates with the account: active subscriptions and
+     * unconsumed one-time products. Play Billing 8 removed the purchase history API, so expired
+     * and consumed purchases are no longer retrievable from the client.
+     */
+    private fun queryPurchases(
+        productType: String,
+        onError: (CBException) -> Unit,
+        purchaseTransactionList: (List<PurchaseTransaction>?) -> Unit
     ) {
-        queryPurchaseHistoryAsync(productType) {
-            purchaseTransactionList(it)
-        }
-    }
-
-    private fun queryAllInAppPurchaseHistory(
-        productType: String, purchaseTransactionList: (List<PurchaseTransaction>?) -> Unit
-    ) {
-        queryPurchaseHistoryAsync(productType) {
-            purchaseTransactionList(it)
-        }
-    }
-
-    private fun queryPurchaseHistoryAsync(
-        productType: String, purchaseTransactionList: (List<PurchaseTransaction>?) -> Unit
-    ) {
-        val queryPurchaseHistoryParams = QueryPurchaseHistoryParams.newBuilder().setProductType(productType).build()
-        billingClient?.queryPurchaseHistoryAsync(queryPurchaseHistoryParams) { billingResult, subsHistoryList ->
+        val queryPurchasesParams = QueryPurchasesParams.newBuilder()
+            .setProductType(productType)
+            .includeSuspendedSubscriptions(true)
+            .build()
+        billingClient?.queryPurchasesAsync(queryPurchasesParams) { billingResult, purchases ->
             if (billingResult.responseCode == OK) {
-                val purchaseHistoryList = subsHistoryList?.map {
+                purchaseTransactionList(purchases.map {
                     it.toPurchaseTransaction(productType)
-                }
-                purchaseTransactionList(purchaseHistoryList)
+                })
             } else {
-                restorePurchaseCallBack.onError(throwCBException(billingResult))
+                onError(throwCBException(billingResult))
             }
         }
     }
 
-    private fun PurchaseHistoryRecord.toPurchaseTransaction(productType: String): PurchaseTransaction {
+    private fun Purchase.toPurchaseTransaction(productType: String): PurchaseTransaction {
         return PurchaseTransaction(
-            productId = this.skus,
+            productId = this.products,
             productType = productType,
             purchaseTime = this.purchaseTime,
             purchaseToken = this.purchaseToken
@@ -572,7 +614,12 @@ class BillingClientManager(context: Context) : PurchasesUpdatedListener {
     private fun buildBillingClient(listener: PurchasesUpdatedListener): BillingClient? {
         if (billingClient == null) {
             billingClient = mContext?.let {
-                BillingClient.newBuilder(it).enablePendingPurchases().setListener(listener)
+                BillingClient.newBuilder(it)
+                    .enablePendingPurchases(
+                        PendingPurchasesParams.newBuilder().enableOneTimeProducts().build()
+                    )
+                    .enableAutoServiceReconnection()
+                    .setListener(listener)
                     .build()
             }
         }
@@ -635,25 +682,33 @@ class BillingClientManager(context: Context) : PurchasesUpdatedListener {
         completionCallback: CBCallback.PurchaseCallback<String>
     ) {
         this.purchaseCallBack = completionCallback
+        purchaseToken(product, completionCallback::onError) { purchaseToken ->
+            validateReceipt(purchaseToken, product)
+        }
+    }
+
+    private fun purchaseToken(
+        product: CBProduct,
+        onError: (CBException) -> Unit,
+        onToken: (String) -> Unit
+    ) {
         onConnected({ status ->
             if (status)
-                queryPurchaseHistory { purchaseHistoryList ->
-                    val purchaseTransaction = purchaseHistoryList.filter {
-                        it.productId.first() == product.id
+                queryAllPurchases(onError) { purchaseList ->
+                    val transaction = purchaseList.firstOrNull {
+                        it.productId.contains(product.id)
                     }
-                    val transaction = purchaseTransaction.firstOrNull()
                     transaction?.let {
-                        validateReceipt(transaction.purchaseToken, product)
+                        onToken(it.purchaseToken)
                     } ?: run {
-                        completionCallback.onError(itemNotOwnedException())
+                        onError(itemNotOwnedException())
                     }
-
                 } else
-                completionCallback.onError(
+                onError(
                     connectionError
                 )
         }, { error ->
-            completionCallback.onError(error)
+            onError(error)
         })
     }
 
@@ -676,6 +731,7 @@ class BillingClientManager(context: Context) : PurchasesUpdatedListener {
 
     /* Chargebee method called here to validate receipt */
     private fun validateNonSubscriptionReceipt(purchaseToken: String, product: CBProduct) {
+        val productType = CBPurchase.productType
         CBPurchase.validateNonSubscriptionReceipt(purchaseToken, product) {
             when (it) {
                 is ChargebeeResult.Success -> {
@@ -687,10 +743,12 @@ class BillingClientManager(context: Context) : PurchasesUpdatedListener {
                         val invoiceId = (it.data).nonSubscription.invoiceId
                         Log.i(TAG, "Invoice ID:  $invoiceId")
                         val nonSubscriptionResult = (it.data).nonSubscription
-                        if (invoiceId.isEmpty()) {
-                            oneTimePurchaseCallback?.onSuccess(nonSubscriptionResult, false)
-                        } else {
-                            oneTimePurchaseCallback?.onSuccess(nonSubscriptionResult, true)
+                        consumeIfConsumable(purchaseToken, productType) {
+                            if (invoiceId.isEmpty()) {
+                                oneTimePurchaseCallback?.onSuccess(nonSubscriptionResult, false)
+                            } else {
+                                oneTimePurchaseCallback?.onSuccess(nonSubscriptionResult, true)
+                            }
                         }
                     } else {
                         oneTimePurchaseCallback?.onError(CBException(ErrorDetail(message = GPErrorCode.PurchaseInvalid.errorMsg)))
@@ -713,24 +771,8 @@ class BillingClientManager(context: Context) : PurchasesUpdatedListener {
         completionCallback: CBCallback.OneTimePurchaseCallback
     ) {
         this.oneTimePurchaseCallback = completionCallback
-        onConnected({ status ->
-            if (status)
-                queryPurchaseHistory { purchaseHistoryList ->
-                    val purchaseTransaction = purchaseHistoryList.filter {
-                        it.productId.first() == product.id
-                    }
-                    val transaction = purchaseTransaction.firstOrNull()
-                    transaction?.let {
-                        validateNonSubscriptionReceipt(transaction.purchaseToken, product)
-                    } ?: run {
-                        completionCallback.onError(itemNotOwnedException())
-                    }
-                } else
-                completionCallback.onError(
-                    connectionError
-                )
-        }, { error ->
-            completionCallback.onError(error)
-        })
+        purchaseToken(product, completionCallback::onError) { purchaseToken ->
+            validateNonSubscriptionReceipt(purchaseToken, product)
+        }
     }
 }

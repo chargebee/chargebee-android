@@ -7,6 +7,6 @@ enum class ProductType(val value: String) {
     INAPP("inapp");
 
     companion object {
-        fun getProductType(value: String): ProductType = ProductType.valueOf(value.toUpperCase(Locale.ROOT))
+        fun getProductType(value: String): ProductType = ProductType.valueOf(value.uppercase(Locale.ROOT))
     }
 }
