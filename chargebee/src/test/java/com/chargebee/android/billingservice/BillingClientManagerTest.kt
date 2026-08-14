@@ -118,9 +118,15 @@ class BillingClientManagerTest {
             val queryPurchasesParams = QueryPurchasesParams.newBuilder()
                 .setProductType(BillingClient.ProductType.SUBS)
                 .build()
-            Mockito.`when`(billingClient.queryPurchasesAsync(queryPurchasesParams))
+            val purchasesResponseListener = Mockito.mock(PurchasesResponseListener::class.java)
+            Mockito.`when`(
+                billingClient.queryPurchasesAsync(
+                    queryPurchasesParams,
+                    purchasesResponseListener
+                )
+            ).thenReturn(Unit)
             verify(billingClient, times(1))
-                ?.queryPurchasesAsync(queryPurchasesParams)
+                .queryPurchasesAsync(queryPurchasesParams, purchasesResponseListener)
         }
     }
 
