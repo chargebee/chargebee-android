@@ -315,7 +315,7 @@ class BillingClientManager(context: Context) : PurchasesUpdatedListener {
                         }
 
                         Purchase.PurchaseState.PENDING -> {
-                            purchaseCallBack?.onError(
+                            notifyPurchaseError(
                                 CBException(
                                     ErrorDetail(
                                         message = GPErrorCode.PurchasePending.errorMsg,
@@ -326,7 +326,7 @@ class BillingClientManager(context: Context) : PurchasesUpdatedListener {
                         }
 
                         Purchase.PurchaseState.UNSPECIFIED_STATE -> {
-                            purchaseCallBack?.onError(
+                            notifyPurchaseError(
                                 CBException(
                                     ErrorDetail(
                                         message = GPErrorCode.PurchaseUnspecified.errorMsg,
@@ -340,15 +340,16 @@ class BillingClientManager(context: Context) : PurchasesUpdatedListener {
             }
 
             else -> {
-                if (purchaseProductParams.product.type == ProductType.SUBS)
-                    purchaseCallBack?.onError(
-                        throwCBException(billingResult)
-                    )
-                else
-                    oneTimePurchaseCallback?.onError(
-                        throwCBException(billingResult)
-                    )
+                notifyPurchaseError(throwCBException(billingResult))
             }
+        }
+    }
+
+    private fun notifyPurchaseError(error: CBException) {
+        if (purchaseProductParams.product.type == ProductType.SUBS) {
+            purchaseCallBack?.onError(error)
+        } else {
+            oneTimePurchaseCallback?.onError(error)
         }
     }
 
