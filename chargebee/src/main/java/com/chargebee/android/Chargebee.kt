@@ -22,10 +22,17 @@ import com.chargebee.android.resources.PlanResource
 import com.chargebee.android.resources.SubscriptionResource
 import okhttp3.Credentials
 
+/**
+ * Closure that returns a fresh mobile token from the backend.
+ * The SDK invokes it during [Chargebee.configure] and whenever a request fails with a 401.
+ * The provided callback must be invoked with a token, or with null when one cannot be obtained.
+ */
+typealias CBMobileTokenProvider = (completion: (String?) -> Unit) -> Unit
+
 object Chargebee {
     var site: String = ""
     var publishableApiKey: String = ""
-    var encodedApiKey: String = ""
+    private var encodedPublishableApiKey: String = ""
     var sdkKey: String = ""
     var baseUrl: String = ""
     var allowErrorLogging: Boolean = true
@@ -37,6 +44,23 @@ object Chargebee {
     const val platform: String = "Android"
     const val sdkVersion: String = "2.0.0-beta-6"
     const val limit: String = "100"
+
+    /*
+     * Mobile token auth. When a token is present the SDK sends it as the Authorization header
+     * instead of the publishable key. If empty, we fall back to using publishable-key.
+     */
+    var mobileToken: String = ""
+    var tokenProvider: CBMobileTokenProvider? = null
+
+    val encodedMobileToken: String
+        get() = if (mobileToken.isNotEmpty()) Credentials.basic(mobileToken, "") else ""
+
+    /*
+     * The Authorization header the SDK sends on every request: the mobile token when one is configured,
+     * otherwise the publishable key. Resolved lazily so the value picks up a refreshed token.
+     */
+    val encodedApiKey: String
+        get() = if (mobileToken.isNotEmpty()) encodedMobileToken else encodedPublishableApiKey
     private const val PLAY_STORE_SUBSCRIPTION_URL =
         "https://play.google.com/store/account/subscriptions"
     private const val SUBSCRIPTION_URL =
@@ -53,7 +77,9 @@ object Chargebee {
         this.applicationId = packageName
         this.publishableApiKey = publishableApiKey
         this.site = site
-        this.encodedApiKey = Credentials.basic(publishableApiKey, "")
+        this.encodedPublishableApiKey = Credentials.basic(publishableApiKey, "")
+        this.mobileToken = ""
+        this.tokenProvider = null
         this.baseUrl = "https://${site}.chargebee.com/api/"
         this.allowErrorLogging = allowErrorLogging
         this.sdkKey = sdkKey
@@ -89,7 +115,9 @@ object Chargebee {
         this.applicationId = packageName
         this.publishableApiKey = publishableApiKey
         this.site = site
-        this.encodedApiKey = Credentials.basic(publishableApiKey, "")
+        this.encodedPublishableApiKey = Credentials.basic(publishableApiKey, "")
+        this.mobileToken = ""
+        this.tokenProvider = null
         this.baseUrl = "https://${site}.chargebee.com/api/"
         this.allowErrorLogging = allowErrorLogging
         this.sdkKey = sdkKey
@@ -111,6 +139,87 @@ object Chargebee {
                     this.version = CatalogVersion.Unknown.value
                     completion(it)
                 }
+            }
+        }
+    }
+
+    /*
+     * Configure the SDK using a mobile token instead of a publishable API key. The [tokenProvider] is
+     * invoked to obtain a token from the merchant's backend, both now and whenever a request is
+     * rejected with a 401 (expired/revoked token).
+     */
+    fun configure(
+        site: String,
+        sdkKey: String = "",
+        packageName: String = "",
+        allowErrorLogging: Boolean = true,
+        tokenProvider: CBMobileTokenProvider,
+        completion: (ChargebeeResult<Any>) -> Unit
+    ) {
+        this.site = site
+        this.publishableApiKey = ""
+        this.encodedPublishableApiKey = ""
+        this.baseUrl = "https://${site}.chargebee.com/api/"
+        this.allowErrorLogging = allowErrorLogging
+        this.sdkKey = sdkKey
+        this.applicationId = packageName
+        this.tokenProvider = tokenProvider
+
+        refreshMobileToken { success ->
+            if (!success) {
+                completion(
+                    ChargebeeResult.Error(
+                        exp = CBException(
+                            error = ErrorDetail(
+                                message = "Unable to fetch a mobile token from the token provider",
+                                apiErrorCode = "401",
+                                httpStatusCode = 401
+                            )
+                        )
+                    )
+                )
+                return@refreshMobileToken
+            }
+            // Nothing to verify without an SDK key; the environment is ready.
+            if (TextUtils.isEmpty(sdkKey)) {
+                completion(ChargebeeResult.Success("Environment Setup Completed"))
+                return@refreshMobileToken
+            }
+            val auth = Auth(sdkKey, applicationId, appName, channel)
+            CBAuthentication.authenticate(auth) {
+                when (it) {
+                    is ChargebeeResult.Success -> {
+                        val response = it.data as CBAuthResponse
+                        this.version = response.in_app_detail.product_catalog_version
+                        this.applicationId = response.in_app_detail.app_id
+                        this.appName = response.in_app_detail.app_name
+                        completion(ChargebeeResult.Success(response))
+                    }
+                    is ChargebeeResult.Error -> {
+                        this.version = CatalogVersion.Unknown.value
+                        completion(it)
+                    }
+                }
+            }
+        }
+    }
+
+    /*
+     * Fetches a fresh token from the merchant-supplied provider and stores it. Invokes [completion]
+     * with false when no provider is configured or the provider returns an empty token.
+     */
+    fun refreshMobileToken(completion: (Boolean) -> Unit) {
+        val provider = tokenProvider
+        if (provider == null) {
+            completion(false)
+            return
+        }
+        provider { token ->
+            if (!token.isNullOrEmpty()) {
+                this.mobileToken = token
+                completion(true)
+            } else {
+                completion(false)
             }
         }
     }
