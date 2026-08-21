@@ -20,6 +20,12 @@ phases:
       - VERSION=$(grep 'versionName' $CODEBUILD_SRC_DIR/chargebee/build.gradle | head -n 1 | cut -d'"' -f2)
       - ./gradlew clean
       - ./gradlew chargebee:publishReleasePublicationToMavenRepository
+      - |
+        token=$(printf '%s:%s' "$maven_username" "$maven_password" | base64 | tr -d '\n')
+        curl --fail --location --request POST \
+          "https://ossrh-staging-api.central.sonatype.com/manual/upload/defaultRepository/com.chargebee" \
+          --header "Authorization: Bearer ${token}"
+
     finally:
       - |
         if [ "$CODEBUILD_BUILD_SUCCEEDING" = "0" ]; then
