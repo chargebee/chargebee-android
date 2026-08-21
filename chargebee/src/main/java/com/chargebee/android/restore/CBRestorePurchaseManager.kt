@@ -1,10 +1,8 @@
 package com.chargebee.android.restore
 
 import android.util.Log
-import com.chargebee.android.ErrorDetail
 import com.chargebee.android.billingservice.CBCallback
 import com.chargebee.android.billingservice.CBPurchase
-import com.chargebee.android.billingservice.GPErrorCode
 import com.chargebee.android.billingservice.ProductType
 import com.chargebee.android.exceptions.CBException
 import com.chargebee.android.exceptions.ChargebeeResult
@@ -90,14 +88,7 @@ class CBRestorePurchaseManager {
         ) {
             if (storeTransactions.isEmpty()) {
                 if (restorePurchases.isEmpty()) {
-                    completionCallback.onError(
-                        CBException(
-                            ErrorDetail(
-                                message = GPErrorCode.InvalidPurchaseToken.errorMsg,
-                                httpStatusCode = 400
-                            )
-                        )
-                    )
+                    completionCallback.onSuccess(emptyList())
                 } else {
                     val activePurchases = restorePurchases.filter { subscription ->
                         subscription.storeStatus == StoreStatus.Active.value
